@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0.0",
+  "id": "00000000-0000-4000-8000-000000000001",
+  "session_id": "00000000-0000-4000-8000-000000000002",
+  "device_id": "00000000-0000-4000-8000-000000000003",
+  "local_sequence": 1,
+  "occurred_at": "2026-11-04T12:00:00Z",
+  "time_quality": "uncertain",
+  "activity_id": "recall",
+  "package_id": "order-a-drink",
+  "package_version": 1,
+  "target_ids": [
+    "request-drink-polite"
+  ],
+  "modality": "writing",
+  "support_event_ids": [],
+  "technical_status": "valid",
+  "response": "A large tea, please.",
+  "audio_reference": null,
+  "assessment_status": "pending",
+  "package_hash": "0000000000000000000000000000000000000000000000000000000000000000"
+}

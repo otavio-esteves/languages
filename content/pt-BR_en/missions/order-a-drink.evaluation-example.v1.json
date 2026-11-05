@@ -1,0 +1,112 @@
+{
+  "schema_version": "1.0.0",
+  "id": "order-a-drink-evaluation-example",
+  "version": 1,
+  "minimum_reader_version": "1.0.0",
+  "status": "draft",
+  "purpose": "evaluation_example",
+  "title": "Exemplo público de avaliação — não reservado",
+  "language_pair": "pt-BR_en",
+  "capability_ids": [
+    "request-drink",
+    "ask-for-clarification"
+  ],
+  "prerequisite_ids": [],
+  "targets": [
+    {
+      "id": "request-drink-polite",
+      "expression": "I'd like a small coffee, please.",
+      "meaning": "Fazer um pedido educado, especificando item e tamanho.",
+      "rationale": "Permite transmitir uma escolha na situação de compra."
+    },
+    {
+      "id": "request-repetition",
+      "expression": "Could you repeat that, please?",
+      "meaning": "Pedir repetição quando a mensagem não foi compreendida.",
+      "rationale": "Permite reparar a interação sem fingir compreensão."
+    }
+  ],
+  "provenance": {
+    "author_type": "ai_assisted_draft",
+    "license": "pending_owner_decision",
+    "reviewer": null,
+    "reviewed_at": null
+  },
+  "assets": [
+    {
+      "id": "dialogue-audio",
+      "kind": "audio",
+      "status": "ready",
+      "script": "I'd like a small coffee, please. For here or to go? Could you repeat that, please? For here or to go? To go, please.",
+      "path": "assets/dialogue-audio-2e1cd14d66acf795.wav",
+      "sha256": "2e1cd14d66acf795a2fd00f08668fd505209f992afeed852f8c83c3399ce907a"
+    },
+    {
+      "id": "followup-audio",
+      "kind": "audio",
+      "status": "ready",
+      "script": "For here or to go?",
+      "path": "assets/followup-audio-9f9416977bff01e7.wav",
+      "sha256": "9f9416977bff01e7d33d7a7cca492f8cca151a829584c3dc4af4345fa0e3873d"
+    }
+  ],
+  "rubric": {
+    "id": "drink-request",
+    "version": 1,
+    "dimensions": [
+      {
+        "id": "item-and-size",
+        "essential": true,
+        "criterion": "Interlocutor identifica item e tamanho solicitados."
+      },
+      {
+        "id": "repair",
+        "essential": true,
+        "criterion": "Solicita esclarecimento ou repetição quando a informação não é compreendida."
+      },
+      {
+        "id": "answer-followup",
+        "essential": true,
+        "criterion": "Responde à pergunta de continuidade de acordo com a situação."
+      },
+      {
+        "id": "target-form",
+        "essential": false,
+        "criterion": "Demonstra a expressão-alvo; alternativas válidas podem cumprir o objetivo sem demonstrá-la."
+      },
+      {
+        "id": "comprehensibility",
+        "essential": true,
+        "criterion": "Mensagem compreensível na modalidade observada; em fala não exigir imitação de sotaque."
+      }
+    ]
+  },
+  "activities": [
+    {
+      "id": "evaluation-example",
+      "type": "communicative_task",
+      "modality": "speaking",
+      "prompt": "Você quer uma água grande para levar. Faça o pedido e esclareça uma pergunta que não entendeu.",
+      "target_ids": [
+        "request-drink-polite",
+        "request-repetition"
+      ],
+      "supports": [],
+      "content": {
+        "interlocutor_script": [
+          "For here or to go?"
+        ],
+        "administration": "Aplicação humana, sem modelo visível."
+      },
+      "expected": {
+        "human_review": true,
+        "required_meaning": [
+          "large water",
+          "to go",
+          "request repetition"
+        ]
+      },
+      "feedback": "Verifique se a mensagem comunica sua escolha. Se precisar, consulte um apoio e tente novamente; a tentativa apoiada fica identificada."
+    }
+  ]
+}

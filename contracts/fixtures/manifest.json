@@ -1,0 +1,9 @@
+{
+  "schema_version": "1.0.0",
+  "id": "synthetic",
+  "version": 1,
+  "package_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+  "package_bytes": 100,
+  "is_preview": true,
+  "assets": []
+}

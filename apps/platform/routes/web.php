@@ -1,0 +1,43 @@
+<?php
+
+use App\Http\Controllers\EditorialController;
+use App\Http\Controllers\LearningController;
+use App\Http\Middleware\RequireEditor;
+use App\Services\LearningContent;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
+
+Route::get('/', fn () => redirect()->route('editorial'));
+Route::get('/login', fn () => Inertia::render('Login'))->middleware('guest')->name('login');
+Route::post('/login', function (Request $request) {
+    $credentials = $request->validate(['email' => 'required|email|max:254', 'password' => 'required|string|max:1024']);
+    if (! Auth::attempt($credentials)) {
+        throw ValidationException::withMessages(['email' => 'Credenciais inválidas.']);
+    }
+    $request->session()->regenerate();
+
+    return redirect()->intended(route('editorial'));
+})->middleware(['guest', 'throttle:device-login']);
+Route::post('/logout', function (Request $request) {
+    Auth::logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return redirect()->route('login');
+})->middleware('auth');
+Route::get('/editorial', EditorialController::class)->middleware('auth')->name('editorial');
+
+Route::prefix('editorial')->middleware(['auth', RequireEditor::class])->group(function () {
+    Route::get('practice/{id}/{version}', function (Request $request, string $id, int $version, LearningContent $content) {
+        $manifest = $content->manifest($request->user(), $id, $version, true);
+
+        return Inertia::render('PracticePreview', ['mission' => json_decode($content->snapshot($request->user(), $manifest['package_hash'])->document), 'manifest' => $manifest]);
+    })->whereNumber('version');
+    Route::get('content-snapshots/{hash}/assets/{asset}', [LearningController::class, 'asset']);
+    Route::post('attempts/batch', [LearningController::class, 'attempts']);
+    Route::post('exposures/batch', [LearningController::class, 'exposures']);
+    Route::get('learning-sessions/{id}', [LearningController::class, 'session']);
+});

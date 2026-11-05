@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0.0",
+  "data": [
+    {
+      "id": "synthetic-published-mission",
+      "version": 1,
+      "title": "Missão sintética de contrato",
+      "language_pair": "pt-BR_en",
+      "capability_ids": [
+        "synthetic-capability"
+      ]
+    }
+  ]
+}

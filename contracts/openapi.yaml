@@ -1,0 +1,244 @@
+openapi: 3.1.0
+info:
+  title: Idiomas — API de aprendizagem
+  version: 1.0.0
+  description: Autenticação, catálogo e prática F2. Prévias editoriais não publicam rascunhos nem confirmam capacidades.
+servers:
+  - url: http://localhost:8080/api/v1
+paths:
+  /auth/token:
+    post:
+      operationId: issueToken
+      description: Credenciais de uma conta existente; limitado a 5 tentativas por minuto por IP e e-mail. Token expira em 24 horas.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [email, password, device_name]
+              properties:
+                email: {type: string, format: email, maxLength: 254}
+                password: {type: string, minLength: 1, maxLength: 1024}
+                device_name: {type: string, minLength: 1, maxLength: 100}
+      responses:
+        '201':
+          description: Token criado; armazenar somente com proteção adequada
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [token, expires_at, user]
+                properties:
+                  token: {type: string}
+                  expires_at: {type: string, format: date-time}
+                  user: {$ref: '#/components/schemas/User'}
+        '422': {description: "Credenciais inválidas ou campos inválidos"}
+        '429': {description: "Limite de tentativas atingido"}
+    delete:
+      operationId: revokeCurrentToken
+      security: [{deviceToken: []}]
+      responses:
+        '204': {description: "Token atual revogado"}
+        '401': {description: "Token ausente ou inválido"}
+        '403': {description: "Token sem permissão catalog:read"}
+  /me:
+    get:
+      operationId: currentUser
+      security: [{deviceToken: []}]
+      responses:
+        '200':
+          description: Conta autenticada
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/User'}
+        '401': {description: "Token ausente, expirado ou revogado"}
+        '403': {description: "Token sem permissão catalog:read"}
+  /catalog:
+    get:
+      operationId: catalog
+      security: [{deviceToken: []}]
+      responses:
+        '200':
+          description: Última versão publicada de cada missão; pode estar vazio enquanto só existem rascunhos
+          content:
+            application/json:
+              schema: {$ref: './catalog.schema.json'}
+        '401': {description: "Token ausente, expirado ou revogado"}
+        '403': {description: "Token sem permissão catalog:read"}
+  /editorial/catalog:
+    get:
+      operationId: editorialCatalog
+      security: [{deviceToken: []}]
+      responses:
+        '200':
+          description: Prévias de treino disponíveis exclusivamente para editores
+          content:
+            application/json:
+              schema: {$ref: './catalog.schema.json'}
+        '401': {description: "Sessão inválida"}
+        '403': {description: "Conta sem permissão editorial"}
+  /content-packages/{id}/manifest:
+    get:
+      operationId: packageManifest
+      security: [{deviceToken: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+        - {name: version, in: query, required: true, schema: {type: integer, minimum: 1}}
+        - {name: preview, in: query, schema: {type: boolean, default: false}}
+      responses:
+        '200':
+          description: Snapshot imutável e inventário de arquivos por hash; rascunhos requerem editor e preview
+          content:
+            application/json:
+              schema: {$ref: './package-manifest.schema.json'}
+        '401': {description: "Sessão inválida"}
+        '404': {description: "Conteúdo ausente ou indisponível para a conta"}
+        '409': {description: "Mídia incompleta ou publicação alterada sem nova versão"}
+        '422': {description: "Parâmetros inválidos"}
+  /content-snapshots/{hash}:
+    get:
+      operationId: snapshotDocument
+      security: [{deviceToken: []}]
+      parameters:
+        - {name: hash, in: path, required: true, schema: {type: string, pattern: '^[a-f0-9]{64}$'}}
+      responses:
+        '200':
+          description: Bytes JSON originais, verificáveis pelo hash do manifesto
+          content:
+            application/json:
+              schema: {$ref: './content-package.schema.json'}
+        '401': {description: "Sessão inválida"}
+        '404': {description: "Snapshot indisponível para a conta"}
+  /content-snapshots/{hash}/assets/{asset}:
+    get:
+      operationId: snapshotAudio
+      security: [{deviceToken: []}]
+      parameters:
+        - {name: hash, in: path, required: true, schema: {type: string}}
+        - {name: asset, in: path, required: true, schema: {type: string}}
+      responses:
+        '200':
+          description: Arquivo de áudio privado
+          content:
+            audio/wav:
+              schema: {type: string, format: binary}
+        '206': {description: "Faixa parcial de áudio"}
+        '401': {description: "Sessão inválida"}
+        '404': {description: "Arquivo indisponível para a conta"}
+        '409': {description: "Integridade do arquivo inválida"}
+  /attempts/batch:
+    post:
+      operationId: submitAttempts
+      description: Requer habilidade practice:write. Cada item tem transação e confirmação próprias; mesmo ID e payload repetido não duplica efeito. O package_hash fixa o documento observado.
+      security: [{deviceToken: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [events]
+              properties:
+                events: {type: array, minItems: 1, maxItems: 50, items: {$ref: './attempt-event.schema.json'}}
+      responses:
+        '200': {$ref: '#/components/responses/BatchReceipt'}
+        '401': {description: "Sessão inválida"}
+        '403': {description: "Habilidade insuficiente"}
+        '413': {description: "Lote acima de 512 KiB"}
+        '422': {description: "Envelope inválido"}
+        '429': {description: "Limite de envio atingido"}
+  /exposures/batch:
+    post:
+      operationId: submitExposures
+      description: Confirma apoio antes da revelação; persiste mesmo sem uma tentativa posterior. Requer practice:write.
+      security: [{deviceToken: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [events]
+              properties:
+                events: {type: array, minItems: 1, maxItems: 50, items: {$ref: './exposure-event.schema.json'}}
+      responses:
+        '200': {$ref: '#/components/responses/BatchReceipt'}
+        '401': {description: "Sessão inválida"}
+        '403': {description: "Habilidade insuficiente"}
+        '413': {description: "Lote acima de 512 KiB"}
+        '422': {description: "Envelope inválido"}
+        '429': {description: "Limite de envio atingido"}
+  /learning-sessions/{id}:
+    get:
+      operationId: sessionFeedback
+      description: Somente eventos da conta autenticada. Respostas abertas ficam não verificadas; nenhuma resposta desta fase confirma retenção posterior.
+      security: [{deviceToken: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Tentativas/exposições e feedback limitado por modalidade; is_preview identifica simulações editoriais
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [session_id, events]
+                properties:
+                  session_id: {type: string, format: uuid}
+                  events:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, kind, assessment]
+                      properties:
+                        id: {type: string, format: uuid}
+                        kind: {type: string, enum: [attempt, exposure]}
+                        assessment:
+                          oneOf:
+                            - {type: 'null'}
+                            - type: object
+                              required: [outcome, supported, support_pending, is_preview, retention_confirmed, source, message]
+                              properties:
+                                outcome: {type: string, enum: [correct, incorrect, technical_issue, unverified]}
+                                supported: {type: boolean}
+                                support_pending: {type: boolean}
+                                is_preview: {type: boolean}
+                                retention_confirmed: {const: false}
+                                source: {type: string, enum: [not_assessed, automatic_rule]}
+                                message: {type: string}
+        '401': {description: "Sessão inválida"}
+        '404': {description: "Identificador inválido"}
+components:
+  responses:
+    BatchReceipt:
+      description: Resultado independente por item; accepted e duplicate confirmam persistência, e não proficiência
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [results]
+            properties:
+              results:
+                type: array
+                items:
+                  type: object
+                  required: [id, status]
+                  properties:
+                    id: {type: [string, 'null']}
+                    status: {type: string, enum: [accepted, duplicate, conflict, rejected]}
+                    message: {type: string}
+  securitySchemes:
+    deviceToken: {type: http, scheme: bearer}
+  schemas:
+    User:
+      type: object
+      additionalProperties: false
+      required: [id, name, email]
+      properties:
+        id: {type: integer, minimum: 1}
+        name: {type: string}
+        email: {type: string, format: email}
+        is_editor: {type: boolean, description: Permissão editorial opcional para clientes antigos}

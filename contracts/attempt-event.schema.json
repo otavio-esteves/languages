@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "$id": "https://idiomas.local/contracts/attempt-event.schema.json",
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "session_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "device_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "local_sequence": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "time_quality": {
+      "enum": [
+        "trusted",
+        "uncertain"
+      ]
+    },
+    "activity_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "package_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "package_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "target_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "modality": {
+      "type": "string",
+      "enum": [
+        "reading",
+        "listening",
+        "writing",
+        "speaking"
+      ]
+    },
+    "support_event_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "uniqueItems": true
+    },
+    "technical_status": {
+      "enum": [
+        "valid",
+        "failed",
+        "uncertain"
+      ]
+    },
+    "response": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 10000
+    },
+    "audio_reference": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "assessment_status": {
+      "enum": [
+        "pending",
+        "not_requested"
+      ]
+    },
+    "package_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "session_id",
+    "device_id",
+    "local_sequence",
+    "occurred_at",
+    "time_quality",
+    "activity_id",
+    "package_id",
+    "package_version",
+    "target_ids",
+    "modality",
+    "support_event_ids",
+    "technical_status",
+    "response",
+    "audio_reference",
+    "assessment_status",
+    "package_hash"
+  ]
+}

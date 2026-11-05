@@ -1,0 +1,113 @@
+{
+  "policy_version": "learning-policy-v0",
+  "status": "acceptance_examples_not_executed_engine",
+  "cases": [
+    {
+      "id": "recognition-only",
+      "input": {
+        "modality": "reading",
+        "task": "choice",
+        "success": true
+      },
+      "expected": {
+        "reading": "recognition",
+        "speaking": "not_observed"
+      }
+    },
+    {
+      "id": "supported",
+      "input": {
+        "modality": "writing",
+        "support_used": true,
+        "success": true
+      },
+      "expected": {
+        "independent": false,
+        "retention_confirmed": false
+      }
+    },
+    {
+      "id": "immediate",
+      "input": {
+        "success": true,
+        "independent": true,
+        "elapsed_hours": 0.167,
+        "stage_days": 1
+      },
+      "expected": {
+        "stage_days": 1,
+        "due_date": "unchanged",
+        "retention_confirmed": false
+      }
+    },
+    {
+      "id": "spaced",
+      "input": {
+        "success": true,
+        "independent": true,
+        "new_session": true,
+        "new_variant": true,
+        "elapsed_hours": 72,
+        "stage_days": 1
+      },
+      "expected": {
+        "stage_days": 3,
+        "retention_observed": true
+      }
+    },
+    {
+      "id": "technical",
+      "input": {
+        "technical_status": "failed",
+        "stage_days": 7
+      },
+      "expected": {
+        "stage_days": 7,
+        "linguistic_penalty": false
+      }
+    },
+    {
+      "id": "contradiction",
+      "input": {
+        "previous_demonstration": true,
+        "later_eligible_error": true
+      },
+      "expected": {
+        "summary": "needs_verification",
+        "history_preserved": true,
+        "stage_days": 1
+      }
+    },
+    {
+      "id": "abandoned-support",
+      "input": {
+        "solution_opened": true,
+        "response_submitted": false
+      },
+      "expected": {
+        "exposure_persisted": true,
+        "attempt_created": false
+      }
+    },
+    {
+      "id": "budget",
+      "input": {
+        "budget_minutes": 4,
+        "candidate_costs": [
+          3,
+          3,
+          1
+        ]
+      },
+      "expected": {
+        "selected_indexes": [
+          0,
+          2
+        ],
+        "deferred_indexes": [
+          1
+        ]
+      }
+    }
+  ]
+}

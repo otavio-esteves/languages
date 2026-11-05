@@ -1,0 +1,373 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "$id": "https://idiomas.local/contracts/content-package.schema.json",
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "minimum_reader_version": {
+      "const": "1.0.0"
+    },
+    "status": {
+      "enum": [
+        "draft",
+        "reviewed",
+        "published"
+      ]
+    },
+    "purpose": {
+      "enum": [
+        "training",
+        "evaluation_example"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "language_pair": {
+      "const": "pt-BR_en"
+    },
+    "capability_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "prerequisite_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "targets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "expression",
+          "meaning",
+          "rationale"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expression": {
+            "type": "string",
+            "minLength": 1
+          },
+          "meaning": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rationale": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "author_type",
+        "license",
+        "reviewer",
+        "reviewed_at"
+      ],
+      "properties": {
+        "author_type": {
+          "enum": [
+            "ai_assisted_draft",
+            "human_authored",
+            "human_reviewed_ai_draft"
+          ]
+        },
+        "license": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reviewer": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reviewed_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      }
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "script",
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "const": "audio"
+          },
+          "status": {
+            "enum": [
+              "planned",
+              "ready"
+            ]
+          },
+          "script": {
+            "type": "string",
+            "minLength": 1
+          },
+          "path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sha256": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "ready"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "rubric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "dimensions"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "dimensions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "essential",
+              "criterion"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "essential": {
+                "type": "boolean"
+              },
+              "criterion": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "activities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "type",
+          "modality",
+          "prompt",
+          "target_ids",
+          "supports",
+          "content",
+          "expected",
+          "feedback"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "enum": [
+              "purpose",
+              "dialogue",
+              "explanation",
+              "information_question",
+              "written_recall",
+              "recorded_speech",
+              "communicative_task",
+              "summary"
+            ]
+          },
+          "modality": {
+            "type": "string",
+            "enum": [
+              "reading",
+              "listening",
+              "writing",
+              "speaking"
+            ]
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "supports": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "kind",
+                "content",
+                "affected_modalities",
+                "reveals_answer"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "kind": {
+                  "enum": [
+                    "transcript",
+                    "hint",
+                    "model",
+                    "solution"
+                  ]
+                },
+                "content": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "affected_modalities": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "reading",
+                      "listening",
+                      "writing",
+                      "speaking"
+                    ]
+                  },
+                  "minItems": 1
+                },
+                "reveals_answer": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "content": {
+            "type": "object"
+          },
+          "expected": {
+            "type": "object"
+          },
+          "feedback": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "minItems": 1
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "version",
+    "minimum_reader_version",
+    "status",
+    "purpose",
+    "title",
+    "language_pair",
+    "capability_ids",
+    "prerequisite_ids",
+    "targets",
+    "provenance",
+    "assets",
+    "rubric",
+    "activities"
+  ]
+}

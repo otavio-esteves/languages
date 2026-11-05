@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "$id": "https://idiomas.local/contracts/exposure-event.schema.json",
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "session_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "device_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "local_sequence": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "time_quality": {
+      "enum": [
+        "trusted",
+        "uncertain"
+      ]
+    },
+    "activity_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "package_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "package_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "target_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "support_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "kind": {
+      "enum": [
+        "model",
+        "solution",
+        "transcript",
+        "hint",
+        "training_use"
+      ]
+    },
+    "affected_modalities": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "reading",
+          "listening",
+          "writing",
+          "speaking"
+        ]
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "reveals_answer": {
+      "type": "boolean"
+    },
+    "package_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "session_id",
+    "device_id",
+    "local_sequence",
+    "occurred_at",
+    "time_quality",
+    "activity_id",
+    "package_id",
+    "package_version",
+    "target_ids",
+    "support_id",
+    "kind",
+    "affected_modalities",
+    "reveals_answer",
+    "package_hash"
+  ]
+}

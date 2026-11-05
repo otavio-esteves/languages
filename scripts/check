@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+TASK_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$TASK_ROOT"
+scripts/compose run --rm app vendor/bin/pint --test
+scripts/compose run --rm app php artisan test
+scripts/compose run --rm --no-deps node npm run typecheck
+scripts/compose run --rm --no-deps node npm run build
+(cd apps/android && ./gradlew testDebugUnitTest assembleDebug lintDebug)

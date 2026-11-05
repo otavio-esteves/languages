@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0.0",
+  "id": "00000000-0000-4000-8000-000000000005",
+  "attempt_id": "00000000-0000-4000-8000-000000000001",
+  "capability_id": "request-drink",
+  "target_ids": [
+    "request-drink-polite"
+  ],
+  "modality": "writing",
+  "source": "self_report",
+  "rubric_id": "drink-request",
+  "rubric_version": 1,
+  "policy_version": "learning-policy-v0",
+  "assessed_at": "2026-11-04T12:01:00Z",
+  "technical_status": "valid",
+  "independent": false,
+  "dimensions": [
+    {
+      "id": "item-and-size",
+      "result": "not_observed",
+      "reason": "Fixture sintética de autoavaliação; não promove capacidade."
+    }
+  ],
+  "supersedes_id": null
+}
