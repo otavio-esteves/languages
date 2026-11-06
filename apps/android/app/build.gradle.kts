@@ -23,7 +23,13 @@ android {
     }
     buildFeatures { compose = true; buildConfig = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
-    testOptions { unitTests.all { it.systemProperty("contracts.dir", rootProject.file("../../contracts").absolutePath) } }
+    testOptions {
+        unitTests.all {
+            it.systemProperty("contracts.dir", rootProject.file("../../contracts").absolutePath)
+            it.inputs.dir(rootProject.file("../../contracts"))
+            it.inputs.dir(rootProject.file("../../content/pt-BR_en/missions"))
+        }
+    }
 }
 kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) } }
 ksp { arg("room.schemaLocation", "$projectDir/schemas") }

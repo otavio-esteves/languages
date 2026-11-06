@@ -1,152 +1,158 @@
 package br.com.idiomas
 
-import android.Manifest
-import android.media.MediaRecorder
-import android.os.Build
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.media3.common.MediaItem
-import androidx.media3.exoplayer.ExoPlayer
 import br.com.idiomas.data.*
-import java.io.File
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 
-@Composable fun LocalAudio(path: String, autoplay: Boolean = false, requestId: Int = 0, allowReplay: Boolean = true, onFailure: ()->Unit = {}) {
-    val context=LocalContext.current
-    val lifecycle=LocalLifecycleOwner.current.lifecycle
-    val failureCallback by rememberUpdatedState(onFailure)
-    var playbackIssue by remember(path) { mutableStateOf(false) }
-    val player=remember(path) { ExoPlayer.Builder(context).build().apply { setMediaItem(MediaItem.fromUri(android.net.Uri.fromFile(File(path))));prepare() } }
-    LaunchedEffect(path,autoplay,requestId) { if(autoplay) { player.seekTo(0);player.play() } }
-    DisposableEffect(player,lifecycle) {
-        val observer=LifecycleEventObserver { _,event -> if(event==Lifecycle.Event.ON_STOP) player.pause() }
-        val listener=object:androidx.media3.common.Player.Listener { override fun onPlayerError(error:androidx.media3.common.PlaybackException) { playbackIssue=true;failureCallback() } }
-        player.addListener(listener)
-        lifecycle.addObserver(observer)
-        onDispose { lifecycle.removeObserver(observer);player.removeListener(listener);player.release() }
-    }
-    if(playbackIssue) Text("Não foi possível reproduzir o áudio. Nenhuma capacidade foi avaliada.")
-    Row(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-        if(allowReplay) OutlinedButton(onClick={ player.seekTo(0);player.play() }) { Text("Ouvir") }
-        TextButton(onClick={player.pause()}) { Text("Pausar") }
-    }
-}
-
-@Composable private fun VoiceRecorder(vm: PracticeViewModel, value: OpenPractice, sessionKey: String, savedPath: String?) {
-    val context=LocalContext.current
-    val lifecycle=LocalLifecycleOwner.current.lifecycle
-    var recorder by remember(sessionKey) { mutableStateOf<MediaRecorder?>(null) }
-    var recording by remember(sessionKey) { mutableStateOf(false) }
-    var output by remember(sessionKey) { mutableStateOf<File?>(null) }
-    var permissionDenied by remember(sessionKey) { mutableStateOf(false) }
-    fun stop() {
-        val current=recorder ?: return
-        recorder=null;recording=false
-        try { current.stop(); output?.takeIf { it.exists() && it.length()>0 }?.let { vm.recorded(value,it) } ?: vm.recordingError(value) }
-        catch(_: Exception) { output?.delete();vm.recordingError(value) }
-        finally { current.release() }
-    }
-    val request=rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        permissionDenied=!granted
-        if(granted) {
-            var current:MediaRecorder?=null
-            try {
-                val file=vm.recordingFile(value) ?: return@rememberLauncherForActivityResult
-                @Suppress("DEPRECATION")
-                val created=if(Build.VERSION.SDK_INT>=31) MediaRecorder(context) else MediaRecorder()
-                current=created
-                created.setAudioSource(MediaRecorder.AudioSource.MIC)
-                created.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-                created.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-                created.setOutputFile(file.absolutePath)
-                created.prepare();created.start();output=file;recorder=created;recording=true
-            } catch(_: Exception) { current?.release();vm.recordingError(value) }
+@Composable
+fun PracticeScreen(vm: PracticeViewModel, state: PracticeScreenState, pending: Int) {
+    val value = state.open ?: return
+    val activity = value.document.activities[value.session.cursor]
+    val phases = remember(value.installed.hash) { value.document.phases() }
+    val phase = phases.first { it.id == activity.phaseId() }
+    var answer by remember(value.session.id, value.session.cursor, value.session.answeredIndex) { mutableStateOf(value.session.draft) }
+    var selected by remember(value.session.id, value.session.cursor, value.session.answeredIndex) { mutableStateOf<String?>(null) }
+    val answered = value.session.answeredIndex == value.session.cursor
+    val meanings = remember(value.installed.hash, activity.id) { activity.wordMeanings() }
+    var selectedMeaning by remember(value.session.id, value.session.cursor) { mutableStateOf<Pair<String, WordMeaning>?>(null) }
+    val lookup: (String, WordMeaning) -> Unit = { word, meaning ->
+        if (!state.busy) {
+            selectedMeaning = word to meaning
+            if (meaning.supportId !in state.revealed) vm.support(meaning.supportId)
         }
     }
-    DisposableEffect(sessionKey,lifecycle) {
-        val observer=LifecycleEventObserver { _,event -> if(event==Lifecycle.Event.ON_STOP) stop() }
-        lifecycle.addObserver(observer)
-        onDispose { lifecycle.removeObserver(observer);stop() }
+    selectedMeaning?.takeIf { it.second.supportId in state.revealed }?.let { (word, meaning) ->
+        AlertDialog(onDismissRequest = { selectedMeaning = null }, title = { Text(word) }, text = { Text(meaning.meaning) }, confirmButton = { TextButton(onClick = { selectedMeaning = null }) { Text("Fechar") } })
     }
-    if(recording) {
-        Text("Gravando sua voz…",color=MaterialTheme.colorScheme.error)
-        Button(onClick={stop()}) { Text("Parar gravação") }
-    } else {
-        OutlinedButton(onClick={request.launch(Manifest.permission.RECORD_AUDIO)}) { Text(if(savedPath==null) "Gravar minha voz" else "Gravar novamente") }
-    }
-    if(permissionDenied) Text("Microfone indisponível. Você pode continuar sem avaliação oral.")
-    if(savedPath!=null && File(savedPath).exists()) LocalAudio(savedPath)
-    Text("Sua gravação fica neste aparelho. Nenhum áudio será enviado.",style=MaterialTheme.typography.bodySmall)
-}
-
-@Composable fun PracticeScreen(vm: PracticeViewModel,state: PracticeScreenState,pending:Int) {
-    val value=state.open ?: return
-    val activity=value.document.activities[value.session.cursor]
-    var answer by remember(value.session.id,value.session.cursor,value.session.answeredIndex) { mutableStateOf(value.session.draft) }
-    val answered=value.session.answeredIndex==value.session.cursor
-    val listeningIssue=value.events.any { event -> if(event.kind!="attempt")false else {val payload=kotlinx.serialization.json.Json.parseToJsonElement(event.payload).jsonObject;payload.text("modality")=="listening" && payload.text("technical_status")!="valid"} }
-    LazyColumn(modifier=Modifier.fillMaxSize().padding(24.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) {
-        item { TextButton(onClick=vm::exit,enabled=!state.busy) { Text("Voltar às missões") } }
-        item { Text(value.document.title,style=MaterialTheme.typography.headlineSmall) }
-        if(value.installed.preview) item { Card { Text("Prévia editorial · material em revisão. Esta sessão não confirma capacidades.",Modifier.padding(16.dp)) } }
-        item { Text("Etapa ${value.session.cursor+1} de ${value.document.activities.size}",style=MaterialTheme.typography.labelLarge) }
-        item { Text(activity.prompt,style=MaterialTheme.typography.titleLarge) }
-        if(activity.type=="summary" || value.session.completed) {
-            item { Text("Você registrou ${value.events.count { it.kind=="attempt" }} tentativas e ${value.events.count { it.kind=="exposure" }} exposições ou apoios.") }
-            item { Text("A prática ficou salva. Produções abertas permanecem sem avaliação independente; retenção posterior ainda não foi verificada.") }
-            item { Text(if(pending==0) "Sem registros aguardando envio." else "$pending registros aguardando envio. Você pode encerrar agora.") }
-            if(value.events.any { it.syncState=="blocked" }) item { Text("Alguns registros não foram aceitos. A prática permanece salva neste aparelho.") }
-            item { Button(onClick={vm.next()},enabled=!state.busy && !value.session.completed) { Text("Encerrar sessão") } }
+    val scroll = rememberLazyListState()
+    BackHandler { if (!state.busy) { if (state.trail) vm.exit() else vm.showTrail() } }
+    LaunchedEffect(value.session.id, value.session.cursor, state.trail) { scroll.scrollToItem(0) }
+    LazyColumn(state = scroll, modifier = Modifier.fillMaxSize().imePadding(), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(22.dp)) {
+        if (!state.trail) item {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                BrandMark()
+                TextButton(onClick = { if (state.trail) vm.exit() else vm.showTrail() }, enabled = !state.busy) { Text(if (state.trail) "Voltar" else "Trilha") }
+            }
+        }
+        if (!value.document.isTextOnly()) {
+            item { Text("Continue na trilha de texto.", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold) }
+            item { Text("Esta versão foi guardada no histórico. Baixe a versão atual na prévia editorial.") }
+            item { JourneyButton("Voltar às missões", vm::exit, !state.busy, Modifier.fillMaxWidth()) }
+        } else if (state.trail) {
+            item { LearningTrail(phases, value.session.cursor, value.session.completed, state.busy, vm::begin) }
+        } else if (value.session.completed) {
+            item { Text("Percurso concluído.", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold) }
+            item { Text("Você chegou ao fim desta prática de texto.") }
+            item { JourneyButton("Ver meu percurso", vm::showTrail, !state.busy, Modifier.fillMaxWidth()) }
         } else {
-            if(activity.content.text("asset_id")!=null) item { Button(onClick=vm::playModel,enabled=!state.busy) { Text(if(activity.type=="dialogue") "Ouvir o diálogo" else "Ouvir o atendente") } }
-            state.playPath?.let { path -> item { LocalAudio(path,true,state.playNonce,false) { vm.recordingError(value) } } }
-            if(activity.type=="explanation") {
-                items(activity.content.strings("examples").size) { index -> Text(activity.content.strings("examples")[index]) }
-                activity.content.text("pt_BR_note")?.let { note -> item { Text(note) } }
-            }
-            for(support in activity.supports) item {
-                if(support.id in state.revealed) Text(support.content)
-                else OutlinedButton(onClick={vm.support(support.id)},enabled=!state.busy) { Text(if(support.kind=="transcript") "Ver transcrição" else "Consultar apoio") }
-            }
-            if(activity.type=="information_question" && listeningIssue && !answered) item { Text("O áudio apresentou uma falha. Você pode continuar sem avaliação auditiva.");TextButton(onClick={vm.next()},enabled=!state.busy) {Text("Continuar sem avaliação auditiva")} }
-            if(activity.type=="information_question" && !answered) {
-                for(option in activity.content.strings("options")) item { OutlinedButton(onClick={vm.answer(option)},enabled=!state.busy,modifier=Modifier.fillMaxWidth()) { Text(option) } }
-            }
-            if(activity.type=="written_recall" && !answered) {
-                item { OutlinedTextField(answer,{answer=it;vm.saveDraft(it)},label={Text("Sua resposta")},modifier=Modifier.fillMaxWidth(),minLines=3) }
-                item { Button(onClick={vm.answer(answer)},enabled=!state.busy && answer.isNotBlank()) { Text("Registrar resposta") } }
-            }
-            if(activity.type in listOf("recorded_speech","communicative_task") && !answered) {
-                item { VoiceRecorder(vm,value,"${value.session.id}:${value.session.cursor}",value.session.recordingPath) }
-                item { Button(onClick={vm.answer(null,value.session.recordingPath)},enabled=!state.busy && value.session.recordingPath!=null) { Text("Registrar prática oral") } }
-                item { TextButton(onClick={vm.next()},enabled=!state.busy) { Text("Agora não posso falar · continuar") } }
-            }
-            if(answered) {
-                val latest=value.events.lastOrNull { it.kind=="attempt" }
-                val data=latest?.payload?.let { kotlinx.serialization.json.Json.parseToJsonElement(it).jsonObject }
-                val feedback=when {
-                    data?.text("technical_status")!="valid" -> "Falha técnica registrada. Sua capacidade não foi reduzida."
-                    activity.type=="information_question" && listeningIssue -> "Falha de reprodução nesta sessão. Sua compreensão auditiva não foi avaliada."
-                    activity.type=="information_question" -> if(value.session.draft in activity.expected.strings("accepted")) "Você identificou a informação. Este acerto não confirma retenção posterior." else "Ouça novamente e identifique a escolha comunicada. Você pode tentar outra vez ou continuar."
-                    else -> "Prática registrada. Uma resposta alternativa válida precisa ser julgada pelo sentido; a produção ainda não foi avaliada."
+            item { SessionProgress(phase.lessonIndex(value.session.cursor).coerceAtLeast(0), phase.lessons().size) }
+            item { Text("DIA ${phases.indexOf(phase) + 1} · ${phase.title}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            item { Text(activity.prompt, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold, modifier = Modifier.semantics { heading() }) }
+            activity.content["messages"]?.jsonArray?.let { turns ->
+                for ((position, turn) in turns.withIndex()) {
+                    item {
+                        Box(Modifier.fillMaxWidth(), contentAlignment = if (position % 2 == 0) Alignment.CenterEnd else Alignment.CenterStart) {
+                            Surface(shape = MaterialTheme.shapes.medium, color = if (position % 2 == 0) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant) {
+                                Column(Modifier.widthIn(max = 285.dp).padding(18.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Text(turn.jsonObject.text("speaker") ?: "", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    GlossaryText(turn.jsonObject.text("text") ?: "", meanings, lookup, style = MaterialTheme.typography.bodyLarge)
+                                }
+                            }
+                        }
+                    }
                 }
-                item { Text(feedback) }
-                item { Row { TextButton(onClick={vm.next(true)},enabled=!state.busy) { Text("Nova tentativa") };Button(onClick={vm.next()},enabled=!state.busy) { Text("Continuar") } } }
             }
-            if(activity.type in listOf("purpose","dialogue","explanation")) item { Button(onClick=vm::passive,enabled=!state.busy) { Text("Continuar") } }
+            activity.content["vocabulary"]?.jsonArray?.let { words ->
+                for (word in words) item {
+                    Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        GlossaryText(word.jsonObject.text("word") ?: "", meanings, lookup, style = MaterialTheme.typography.titleLarge)
+                        Text(word.jsonObject.text("meaning") ?: "", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                }
+            }
+            activity.content.text("study_text")?.let { text -> item { Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.small) { GlossaryText(text, meanings, lookup, Modifier.padding(20.dp), MaterialTheme.typography.titleMedium) } } }
+            activity.content.text("pt_BR_note")?.let { note -> item { Text(note, color = MaterialTheme.colorScheme.onSurfaceVariant) } }
+            for (example in activity.content.strings("examples")) item {
+                Column(verticalArrangement = Arrangement.spacedBy(18.dp)) { GlossaryText(example, meanings, lookup, style = MaterialTheme.typography.titleMedium); HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant) }
+            }
+            for (support in activity.supports.filter { !it.id.startsWith("gloss-") && it.kind != "solution" }) item {
+                if (support.id in state.revealed) Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.small) { Text(support.content, Modifier.padding(18.dp), style = MaterialTheme.typography.bodyMedium) }
+                else TextButton(onClick = { vm.support(support.id) }, enabled = !state.busy) { Text("Consultar apoio") }
+            }
+            if (activity.type == "information_question" && !answered) {
+                item {
+                    Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        for (option in activity.content.strings("options")) {
+                            val chosen = selected == option
+                            Surface(shape = MaterialTheme.shapes.small, color = if (chosen) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface, border = BorderStroke(2.dp, if (chosen) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)) {
+                                Row(Modifier.fillMaxWidth().selectable(selected = chosen, enabled = !state.busy, role = Role.RadioButton, onClick = { selected = option }).padding(18.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    RadioButton(chosen, onClick = null)
+                                    if (activity.content.text("options_language") == "en") GlossaryText(option, meanings, lookup, style = MaterialTheme.typography.bodyLarge)
+                                    else Text(option, style = MaterialTheme.typography.bodyLarge)
+                                }
+                            }
+                        }
+                    }
+                }
+                item { JourneyButton("Conferir", { selected?.let { vm.answer(it) } }, !state.busy && selected != null, Modifier.fillMaxWidth()) }
+            }
+            if (activity.type in listOf("written_recall", "communicative_task") && !answered) {
+                item { OutlinedTextField(answer, { answer = it; vm.saveDraft(it) }, label = { Text("Sua mensagem") }, placeholder = { Text("Escreva em inglês…") }, modifier = Modifier.fillMaxWidth(), minLines = 5) }
+                item { JourneyButton("Registrar resposta", { vm.answer(answer) }, !state.busy && answer.isNotBlank(), Modifier.fillMaxWidth()) }
+            }
+            if (answered) {
+                val latest = value.events.lastOrNull { it.kind == "attempt" && Json.parseToJsonElement(it.payload).jsonObject.text("activity_id") == activity.id }
+                val data = latest?.payload?.let { Json.parseToJsonElement(it).jsonObject }
+                val technicalIssue = data?.text("technical_status") != "valid"
+                val comparison = if (technicalIssue) TextComparison("technical_issue", "Falha técnica registrada. Nenhuma conclusão linguística foi feita.") else compareAnswer(activity, value.session.draft)
+                item {
+                    Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.small) {
+                        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Text(when (comparison.outcome) { "correct" -> "Resposta aceita"; "incorrect" -> "Vamos ajustar"; else -> "Vamos conferir" }, fontWeight = FontWeight.SemiBold)
+                            Text(comparison.message)
+                            Text("Você escreveu:", style = MaterialTheme.typography.labelSmall)
+                            GlossaryText(value.session.draft, meanings, lookup)
+                            comparison.example?.let { example ->
+                                Text("Um exemplo possível", style = MaterialTheme.typography.labelSmall)
+                                GlossaryText(example, meanings, lookup, style = MaterialTheme.typography.titleMedium)
+                            }
+                            if (data?.strings("support_event_ids")?.isNotEmpty() == true) Text("O apoio consultado ficou registrado.", style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+                item { JourneyButton("Continuar", { vm.next() }, !state.busy, Modifier.fillMaxWidth()) }
+                item { TextButton(onClick = { vm.next(true) }, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) { Text("Tentar de novo") } }
+            }
+            if (activity.type in listOf("purpose", "dialogue", "explanation")) item { JourneyButton("Continuar", vm::passive, !state.busy, Modifier.fillMaxWidth()) }
+            if (activity.type == "summary") {
+                item { Text("Você praticou palavras, pedidos curtos e frases com contrações. As respostas previstas receberam correção automática de treino. Formas não reconhecidas continuam sem confirmação independente.") }
+                item { Text("Esta sessão não verifica escuta, fala ou retenção posterior.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                item { JourneyButton("Concluir prática", { vm.next() }, !state.busy, Modifier.fillMaxWidth()) }
+            }
         }
-        item { OutlinedButton(onClick=vm::sync,enabled=!state.busy) { Text("Sincronizar registros") } }
-        if(state.busy) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
-        state.message?.let { message -> item { Text(message) } }
+        if (!state.trail) item {
+            if (pending > 0) Text("$pending registros aguardam envio. Sua prática está salva neste aparelho.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            TextButton(onClick = vm::sync, enabled = !state.busy) { Text("Sincronizar") }
+        }
+        if (state.busy && !state.trail) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
+        state.message?.let { message -> item { Text(message, color = MaterialTheme.colorScheme.onSurfaceVariant) } }
     }
 }

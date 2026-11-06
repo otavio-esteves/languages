@@ -9,7 +9,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-data class PracticeScreenState(val busy: Boolean = false, val message: String? = null, val previews: List<CatalogItem> = emptyList(), val open: OpenPractice? = null, val revealed: Set<String> = emptySet(), val playPath: String? = null, val playNonce: Int = 0)
+data class PracticeScreenState(val busy: Boolean = false, val message: String? = null, val previews: List<CatalogItem> = emptyList(), val open: OpenPractice? = null, val revealed: Set<String> = emptySet(), val playPath: String? = null, val playNonce: Int = 0, val trail: Boolean = true)
 class PracticeViewModel(private val practice: PracticeRepository, private val catalog: CatalogRepository) : ViewModel() {
     private val mutable = MutableStateFlow(PracticeScreenState())
     val screen = mutable.asStateFlow()
@@ -31,10 +31,24 @@ class PracticeViewModel(private val practice: PracticeRepository, private val ca
     fun previews() = action { identity -> val values=practice.previews();publish(identity) { it.copy(previews=values) } }
     fun download(item: CatalogItem, preview: Boolean) = action { identity ->
         val installed=practice.download(item,preview);val open=practice.open(installed.hash)
-        publish(identity) { it.copy(open=open,revealed=emptySet()) }
+        publish(identity) { it.copy(open=open,revealed=emptySet(),trail=true) }
     }
-    fun open(installed: InstalledPackage) = action { identity -> val open=practice.open(installed.hash);publish(identity) { it.copy(open=open,revealed=emptySet()) } }
-    fun exit() { mutable.update { it.copy(open=null,revealed=emptySet(),playPath=null) } }
+    fun open(installed: InstalledPackage) = action { identity -> val open=practice.open(installed.hash);publish(identity) { it.copy(open=open,revealed=emptySet(),trail=true) } }
+    fun exit() { mutable.update { it.copy(open=null,revealed=emptySet(),playPath=null,trail=true) } }
+    fun showTrail() { mutable.update { it.copy(trail=true,playPath=null) } }
+    fun begin() = action { identity ->
+        val value=mutable.value.open ?: return@action
+        check(value.document.isTextOnly())
+        val activity=value.document.activities[value.session.cursor]
+        val updated=if(activity.type in listOf("dialogue","explanation")) practice.exposure(value) else value
+        publish(identity) { it.copy(open=updated,trail=false) }
+    }
+    private suspend fun presentNext(previous:OpenPractice,next:OpenPractice): Pair<OpenPractice,Boolean> {
+        val oldPhase=previous.document.phases().first { it.id==previous.document.activities[previous.session.cursor].phaseId() }
+        val changed=next.session.completed || oldPhase.id!=next.document.activities[next.session.cursor].phaseId() || oldPhase.lessonIndex(previous.session.cursor)!=oldPhase.lessonIndex(next.session.cursor)
+        val shown=if(!changed && next.document.activities[next.session.cursor].type=="dialogue") practice.exposure(next) else next
+        return shown to changed
+    }
     fun support(id:String) = action { identity ->
         val value=mutable.value.open ?: return@action
         val support=value.document.activities[value.session.cursor].supports.single { it.id==id }
@@ -47,8 +61,10 @@ class PracticeViewModel(private val practice: PracticeRepository, private val ca
     }
     fun passive() = action { identity ->
         val value=mutable.value.open ?: return@action
-        val exposed=practice.exposure(value);val next=practice.advance(exposed)
-        publish(identity) { it.copy(open=next,revealed=emptySet()) }
+        val current=value.document.activities[value.session.cursor]
+        val exposed=if(current.type=="purpose") practice.exposure(value) else value
+        val (next,trail)=presentNext(value,practice.advance(exposed))
+        publish(identity) { it.copy(open=next,revealed=emptySet(),trail=trail) }
     }
     fun answer(text:String?,path:String?=null,technical:String="valid") = action { identity ->
         val value=mutable.value.open ?: return@action
@@ -56,7 +72,7 @@ class PracticeViewModel(private val practice: PracticeRepository, private val ca
     }
     fun next(retry:Boolean=false) = action { identity ->
         val value=mutable.value.open ?: return@action
-        val updated=practice.advance(value,retry);publish(identity) { it.copy(open=updated,revealed=emptySet()) }
+        val (updated,trail)=presentNext(value,practice.advance(value,retry));publish(identity) { it.copy(open=updated,revealed=emptySet(),trail=trail) }
     }
     fun saveDraft(text:String) { val value=mutable.value.open ?: return;viewModelScope.launch { practice.draft(value,text) } }
     fun recordingFile(value:OpenPractice):File?=if(catalog.session.value?.account?.id==value.session.ownerId && mutable.value.open?.session?.id==value.session.id) practice.recordingFile(value) else null

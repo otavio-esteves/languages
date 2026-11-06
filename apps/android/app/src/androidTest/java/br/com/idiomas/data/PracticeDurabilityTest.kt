@@ -28,8 +28,8 @@ class PracticeDurabilityTest {
         override fun getSharedPreferences(name:String,mode:Int)=base.getSharedPreferences("fixture-$tag-$name",mode)
         override fun deleteSharedPreferences(name:String)=base.deleteSharedPreferences("fixture-$tag-$name")
     } }
-    private class FakeApi : LearningApi,PracticeApi {
-        val raw="""{"schema_version":"1.0.0","id":"synthetic","version":1,"minimum_reader_version":"1.0.0","title":"Synthetic test","status":"draft","assets":[],"activities":[{"id":"intro","type":"purpose","modality":"reading","prompt":"Test","target_ids":["synthetic-target"],"supports":[],"content":{},"expected":{},"feedback":"Test"},{"id":"write","type":"written_recall","modality":"writing","prompt":"Test","target_ids":["synthetic-target"],"supports":[],"content":{},"expected":{},"feedback":"Test"}]}""".toByteArray()
+    private class FakeApi(private val rawOverride: ByteArray? = null) : LearningApi,PracticeApi {
+        val raw=rawOverride ?: """{"schema_version":"1.0.0","id":"synthetic","version":1,"minimum_reader_version":"1.0.0","title":"Synthetic test","status":"draft","assets":[],"activities":[{"id":"intro","type":"purpose","modality":"reading","prompt":"Test","target_ids":["synthetic-target"],"supports":[],"content":{},"expected":{},"feedback":"Test"},{"id":"write","type":"written_recall","modality":"writing","prompt":"Test","target_ids":["synthetic-target"],"supports":[],"content":{},"expected":{},"feedback":"Test"}]}""".toByteArray()
         val hash=MessageDigest.getInstance("SHA-256").digest(raw).joinToString("") {"%02x".format(it)}
         val received=mutableSetOf<String>()
         var loseConfirmation=true
@@ -100,12 +100,60 @@ class PracticeDurabilityTest {
         }
     }
 
+    @Test fun correction_example_and_attempt_commit_together_and_only_support_later_attempts()=runBlocking {
+        val root=Json.parseToJsonElement(FakeApi().raw.toString(Charsets.UTF_8)).jsonObject.toMutableMap()
+        val activities=root["activities"]!!.jsonArray.toMutableList()
+        val writing=activities[1].jsonObject.toMutableMap()
+        writing["expected"]=buildJsonObject { put("comparison",buildJsonObject {
+            put("version","text-variants-v1");put("accepted",buildJsonArray {add("water")})
+            put("corrections",buildJsonArray {add(buildJsonObject {put("response","coffee");put("message","Outra bebida.")})})
+            put("example","water")
+        }) }
+        writing["supports"]=buildJsonArray {add(buildJsonObject {
+            put("id","comparison-example");put("kind","solution");put("content","water")
+            put("affected_modalities",buildJsonArray {add("writing")});put("reveals_answer",true)
+        })}
+        activities[1]=JsonObject(writing);root["activities"]=JsonArray(activities)
+        val api=FakeApi(JsonObject(root).toString().toByteArray())
+        val name="comparison-test-${UUID.randomUUID()}.db"
+        var database=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(MIGRATION_1_2).build()
+        val vault=MemorySessionVault()
+        var catalog=CatalogRepository(api,RoomCatalogCache(database.catalogDao()),vault)
+        var repo=PracticeRepository(context,database,catalog,api)
+        try {
+            catalog.login("first","synthetic")
+            val installed=repo.download(CatalogItem("synthetic",1,"Synthetic","pt-BR_en",listOf("synthetic-target")),true)
+            var open=repo.advance(repo.open(installed.hash))
+            database.openHelper.writableDatabase.execSQL("CREATE TRIGGER synthetic_example_failure BEFORE INSERT ON practice_events WHEN NEW.kind='exposure' BEGIN SELECT RAISE(ABORT,'synthetic interruption'); END")
+            try {repo.answer(open,"coffee");fail("Attempt and example must roll back together") } catch(_:android.database.sqlite.SQLiteException) {}
+            assertTrue(database.practiceDao().events(1,open.session.id).isEmpty())
+            assertEquals(-1,database.practiceDao().session(1,open.session.id)!!.answeredIndex)
+            database.openHelper.writableDatabase.execSQL("DROP TRIGGER synthetic_example_failure")
+            open=repo.answer(open,"coffee")
+            assertEquals(listOf("attempt","exposure"),open.events.map {it.kind})
+            assertTrue(Json.parseToJsonElement(open.events[0].payload).jsonObject.strings("support_event_ids").isEmpty())
+            val solutionId=open.events[1].id
+            val sessionId=open.session.id
+            database.close()
+            database=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(MIGRATION_1_2).build()
+            catalog=CatalogRepository(api,RoomCatalogCache(database.catalogDao()),vault)
+            repo=PracticeRepository(context,database,catalog,api)
+            open=repo.open(installed.hash)
+            assertEquals(sessionId,open.session.id);assertEquals(2,open.events.size)
+            open=repo.answer(repo.advance(open,true),"WATER!")
+            assertEquals(3,open.events.size)
+            val retry=Json.parseToJsonElement(open.events.last().payload).jsonObject
+            assertEquals(listOf(solutionId),retry.strings("support_event_ids"))
+            assertTrue(open.events.all {it.syncState=="pending"})
+        } finally { database.close();context.deleteDatabase(name);fixtureRoot.deleteRecursively();context.deleteSharedPreferences("practice-device") }
+    }
+
     @Test fun migration_from_v1_preserves_catalog()=runBlocking {
         val name="migration-test-${UUID.randomUUID()}.db"
         val old=context.openOrCreateDatabase(name,0,null)
         val expected=CatalogItem("preserved",1,"Preserved","pt-BR_en",listOf("capability"))
         old.execSQL("CREATE TABLE catalog (ownerId INTEGER NOT NULL, missionId TEXT NOT NULL, payload TEXT NOT NULL, PRIMARY KEY(ownerId,missionId))")
-        old.execSQL("INSERT INTO catalog VALUES(?,?,?)",arrayOf(1,"preserved",Json.encodeToString(expected)))
+        old.execSQL("INSERT INTO catalog VALUES(?,?,?)",arrayOf<Any>(1,"preserved",Json.encodeToString(expected)))
         old.version=1;old.close()
         val database=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(MIGRATION_1_2).build()
         try {assertEquals(listOf(expected),RoomCatalogCache(database.catalogDao()).observe(1).first());assertTrue(database.practiceDao().pending(1).isEmpty())}

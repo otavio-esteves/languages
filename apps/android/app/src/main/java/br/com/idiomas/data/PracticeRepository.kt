@@ -132,9 +132,18 @@ class PracticeRepository(private val context: Context, private val database: Cat
             append(value,"attempt",buildJsonObject {
                 put("modality",activity.modality);put("support_event_ids",JsonArray(supports.map { JsonPrimitive(it.id) }))
                 put("technical_status",technical);put("response",response?.take(10000));put("audio_reference",if(audioPath==null) null else "local-only:${UUID.randomUUID()}")
-                put("assessment_status",if(activity.type == "information_question") "pending" else "not_requested")
+                put("assessment_status",if(activity.type == "information_question" || activity.expected["comparison"] != null) "pending" else "not_requested")
             })
             dao.saveSession(session.copy(draft=response ?: "",recordingPath=audioPath,answeredIndex=session.cursor))
+            // A displayed correction is a later exposure, never prior support for this attempt.
+            if (technical == "valid" && compareAnswer(activity, response).example != null) {
+                val solution = activity.supports.firstOrNull { it.id == "comparison-example" && it.kind == "solution" }
+                if (solution != null) append(value, "exposure", buildJsonObject {
+                    put("support_id", solution.id); put("kind", solution.kind)
+                    put("affected_modalities", JsonArray(solution.affected_modalities.map(::JsonPrimitive)))
+                    put("reveals_answer", solution.reveals_answer)
+                })
+            }
         }
         scheduleSync(value.session.ownerId)
         reload(value)
@@ -147,7 +156,7 @@ class PracticeRepository(private val context: Context, private val database: Cat
         val next=if(retry) session.copy(draft="",answeredIndex=-1,recordingPath=null) else if(last) session.copy(completed=true) else session.copy(cursor=session.cursor+1,draft="",answeredIndex=-1,recordingPath=null)
         database.withTransaction {
             dao.saveSession(next)
-            if(!retry && !next.completed && value.document.activities[next.cursor].type=="explanation") {
+            if(!retry && !next.completed && value.document.activities[next.cursor].type=="explanation" && value.document.activities[next.cursor].phaseId()==value.document.activities[session.cursor].phaseId() && value.document.phases().first { it.id==value.document.activities[session.cursor].phaseId() }.let { it.lessonIndex(session.cursor)==it.lessonIndex(next.cursor) }) {
                 val target=value.document.activities[next.cursor]
                 append(value.copy(session=next),"exposure",buildJsonObject {
                     put("support_id","activity-${target.id}");put("kind","training_use");put("affected_modalities",JsonArray(listOf(JsonPrimitive(target.modality))));put("reveals_answer",false)
