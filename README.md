@@ -2,7 +2,7 @@
 
 Fundação de um aplicativo de inglês para adultos falantes de português brasileiro. Um monorepo reúne Laravel/API e Vue em `apps/platform`, Android/Kotlin em `apps/android` e contratos compartilhados em `contracts`. Cada aplicação tem build e release independentes.
 
-A fundação F0/F1 evoluiu para a implementação técnica de F2: uma missão com áudio, escrita, fala local, apoios, retomada e sincronização básica no Android. O painel possui uma prévia interativa para revisão. O catálogo de alunos permanece vazio enquanto o conteúdo estiver em rascunho. Revisão humana, teste formativo e avaliação humana operacional ainda estão pendentes; F2 não está pedagogicamente concluída.
+O foco atual é uma interface minimalista e uma trilha de leitura e escrita por dias, exibindo apenas o dia atual: Palavras, Pedidos curtos e Frases e contrações. A missão de texto está na versão 3, em rascunho, com retomada e sincronização no Android e prévia editorial na web. A escrita possui comparação automática com variantes previstas; formas desconhecidas permanecem sem confirmação. Significados do vocabulário podem ser consultados por mouse, teclado ou toque e ficam registrados como apoio. Áudio e voz ficam para uma etapa posterior; os contratos e materiais da implementação anterior foram preservados. A trilha representa o percurso das atividades, sem declarar domínio. O catálogo dos alunos continua vazio até a revisão e publicação. Revisão humana, teste formativo e avaliação humana operacional permanecem pendentes; F2 não está pedagogicamente concluída.
 
 ## Executar a plataforma local
 
@@ -20,7 +20,7 @@ Criar uma conta explicitamente, escolhendo nome, e-mail e senha nos prompts:
 scripts/compose run --rm app php artisan app:create-user --editor
 ```
 
-Omitir `--editor` cria uma conta sem acesso à prévia. Não há credenciais padrão. A conta com permissão editorial pode entrar em `/login` e consultar os rascunhos em `/editorial` e clicar em **Abrir prévia interativa**; a prévia não aprova nem publica conteúdo.
+Omitir `--editor` cria uma conta sem acesso à prévia. Não há credenciais padrão. A conta com permissão editorial pode entrar em `/login` e consultar os rascunhos em `/editorial` e selecionar o ponto atual da trilha; a prévia não aprova nem publica conteúdo.
 
 ```bash
 scripts/compose logs --tail=50 app
@@ -42,7 +42,7 @@ Se o Java padrão for apenas JRE, defina `JAVA_HOME` para um JDK completo antes 
 
 Entre com uma conta criada na plataforma. A tela lê o catálogo pela API, persiste-o com Room e observa o banco local. Cache é isolado por conta; falha de rede preserva o catálogo já baixado, erro 401 encerra a sessão e logout remove o cache daquela conta. O token é protegido pelo Android Keystore e recuperado após encerrar o processo; continua expirando em 24 horas no servidor. Após baixar um pacote, é possível praticar offline, retomar posição e resposta escrita e sincronizar depois. Logout preserva a prática e a fila daquela conta para uma nova entrada; outra conta não pode acessá-las. A exclusão local exige confirmação e descarta também os registros ainda não enviados.
 
-Editores podem baixar a prévia de treino na seção editorial do Android. O pacote e seus áudios são verificados por SHA-256 antes da ativação. Apoios são registrados antes da revelação; resposta, posição e pendência são persistidas numa única transação. A voz só é gravada após permissão explícita e permanece no armazenamento privado do aparelho; não há upload nem avaliação oral automática. A sincronização ocorre com rede disponível e sessão válida. Uma conta expirada precisa entrar novamente, sem perder a fila. O uso validado nesta fase é em um aparelho por pessoa.
+Editores podem baixar a trilha de texto na seção editorial do Android. O pacote atual não contém mídia e é verificado por SHA-256 antes da ativação. Apoios são registrados antes da revelação; resposta, posição e pendência são persistidas numa única transação. O fluxo atual trabalha apenas com leitura e escrita e não solicita microfone. Os registros anteriores permanecem separados por modalidade; não há upload nem avaliação oral automática. A sincronização ocorre com rede disponível e sessão válida. Uma conta expirada precisa entrar novamente, sem perder a fila. O uso validado nesta fase é em um aparelho por pessoa.
 
 ## Verificações
 
@@ -51,6 +51,7 @@ Após o bootstrap:
 ```bash
 scripts/compose run --rm app vendor/bin/pint --test
 scripts/compose run --rm app php artisan test
+scripts/compose run --rm --no-deps node npm run test:frontend
 scripts/compose run --rm --no-deps node npm run typecheck
 scripts/compose run --rm --no-deps node npm run build
 ```
@@ -68,6 +69,6 @@ scripts/compose run --rm --no-deps node npm run build
 - [Versões resolvidas](docs/decisions/versions.json)
 - [API implementada](contracts/openapi.yaml)
 
-JSON Schema 2020-12 descreve pacotes, tentativas, exposições, evidências e catálogo. `contracts/fixtures` contém apenas dados sintéticos. Os exemplos de política são especificação de aceite; o motor de revisão ainda não foi implementado. `content/pt-BR_en/missions` contém uma missão de treino e uma variante pública de avaliação, ambas rascunhos assistidos por IA; há áudio sintético local para prévia, com revisão linguística, inteligibilidade e direitos de publicação ainda pendentes. A variante pública não pode ser usada como instrumento reservado de pesquisa.
+JSON Schema 2020-12 descreve pacotes, tentativas, exposições, evidências e catálogo. `contracts/fixtures` contém apenas dados sintéticos. Os exemplos de política são especificação de aceite; o motor de revisão ainda não foi implementado. `content/pt-BR_en/missions` contém uma missão de treino e uma variante pública de avaliação, ambas rascunhos assistidos por IA; as versões anteriores preservam áudio sintético, adiado no fluxo atual, com revisão linguística, inteligibilidade e direitos de publicação ainda pendentes. A variante pública não pode ser usada como instrumento reservado de pesquisa.
 
 Não colocar dados pessoais, áudios de alunos, segredos, chaves de assinatura ou instrumentos reservados no repositório. A revisão humana e o teste formativo não bloqueiam a fundação técnica, mas precisam ocorrer antes de publicar conteúdo e concluir F2.
