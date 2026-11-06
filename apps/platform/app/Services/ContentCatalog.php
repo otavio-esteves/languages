@@ -45,6 +45,23 @@ class ContentCatalog
         $targets = array_column($package['targets'], 'id');
         $assets = array_column($package['assets'], 'id');
         foreach ($package['activities'] as $activity) {
+            $supportIds = array_column($activity['supports'], 'id');
+            if (count($supportIds) !== count(array_unique($supportIds))) {
+                throw new RuntimeException('Identificador de apoio duplicado.');
+            }
+            foreach ($activity['content']['glossary'] ?? [] as $entry) {
+                $support = collect($activity['supports'])->firstWhere('id', $entry['support_id']);
+                if (! $support || $support['kind'] !== 'hint' || $support['content'] !== $entry['meaning'] || ! in_array($activity['modality'], $support['affected_modalities'], true)) {
+                    throw new RuntimeException('Significado sem apoio correspondente na modalidade.');
+                }
+            }
+            if (isset($activity['expected']['comparison'])) {
+                $example = $activity['expected']['comparison']['example'];
+                $support = collect($activity['supports'])->firstWhere('id', 'comparison-example');
+                if ($activity['modality'] !== 'writing' || ! $support || $support['kind'] !== 'solution' || $support['content'] !== $example || ! $support['reveals_answer'] || ! in_array('writing', $support['affected_modalities'], true)) {
+                    throw new RuntimeException('Comparação escrita sem exposição do exemplo declarada.');
+                }
+            }
             if (array_diff($activity['target_ids'], $targets)) {
                 throw new RuntimeException('Alvo inexistente na atividade.');
             }
@@ -67,6 +84,21 @@ class ContentCatalog
                 throw new RuntimeException('Mídia publicada ausente ou inválida.');
             }
         }
+    }
+
+    public function textTraining(): array
+    {
+        $latest = [];
+        foreach ($this->packages() as $package) {
+            if ($package['purpose'] !== 'training' || $package['assets'] !== [] || array_diff(array_column($package['activities'], 'modality'), ['reading', 'writing'])) {
+                continue;
+            }
+            if (! isset($latest[$package['id']]) || $package['version'] > $latest[$package['id']]['version']) {
+                $latest[$package['id']] = $package;
+            }
+        }
+
+        return array_values($latest);
     }
 
     public function published(): array

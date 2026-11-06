@@ -1,7 +1,12 @@
 <script setup lang="ts">
-import { router, Link } from '@inertiajs/vue3';
-type Activity = { id: string; type: string; modality: string; prompt: string; content: Record<string, unknown>; expected: Record<string, unknown>; feedback: string };
-type Package = { id: string; title: string; version: number; status: string; purpose: string; provenance: { reviewer: string | null }; assets: { id: string; status: string; script: string }[]; rubric: { dimensions: { id: string; essential: boolean; criterion: string }[] }; activities: Activity[] };
+import { router } from '@inertiajs/vue3';
+import TrailMap from '../components/TrailMap.vue';
+import { phases, type Mission } from '../lib/textTrail';
+type Package = Mission & { progress: { day: number; cursor?: number; completed: boolean } };
 defineProps<{ packages: Package[] }>();
 </script>
-<template><main><header><div><p class="eyebrow">IDIOMAS · FUNDAÇÃO</p><h1>Prévia editorial</h1></div><button class="secondary" @click="router.post('/logout')">Sair</button></header><aside>Os rascunhos abaixo aguardam revisão humana. Não aparecem no catálogo de estudo. Esta prévia não publica nem aprova conteúdo.</aside><p v-if="packages.length === 0">Nenhum pacote encontrado.</p><article v-for="pkg in packages" :key="`${pkg.id}:${pkg.version}`"><div class="meta">{{ pkg.status }} · versão {{ pkg.version }} · {{ pkg.purpose }}</div><h2>{{ pkg.title }}</h2><Link v-if="pkg.purpose === 'training'" :href="`/editorial/practice/${pkg.id}/${pkg.version}`" class="preview-link">Abrir prévia interativa</Link><p>Revisor: {{ pkg.provenance.reviewer ?? 'pendente' }}</p><details><summary>Rubrica e critérios</summary><ul><li v-for="d in pkg.rubric.dimensions" :key="d.id">{{ d.criterion }} <strong v-if="d.essential">(essencial)</strong></li></ul></details><details><summary>Roteiros de áudio</summary><section v-for="asset in pkg.assets" :key="asset.id"><p>{{ asset.status }} · {{ asset.script }}</p></section></details><details v-for="a in pkg.activities" :key="a.id"><summary>{{ a.modality }} · {{ a.prompt }}</summary><p>{{ a.feedback }}</p><pre>{{ JSON.stringify({ content: a.content, expected: a.expected }, null, 2) }}</pre></details></article></main></template>
+<template>
+  <main class="day-only">
+    <TrailMap v-for="pkg in packages.slice(0, 1)" :key="`${pkg.id}:${pkg.version}`" :phases="phases(pkg)" :cursor="pkg.progress.cursor ?? (phases(pkg)[pkg.progress.day]?.steps[0].index || 0)" :finished="pkg.progress.completed" @start="router.visit(`/editorial/practice/${pkg.id}/${pkg.version}?start=1`)" />
+  </main>
+</template>

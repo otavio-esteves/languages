@@ -114,7 +114,7 @@ class FoundationTest extends TestCase
 
     public function test_only_editor_can_preview_drafts_and_preview_does_not_publish(): void
     {
-        $source = dirname(base_path(), 2).'/content/pt-BR_en/missions/order-a-drink.v1.json';
+        $source = dirname(base_path(), 2).'/content/pt-BR_en/missions/order-a-drink.v2.json';
         File::copy($source, $this->contentDirectory.'/draft.json');
         $user = $this->account();
         $this->actingAs($user)->get('/editorial')->assertForbidden();

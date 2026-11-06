@@ -3,6 +3,7 @@
 use App\Http\Controllers\EditorialController;
 use App\Http\Controllers\LearningController;
 use App\Http\Middleware\RequireEditor;
+use App\Services\DayProgress;
 use App\Services\LearningContent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -34,8 +35,13 @@ Route::prefix('editorial')->middleware(['auth', RequireEditor::class])->group(fu
     Route::get('practice/{id}/{version}', function (Request $request, string $id, int $version, LearningContent $content) {
         $manifest = $content->manifest($request->user(), $id, $version, true);
 
-        return Inertia::render('PracticePreview', ['mission' => json_decode($content->snapshot($request->user(), $manifest['package_hash'])->document), 'manifest' => $manifest]);
+        return Inertia::render('PracticePreview', ['mission' => json_decode($content->snapshot($request->user(), $manifest['package_hash'])->document), 'manifest' => $manifest, 'progress' => app(DayProgress::class)->get($request->user(), $manifest['package_hash'])]);
     })->whereNumber('version');
+    Route::post('day-progress', function (Request $request, DayProgress $progress) {
+        $data = $request->validate(['package_hash' => 'required|string|size:64', 'day' => 'required|integer|min:0', 'completed' => 'required|boolean', 'cursor' => 'sometimes|integer|min:0']);
+
+        return $progress->save($request->user(), $data['package_hash'], $data['day'], $data['completed'], $data['cursor'] ?? null);
+    });
     Route::get('content-snapshots/{hash}/assets/{asset}', [LearningController::class, 'asset']);
     Route::post('attempts/batch', [LearningController::class, 'attempts']);
     Route::post('exposures/batch', [LearningController::class, 'exposures']);

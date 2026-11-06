@@ -5,7 +5,8 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite --host 0.0.0.0",
-    "typecheck": "vue-tsc --noEmit"
+    "typecheck": "vue-tsc --noEmit",
+    "test:frontend": "node --test tests/Frontend/*.test.mjs"
   },
   "dependencies": {
     "@inertiajs/vue3": "^3.0.0",

@@ -16,7 +16,9 @@ jobs:
           scripts/compose run --rm app vendor/bin/pint --test
           scripts/compose run --rm app php artisan test
       - name: Vue checks
-        run: scripts/compose run --rm --no-deps node npm run typecheck
+        run: |
+          scripts/compose run --rm --no-deps node npm run test:frontend
+          scripts/compose run --rm --no-deps node npm run typecheck
       - name: Stop services
         if: always()
         run: scripts/compose down

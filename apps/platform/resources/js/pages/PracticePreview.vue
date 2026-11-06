@@ -1,67 +1,142 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref } from 'vue';
+import { computed, nextTick, onMounted, ref } from 'vue';
 import { Link } from '@inertiajs/vue3';
-type Support = { id: string; kind: string; content: string; affected_modalities: string[]; reveals_answer: boolean };
-type Activity = { id: string; type: string; modality: string; prompt: string; target_ids: string[]; supports: Support[]; content: { asset_id?: string; examples?: string[]; options?: string[]; pt_BR_note?: string }; expected: { accepted?: string[] }; feedback: string };
-const props = defineProps<{ mission: { id: string; version: number; title: string; activities: Activity[] }; manifest: { package_hash: string; is_preview: boolean } }>();
-const index = ref(0), answer = ref(''), revealed = ref<string[]>([]), busy = ref(false), message = ref(''), feedback = ref(''), recorded = ref(false), error = ref(false);
-const session = ref(crypto.randomUUID());
-const device = crypto.randomUUID();
+import BrandMark from '../components/BrandMark.vue';
+import TrailMap from '../components/TrailMap.vue';
+import GlossaryText from '../components/GlossaryText.vue';
+import { compareAnswer, dayLessons, lessonIndex, isTextOnly, phaseId, phases, type Activity, type Mission, type Support, type Gloss, type ComparisonResult } from '../lib/textTrail';
+const props = defineProps<{ mission: Mission; manifest: { package_hash: string; is_preview: boolean }; progress?: { day: number; cursor?: number; completed: boolean } }>();
+const initialDay = phases(props.mission)[props.progress?.day || 0];
+const index = ref(props.progress?.cursor ?? initialDay?.steps[0]?.index ?? 0), answer = ref(''), selected = ref<string | null>(null), revealed = ref<string[]>([]);
+const busy = ref(false), message = ref(''), feedback = ref(''), recorded = ref(false), finished = ref(false), showTrail = ref(true);
+const promptHeading = ref<HTMLElement | null>(null);
+const completed = ref(props.progress?.completed || false);
+const session = crypto.randomUUID(), device = crypto.randomUUID();
 let sequence = 0;
 const events = ref<{ id: string; kind: string; payload: Record<string, unknown>; received: boolean }[]>([]);
 const activity = computed(() => props.mission.activities[index.value]);
-const finished = ref(false);
-const recording = ref(false), recordingUrl = ref<string | null>(null), audioError = ref('');
-let disposed=false;
-let recorder: MediaRecorder | null = null;
-let stream: MediaStream | null = null;
-let audio: HTMLAudioElement | null = null;
-const audioReady = ref(false);
-const listeningFailed=ref(false);
-function base() { return { schema_version: '1.0.0', id: crypto.randomUUID(), session_id: session.value, device_id: device, local_sequence: ++sequence, occurred_at: new Date().toISOString(), time_quality: 'uncertain', activity_id: activity.value.id, package_id: props.mission.id, package_version: props.mission.version, package_hash: props.manifest.package_hash, target_ids: activity.value.target_ids }; }
+const trail = computed(() => phases(props.mission));
+const currentPhase = computed(() => trail.value.find(phase => phase.id === phaseId(activity.value))!);
+const textOnly = computed(() => isTextOnly(props.mission));
+const dayPosition = computed(() => currentPhase.value.steps.findIndex(step => step.index === index.value));
+const hasPending = computed(() => events.value.some(event => !event.received));
+const correct = ref(false);
+const assessment = ref<ComparisonResult | null>(null), submittedResponse = ref('');
+const manualSupports = computed(() => activity.value.supports.filter(support => !support.id.startsWith('gloss-') && support.kind !== 'solution'));
+let actionQueue: Promise<unknown> = Promise.resolve();
+let pendingActions = 0;
+function base(target: Activity = activity.value) {
+  return { schema_version: '1.0.0', id: crypto.randomUUID(), session_id: session, device_id: device, local_sequence: ++sequence, occurred_at: new Date().toISOString(), time_quality: 'uncertain', activity_id: target.id, package_id: props.mission.id, package_version: props.mission.version, package_hash: props.manifest.package_hash, target_ids: target.target_ids };
+}
 async function send(kind: string, payload: Record<string, unknown>) {
-  const existing=events.value.find(e=>!e.received);
-  if(existing && (existing.kind!==kind || existing.payload.activity_id!==payload.activity_id || existing.payload.response!==payload.response || existing.payload.support_id!==payload.support_id)) throw new Error('Reenvie primeiro o registro pendente.');
-  const event=existing || { id: payload.id as string, kind, payload, received: false };if(!existing)events.value.push(event);
-  const cookie = document.cookie.split('; ').find(c => c.startsWith('XSRF-TOKEN='));
+  const existing = events.value.find(event => !event.received);
+  if (existing && (existing.kind !== kind || existing.payload.activity_id !== payload.activity_id || existing.payload.response !== payload.response || existing.payload.support_id !== payload.support_id)) throw new Error('Reenvie primeiro o registro pendente.');
+  const event = existing || { id: payload.id as string, kind, payload, received: false };
+  if (!existing) events.value.push(event);
+  const cookie = document.cookie.split('; ').find(value => value.startsWith('XSRF-TOKEN='));
   const response = await fetch(`/editorial/${kind}s/batch`, { method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-XSRF-TOKEN': cookie ? decodeURIComponent(cookie.split('=').slice(1).join('=')) : '' }, body: JSON.stringify({ events: [event.payload] }) });
   if (!response.ok) throw new Error('O registro não foi confirmado. Mantenha esta página aberta e tente novamente.');
   const result = await response.json();
-  if (!['accepted','duplicate'].includes(result.results?.[0]?.status)) throw new Error(result.results?.[0]?.message || 'Registro não aceito.');
-  const item=events.value.find(e=>e.id===event.id); if(item) item.received=true;
+  if (!['accepted', 'duplicate'].includes(result.results?.[0]?.status)) throw new Error(result.results?.[0]?.message || 'Registro não aceito.');
+  events.value.find(item => item.id === event.id)!.received = true;
 }
-async function action(fn: () => Promise<void>) { if(busy.value) return; busy.value=true; message.value=''; try { await fn(); } catch(e) { message.value=e instanceof Error ? e.message : 'Não foi possível concluir.'; } finally { busy.value=false; } }
-async function expose(support?: Support) { await send('exposure', { ...base(), support_id: support?.id || `activity-${activity.value.id}`, kind: support?.kind || 'training_use', affected_modalities: support?.affected_modalities || [activity.value.modality], reveals_answer: support?.reveals_answer || false }); }
-function support(value: Support) { action(async()=> { await expose(value); revealed.value.push(value.id); }); }
-function play() { action(async()=> { await expose(); audio?.pause(); audio = new Audio(`/editorial/content-snapshots/${props.manifest.package_hash}/assets/${activity.value.content.asset_id}`); audio.onerror=()=>{ listeningFailed.value=true;message.value='Não foi possível reproduzir o áudio. Nenhuma falha linguística foi registrada.'; }; await audio.play(); audioReady.value=true; }); }
-function stopPlayback() { audio?.pause(); }
-function retryPending() { const event=events.value.find(e=>!e.received);if(event)action(async()=>{await send(event.kind,event.payload);message.value='Registro confirmado. Retome a atividade.';}); }
-function submit(value: string | null, technical='valid') { action(async()=> {
-  if(activity.value.modality==='listening' && listeningFailed.value)technical='failed';
-  const supports = events.value.filter(e=>e.kind==='exposure' && e.payload.kind!=='training_use' && (e.payload.affected_modalities as string[]).includes(activity.value.modality)).map(e=>e.id);
-  await send('attempt', { ...base(), modality: activity.value.modality, support_event_ids: supports, technical_status: technical, response: value, audio_reference: recordingUrl.value ? `local-only:${crypto.randomUUID()}` : null, assessment_status: activity.value.type==='information_question' ? 'pending' : 'not_requested' });
-  recorded.value=true;
-  feedback.value=technical!=='valid' ? 'Falha técnica registrada; nenhuma conclusão linguística.' : activity.value.type==='information_question' ? (activity.value.expected.accepted?.includes(value || '') ? 'Você identificou a informação nesta atividade. Retenção posterior não foi avaliada.' : 'Ouça novamente e identifique a escolha comunicada. Você pode continuar ou tentar outra vez.') : 'Prática registrada. A produção aberta continua sem avaliação independente.';
+function action(work: () => Promise<void>): Promise<boolean> {
+  pendingActions++; busy.value = true;
+  const task = actionQueue.then(async () => {
+    message.value = '';
+    try { await work(); return true; } catch (error) { message.value = error instanceof Error ? error.message : 'Não foi possível concluir.'; return false; }
+    finally { pendingActions--; busy.value = pendingActions > 0; }
+  });
+  actionQueue = task;
+  return task;
+}
+async function expose(target: Activity = activity.value, support?: Support) {
+  await send('exposure', { ...base(target), support_id: support?.id || `activity-${target.id}`, kind: support?.kind || 'training_use', affected_modalities: support?.affected_modalities || [target.modality], reveals_answer: support?.reveals_answer || false });
+}
+async function focusPrompt() { await nextTick(); promptHeading.value?.focus(); }
+async function focusCurrentStep() { await nextTick(); document.querySelector<HTMLButtonElement>('.lesson-card.active')?.focus(); }
+function backToTrail() { showTrail.value = true; focusCurrentStep(); }
+function begin() { action(async () => { if (['dialogue', 'explanation'].includes(activity.value.type)) await expose(); showTrail.value = false; await focusPrompt(); }); }
+function support(value: Support) { return action(async () => { if (!revealed.value.includes(value.id)) { await expose(activity.value, value); revealed.value.push(value.id); } }); }
+async function lookup(entry: Gloss): Promise<boolean> {
+  const target = activity.value;
+  const declaration = target.supports.find(item => item.id === entry.support_id);
+  if (!declaration) return false;
+  return action(async () => {
+    if (activity.value.id !== target.id) throw new Error('Retome a atividade para consultar o significado.');
+    if (!revealed.value.includes(entry.support_id)) { await expose(target, declaration); revealed.value.push(entry.support_id); }
+  });
+}
+async function presentFeedback() {
+  const result = compareAnswer(activity.value, submittedResponse.value);
+  if (result.example) {
+    const solution = activity.value.supports.find(item => item.id === 'comparison-example' && item.kind === 'solution');
+    if (solution && !revealed.value.includes(solution.id)) { await expose(activity.value, solution); revealed.value.push(solution.id); }
+  }
+  assessment.value = result;
+  correct.value = result.outcome === 'correct';
+  feedback.value = result.message;
+}
+function chooseOption(event: MouseEvent, option: string) {
+  if (!busy.value && !(event.target as Element).closest('button, [role="tooltip"]')) selected.value = option;
+}
+function submit(value: string) { action(async () => {
+  const supports = events.value.filter(event => event.kind === 'exposure' && event.payload.kind !== 'training_use' && (event.payload.affected_modalities as string[]).includes(activity.value.modality) && (event.payload.target_ids as string[]).some(target => activity.value.target_ids.includes(target))).map(event => event.id);
+  await send('attempt', { ...base(), modality: activity.value.modality, support_event_ids: supports, technical_status: 'valid', response: value, audio_reference: null, assessment_status: activity.value.type === 'information_question' || activity.value.expected.comparison ? 'pending' : 'not_requested' });
+  recorded.value = true; submittedResponse.value = value;
+  await presentFeedback();
 }); }
-async function move() { stopRecording();stopPlayback();if(index.value>=props.mission.activities.length-1) {finished.value=true;return;} const next=props.mission.activities[index.value+1];if(next.type==='explanation')await send('exposure',{...base(),activity_id:next.id,target_ids:next.target_ids,support_id:`activity-${next.id}`,kind:'training_use',affected_modalities:[next.modality],reveals_answer:false});index.value++;reset(); }
-function next() { action(move); }
-function reset() { answer.value='';revealed.value=[];recorded.value=false;feedback.value='';audioReady.value=false; if(recordingUrl.value) URL.revokeObjectURL(recordingUrl.value);recordingUrl.value=null; }
-function passive() { action(async()=> { await expose();await move(); }); }
-async function startRecording() {
-  audioError.value='';
-  try {
-    stream=await navigator.mediaDevices.getUserMedia({audio:true});
-    if(disposed || document.hidden) { stream.getTracks().forEach(t=>t.stop());stream=null;return; }
-    const chunks:BlobPart[]=[]; recorder=new MediaRecorder(stream);
-    recorder.ondataavailable=e=>{if(e.data.size) chunks.push(e.data);};
-    recorder.onstop=()=> { const blob=new Blob(chunks,{type:recorder?.mimeType || 'audio/webm'});if(recordingUrl.value) URL.revokeObjectURL(recordingUrl.value);if(!disposed)recordingUrl.value=URL.createObjectURL(blob);stream?.getTracks().forEach(t=>t.stop());stream=null;recording.value=false; };
-    recorder.onerror=()=>{audioError.value='A gravação falhou. Tente novamente; sua capacidade não foi avaliada.';stopRecording();};
-    recorder.start();recording.value=true;
-  } catch { stream?.getTracks().forEach(t=>t.stop());stream=null;audioError.value='Microfone indisponível. Você pode continuar sem avaliação oral.'; }
+function reset() { answer.value = ''; selected.value = null; revealed.value = []; recorded.value = false; feedback.value = ''; correct.value = false; assessment.value = null; submittedResponse.value = ''; }
+async function saveDay(day: number, completed: boolean, cursor = index.value) {
+  const cookie = document.cookie.split('; ').find(value => value.startsWith('XSRF-TOKEN='));
+  const response = await fetch('/editorial/day-progress', { method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-XSRF-TOKEN': cookie ? decodeURIComponent(cookie.split('=').slice(1).join('=')) : '' }, body: JSON.stringify({ package_hash: props.manifest.package_hash, day, completed, cursor }) });
+  if (!response.ok) throw new Error('Não foi possível salvar o dia. Tente continuar novamente.');
 }
-function stopRecording() { if(recorder?.state==='recording') recorder.stop();stream?.getTracks().forEach(t=>t.stop());recording.value=false; }
-function visibility() { if(document.hidden) {stopRecording();stopPlayback();} }
-document.addEventListener('visibilitychange',visibility);
-onBeforeUnmount(()=>{ disposed=true;document.removeEventListener('visibilitychange',visibility); stopRecording();stopPlayback(); if(recordingUrl.value)URL.revokeObjectURL(recordingUrl.value); });
+function finishDay() { action(async () => { await saveDay(trail.value.length - 1, true); completed.value = true; finished.value = false; showTrail.value = true; }); }
+async function move() {
+  const next = props.mission.activities[index.value + 1];
+  if (!next) return;
+  const changedPhase = phaseId(next) !== phaseId(activity.value);
+  if (changedPhase) await saveDay(trail.value.findIndex(day => day.id === phaseId(next)), false, index.value + 1);
+  const changedLesson = changedPhase || lessonIndex(currentPhase.value, index.value) !== lessonIndex(currentPhase.value, index.value + 1);
+  if (changedLesson && !changedPhase) await saveDay(trail.value.indexOf(currentPhase.value), false, index.value + 1);
+  if (!changedLesson && ['dialogue', 'explanation'].includes(next.type)) await expose(next);
+  index.value++; reset(); showTrail.value = changedLesson;
+  if (changedLesson) await focusCurrentStep(); else await focusPrompt();
+}
+function next() { action(move); }
+function passive() { action(async () => { if (activity.value.type === 'purpose') await expose(); await move(); }); }
+function retryPending() { const event = events.value.find(item => !item.received); if (event) action(async () => { await send(event.kind, event.payload); message.value = 'Registro confirmado. Retome a atividade.'; if (recorded.value && !feedback.value) await presentFeedback(); }); }
+onMounted(() => { if (textOnly.value && new URLSearchParams(window.location.search).get('start') === '1') begin(); });
 </script>
-<template><main><Link href="/editorial" class="preview-link">← Voltar à revisão</Link><p class="eyebrow">PRÉVIA EDITORIAL</p><h1>{{ mission.title }}</h1><aside>Material em rascunho, com voz sintética para revisão. Esta prévia não publica conteúdo nem confirma capacidades. Gravações ficam somente nesta página; a retomada persistente é feita no Android.</aside><article v-if="!finished"><p class="meta">Etapa {{ index+1 }} de {{ mission.activities.length }}</p><h2>{{ activity.prompt }}</h2><div v-if="activity.content.asset_id" class="actions"><button :disabled="busy" @click="play">{{ activity.type==='dialogue' ? 'Ouvir diálogo' : 'Ouvir atendente' }}</button><button v-if="audioReady" class="secondary" @click="stopPlayback">Pausar</button></div><p v-if="activity.content.pt_BR_note">{{ activity.content.pt_BR_note }}</p><p v-for="example in activity.content.examples" :key="example">{{ example }}</p><section v-for="item in activity.supports" :key="item.id"><p v-if="revealed.includes(item.id)">{{ item.content }}</p><button v-else class="secondary" :disabled="busy" @click="support(item)">{{ item.kind==='transcript' ? 'Ver transcrição' : 'Consultar apoio' }}</button></section><div v-if="activity.type==='information_question' && !recorded" class="actions"><button v-for="option in activity.content.options" :key="option" class="secondary" :disabled="busy" @click="submit(option)">{{ option }}</button></div><form v-if="activity.type==='written_recall' && !recorded" @submit.prevent="submit(answer)"><label>Sua resposta<textarea v-model="answer" rows="3" maxlength="10000" required /></label><button :disabled="busy || !answer.trim()">Registrar resposta</button></form><section v-if="['recorded_speech','communicative_task'].includes(activity.type) && !recorded"><p>O áudio da sua voz não será enviado.</p><button v-if="!recording" class="secondary" @click="startRecording">Gravar minha voz</button><button v-else @click="stopRecording">Parar gravação</button><p v-if="recording">Gravando…</p><p v-if="audioError" role="alert">{{ audioError }}</p><audio v-if="recordingUrl" :src="recordingUrl" controls /><div class="actions"><button :disabled="!recordingUrl || busy || recording" @click="submit(null)">Registrar prática oral</button><button class="secondary" :disabled="recording || busy" @click="next">Agora não posso falar · continuar</button></div></section><p v-if="feedback" role="status">{{ feedback }}</p><div v-if="recorded" class="actions"><button class="secondary" @click="recorded=false;feedback='';answer=''">Nova tentativa</button><button @click="next">Continuar</button></div><button v-if="['purpose','dialogue','explanation'].includes(activity.type)" :disabled="busy" @click="passive">Continuar</button><section v-if="activity.type==='summary'"><p>{{ events.filter(e=>e.kind==='attempt').length }} tentativas e {{ events.filter(e=>e.kind==='exposure').length }} exposições ou apoios registrados nesta prévia.</p><p>Produções abertas não foram avaliadas. Retenção posterior não foi verificada.</p><button @click="finished=true">Encerrar sessão</button></section><p v-if="message" role="alert">{{ message }}</p><button v-if="events.some(e=>!e.received)" class="secondary" :disabled="busy" @click="retryPending">Reenviar registro pendente</button></article><article v-else><h2>Sessão encerrada</h2><p>Você pode revisar o conteúdo ou retomar o painel. A prévia não alterou evidências de capacidade.</p><Link href="/editorial" class="preview-link">Voltar ao painel</Link></article></main></template>
+<template>
+  <header v-if="!showTrail || finished" class="site-header"><BrandMark /><span class="header-context">Leitura e escrita</span><button v-if="!showTrail && !finished" class="quiet" :disabled="busy" @click="backToTrail">Voltar à trilha</button><Link v-else href="/editorial" class="quiet exit-link">Voltar à revisão</Link></header>
+  <main v-if="!textOnly" class="lesson-main"><h1>Continue na trilha de texto.</h1><p>Esta versão foi guardada no histórico. A versão atual está na revisão.</p><Link href="/editorial" class="button-link">Abrir trilha atual</Link></main>
+  <main v-else-if="showTrail && !finished" class="day-only">
+    <TrailMap :phases="trail" :cursor="index" :finished="completed" :busy="busy" @start="begin" />
+    <p v-if="message" class="notice" role="alert">{{ message }}</p>
+    <button v-if="hasPending" class="secondary" :disabled="busy" @click="retryPending">Reenviar registro pendente</button>
+  </main>
+  <main v-else class="lesson-main" :aria-busy="busy">
+    <template v-if="!finished">
+      <div class="lesson-progress"><progress :value="completed ? dayLessons(currentPhase).length : Math.max(0, lessonIndex(currentPhase, index))" :max="dayLessons(currentPhase).length" aria-label="Atividades percorridas" /><span>{{ dayPosition + 1 }} / {{ currentPhase.steps.length }}</span></div>
+      <p class="eyebrow">DIA {{ trail.indexOf(currentPhase) + 1 }} · {{ currentPhase.title }}</p>
+      <h1 :key="activity.id" ref="promptHeading" class="exercise-prompt" tabindex="-1">{{ activity.prompt }}</h1>
+      <div v-if="activity.content.messages" class="text-dialogue" aria-label="Conversa escrita"><div v-for="(turn, position) in activity.content.messages" :key="position" class="dialogue-turn" :class="{ customer: position % 2 === 0 }"><span>{{ turn.speaker }}</span><p><GlossaryText :text="turn.text" :glossary="activity.content.glossary" :lookup="lookup" /></p></div></div>
+      <div v-if="activity.content.vocabulary" class="vocabulary-list"><div v-for="item in activity.content.vocabulary" :key="item.word"><GlossaryText :text="item.word" :glossary="activity.content.glossary" :lookup="lookup" /><span>{{ item.meaning }}</span></div></div>
+      <p v-if="activity.content.study_text" class="study-text"><GlossaryText :text="activity.content.study_text" :glossary="activity.content.glossary" :lookup="lookup" /></p>
+      <p v-if="activity.content.pt_BR_note" class="explanation-note">{{ activity.content.pt_BR_note }}</p>
+      <p v-for="example in activity.content.examples" :key="example" class="example-phrase"><GlossaryText :text="example" :glossary="activity.content.glossary" :lookup="lookup" /></p>
+      <div v-if="manualSupports.length" class="supports"><div v-for="item in manualSupports" :key="item.id"><p v-if="revealed.includes(item.id)" class="revealed-support">{{ item.content }}</p><button v-else class="support-button" :disabled="busy" @click="support(item)">Consultar apoio</button></div></div>
+      <form v-if="activity.type === 'information_question' && !recorded" class="choice-form" @submit.prevent="selected !== null && submit(selected)"><fieldset><legend class="sr-only">Escolha uma resposta</legend><div v-for="option in activity.content.options" :key="option" class="choice" :class="{ selected: selected === option }" @click="chooseOption($event, option)"><input v-model="selected" type="radio" :aria-label="option" :disabled="busy" name="response" :value="option" required><span><GlossaryText v-if="activity.content.options_language === 'en'" :text="option" :glossary="activity.content.glossary" :lookup="lookup" /><template v-else>{{ option }}</template></span></div></fieldset><button :disabled="busy || selected === null">Conferir</button></form>
+      <form v-if="['written_recall', 'communicative_task'].includes(activity.type) && !recorded" @submit.prevent="submit(answer)"><label for="response">Sua mensagem</label><textarea id="response" v-model="answer" rows="5" maxlength="10000" placeholder="Escreva em inglês…" lang="en" required /><button :disabled="busy || !answer.trim()">Registrar resposta</button></form>
+      <div v-if="recorded" class="feedback-panel" role="status"><strong>{{ correct ? 'Resposta aceita' : assessment?.outcome === 'incorrect' ? 'Vamos ajustar' : 'Vamos conferir' }}</strong><p>{{ feedback }}</p><p v-if="submittedResponse" class="submitted-response">Você escreveu: <GlossaryText :text="submittedResponse" :glossary="activity.content.glossary" :lookup="lookup" /></p><div v-if="assessment?.example" class="comparison-example"><span>Um exemplo possível</span><GlossaryText :text="assessment.example" :glossary="activity.content.glossary" :lookup="lookup" /></div><p v-if="revealed.length" class="muted">O apoio consultado ficou registrado.</p></div>
+      <div v-if="recorded && feedback" class="exercise-actions"><button class="quiet" :disabled="busy" @click="reset">Tentar de novo</button><button :disabled="busy" @click="next">Continuar</button></div>
+      <div v-if="['purpose', 'dialogue', 'explanation'].includes(activity.type)" class="exercise-actions"><button :disabled="busy" @click="passive">Continuar</button></div>
+      <div v-if="activity.type === 'summary'" class="summary-panel"><p>Você praticou palavras, pedidos curtos e frases com contrações. As respostas previstas receberam correção automática de treino; formas não reconhecidas continuam sem confirmação independente.</p><p class="muted">Esta sessão não verifica escuta, fala ou retenção posterior.</p><button :disabled="busy || hasPending" @click="finishDay">Concluir prática</button></div>
+      <p v-if="message" class="notice" role="alert">{{ message }}</p><button v-if="hasPending" class="secondary" :disabled="busy" @click="retryPending">Reenviar registro pendente</button>
+      <p v-if="busy" class="muted" role="status">Salvando…</p>
+    </template>
+    <div v-else class="finished-state"><span class="finish-mark" aria-hidden="true">✓</span><p class="eyebrow">PERCURSO CONCLUÍDO</p><h1>Uma conversa de cada vez.</h1><p>Você chegou ao fim desta prática de texto.</p><button class="secondary" @click="finished = false; showTrail = true">Ver meu percurso</button><Link href="/editorial" class="quiet exit-link">Voltar à revisão</Link></div>
+  </main>
+</template>

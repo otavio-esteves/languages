@@ -121,15 +121,11 @@ class LearningEvents
 
                     return $p['technical_status'] !== 'valid' && $p['modality'] === $input['modality'] && count(array_intersect($p['target_ids'], $input['target_ids'])) > 0;
                 });
-                $outcome = 'unverified';
+                $comparison = TextAnswers::compare($activity, $input['response']);
                 if ($input['technical_status'] !== 'valid' || $technicalContext) {
-                    $outcome = 'technical_issue';
-                } elseif ($activity['type'] === 'information_question') {
-                    $outcome = in_array($input['response'], $activity['expected']['accepted'] ?? [], true) ? 'correct' : 'incorrect';
+                    $comparison = ['outcome' => 'technical_issue', 'message' => 'Falha técnica registrada; nenhuma conclusão linguística.', 'example' => null, 'rule_version' => null];
                 }
-                $assessment = ['outcome' => $outcome, 'supported' => $supported, 'support_pending' => $supportPending, 'is_preview' => (bool) $row->is_preview, 'retention_confirmed' => false, 'source' => $outcome === 'unverified' ? 'not_assessed' : 'automatic_rule', 'message' => match ($outcome) {
-                    'correct' => 'Você identificou a informação. Isso registra reconhecimento nesta atividade.', 'incorrect' => 'Ouça novamente e identifique a escolha comunicada.', 'technical_issue' => 'Falha técnica registrada; nenhuma conclusão linguística.', default => 'Prática registrada. Respostas abertas precisam de avaliação independente.'
-                }];
+                $assessment = array_merge($comparison, ['supported' => $supported, 'support_pending' => $supportPending, 'is_preview' => (bool) $row->is_preview, 'retention_confirmed' => false, 'source' => $comparison['outcome'] === 'unverified' ? 'not_assessed' : 'automatic_rule']);
             }
 
             return ['id' => $row->event_id, 'kind' => $row->kind, 'assessment' => $assessment];

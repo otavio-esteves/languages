@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Services\DayProgress;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -51,7 +52,7 @@ class PracticeFlowTest extends TestCase
     {
         $item = collect($this->package['activities'])->firstWhere('id', $activity);
 
-        return ['schema_version' => '1.0.0', 'id' => (string) Str::uuid(), 'session_id' => '00000000-0000-4000-8000-000000000002', 'device_id' => '00000000-0000-4000-8000-000000000003', 'local_sequence' => $sequence, 'occurred_at' => now()->toIso8601String(), 'time_quality' => 'uncertain', 'activity_id' => $activity, 'package_id' => $this->package['id'], 'package_version' => 1, 'package_hash' => $hash, 'target_ids' => $item['target_ids']];
+        return ['schema_version' => '1.0.0', 'id' => (string) Str::uuid(), 'session_id' => '00000000-0000-4000-8000-000000000002', 'device_id' => '00000000-0000-4000-8000-000000000003', 'local_sequence' => $sequence, 'occurred_at' => now()->toIso8601String(), 'time_quality' => 'uncertain', 'activity_id' => $activity, 'package_id' => $this->package['id'], 'package_version' => $this->package['version'], 'package_hash' => $hash, 'target_ids' => $item['target_ids']];
     }
 
     private function attempt(string $activity, string $hash, int $sequence = 1): array
@@ -64,6 +65,86 @@ class PracticeFlowTest extends TestCase
     private function exposure(string $hash, int $sequence): array
     {
         return [...$this->event('dialogue', $hash, $sequence), 'support_id' => 'dialogue-transcript', 'kind' => 'transcript', 'affected_modalities' => ['listening'], 'reveals_answer' => true];
+    }
+
+    public function test_text_trail_has_no_media_and_keeps_reading_and_writing_evidence_separate(): void
+    {
+        $this->editor();
+        $this->getJson('/api/v1/editorial/catalog')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.version', 3);
+        $manifest = $this->getJson('/api/v1/content-packages/order-a-drink/manifest?version=2&preview=1')->assertOk()->assertJsonCount(0, 'assets')->json();
+        $this->package = json_decode(file_get_contents($this->directory.'/order-a-drink.v2.json'), true);
+        $this->assertEquals(['reading', 'writing'], array_values(array_unique(array_column($this->package['activities'], 'modality'))));
+        $this->assertCount(3, array_unique(array_column(array_column($this->package['activities'], 'content'), 'phase_id')));
+        $hash = $manifest['package_hash'];
+        $correct = $this->attempt('meaning', $hash);
+        $wrong = $this->attempt('meaning', $hash, 2);
+        $wrong['response'] = 'No local';
+        $open = $this->attempt('recall', $hash, 3);
+        $open['response'] = 'Could I have a large tea, please?';
+        $transfer = $this->attempt('transfer', $hash, 4);
+        $transfer['response'] = 'A small water for here, please. Could you explain that?';
+        $mismatch = $this->attempt('meaning', $hash, 5);
+        $mismatch['modality'] = 'listening';
+        $this->postJson('/api/v1/attempts/batch', ['events' => [$correct, $wrong, $open, $transfer, $mismatch]])
+            ->assertJsonPath('results.0.status', 'accepted')->assertJsonPath('results.3.status', 'accepted')->assertJsonPath('results.4.status', 'rejected');
+        $this->getJson('/api/v1/learning-sessions/'.$correct['session_id'])
+            ->assertJsonPath('events.0.assessment.outcome', 'correct')
+            ->assertJsonPath('events.0.assessment.retention_confirmed', false)
+            ->assertJsonPath('events.1.assessment.message', 'Leia novamente e observe o sentido da mensagem.')
+            ->assertJsonPath('events.2.assessment.outcome', 'unverified')
+            ->assertJsonPath('events.3.assessment.outcome', 'unverified');
+        $this->getJson('/api/v1/catalog')->assertJsonCount(0, 'data');
+    }
+
+    public function test_automatic_writing_comparison_keeps_glossary_and_later_examples_as_support(): void
+    {
+        $this->editor();
+        $manifest = $this->getJson('/api/v1/content-packages/order-a-drink/manifest?version=3&preview=1')->assertOk()->assertJsonCount(0, 'assets')->json();
+        $this->package = json_decode(file_get_contents($this->directory.'/order-a-drink.v3.json'), true);
+        $hash = $manifest['package_hash'];
+        $first = $this->attempt('write-water', $hash);
+        $first['response'] = 'coffee';
+        $first['support_event_ids'] = [];
+        $this->postJson('/api/v1/attempts/batch', ['events' => [$first]])->assertJsonPath('results.0.status', 'accepted');
+        $example = array_merge($this->event('write-water', $hash, 2), ['support_id' => 'comparison-example', 'kind' => 'solution', 'affected_modalities' => ['writing'], 'reveals_answer' => true]);
+        $gloss = array_merge($this->event('write-water', $hash, 3), ['support_id' => 'gloss-water', 'kind' => 'hint', 'affected_modalities' => ['writing'], 'reveals_answer' => true]);
+        $this->postJson('/api/v1/exposures/batch', ['events' => [$example, $gloss]])->assertJsonPath('results.1.status', 'accepted');
+        $retry = $this->attempt('write-water', $hash, 4);
+        $retry['response'] = ' WATER! ';
+        $retry['support_event_ids'] = [$example['id'], $gloss['id']];
+        $unknown = $this->attempt('transfer', $hash, 5);
+        $unknown['response'] = 'May I please get one large coffee?';
+        $failed = $this->attempt('contract', $hash, 6);
+        $failed['technical_status'] = 'failed';
+        $failed['response'] = null;
+        $this->postJson('/api/v1/attempts/batch', ['events' => [$retry, $unknown, $failed]])->assertJsonPath('results.2.status', 'accepted');
+        $this->getJson('/api/v1/learning-sessions/'.$first['session_id'])
+            ->assertJsonPath('events.0.assessment.outcome', 'incorrect')
+            ->assertJsonPath('events.0.assessment.supported', false)
+            ->assertJsonPath('events.0.assessment.example', 'water')
+            ->assertJsonPath('events.3.assessment.outcome', 'correct')
+            ->assertJsonPath('events.3.assessment.supported', true)
+            ->assertJsonPath('events.3.assessment.rule_version', 'text-variants-v1')
+            ->assertJsonPath('events.3.assessment.retention_confirmed', false)
+            ->assertJsonPath('events.4.assessment.outcome', 'unverified')
+            ->assertJsonPath('events.5.assessment.outcome', 'technical_issue');
+    }
+
+    public function test_current_day_is_saved_per_account_and_cannot_be_rewound(): void
+    {
+        $first = $this->editor();
+        $manifest = $this->getJson('/api/v1/content-packages/order-a-drink/manifest?version=3&preview=1')->assertOk()->json();
+        $progress = app(DayProgress::class);
+        $this->assertSame(['cursor' => 0, 'day' => 0, 'completed' => false], $progress->get($first, $manifest['package_hash']));
+        $this->actingAs($first)->postJson('/editorial/day-progress', ['package_hash' => $manifest['package_hash'], 'day' => 1, 'completed' => false])->assertOk()->assertJsonPath('day', 1);
+        $this->postJson('/editorial/day-progress', ['package_hash' => $manifest['package_hash'], 'day' => 0, 'completed' => false])->assertJsonPath('day', 1);
+        $this->postJson('/editorial/day-progress', ['package_hash' => $manifest['package_hash'], 'day' => 99, 'completed' => false])->assertUnprocessable();
+        $this->postJson('/editorial/day-progress', ['package_hash' => $manifest['package_hash'], 'day' => 1, 'completed' => true])->assertUnprocessable();
+        $second = $this->editor();
+        $this->assertSame(['cursor' => 0, 'day' => 0, 'completed' => false], $progress->get($second, $manifest['package_hash']));
+        $this->assertSame(['cursor' => 3, 'day' => 1, 'completed' => false], $progress->get($first, $manifest['package_hash']));
+        $this->actingAs($first)->postJson('/editorial/day-progress', ['package_hash' => $manifest['package_hash'], 'day' => 1, 'cursor' => 5, 'completed' => false])->assertOk()->assertJsonPath('cursor', 5);
+        $this->assertSame(5, $progress->get($first, $manifest['package_hash'])['cursor']);
     }
 
     public function test_drafts_require_editor_and_manifest_pins_raw_document_and_audio(): void

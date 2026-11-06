@@ -14,7 +14,7 @@ class LearningController extends Controller
     {
         abort_unless($request->user()->is_editor, 403);
 
-        return ['schema_version' => '1.0.0', 'data' => array_values(array_map(fn ($p) => array_intersect_key($p, array_flip(['id', 'version', 'title', 'language_pair', 'capability_ids'])), array_filter($catalog->packages(), fn ($p) => $p['purpose'] === 'training')))];
+        return ['schema_version' => '1.0.0', 'data' => array_map(fn ($p) => array_intersect_key($p, array_flip(['id', 'version', 'title', 'language_pair', 'capability_ids'])), $catalog->textTraining())];
     }
 
     public function manifest(Request $request, string $id, LearningContent $content)
