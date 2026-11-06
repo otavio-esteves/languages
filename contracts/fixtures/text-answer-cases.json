@@ -1,0 +1,3170 @@
+{
+  "schema_version": "1.0.0",
+  "cases": [
+    {
+      "id": "word-case-punctuation",
+      "activity": {
+        "type": "written_recall",
+        "modality": "writing",
+        "expected": {
+          "comparison": {
+            "version": "text-variants-v1",
+            "accepted": [
+              "water"
+            ],
+            "corrections": [
+              {
+                "response": "tea",
+                "message": "Tea significa chá. Para água, use water."
+              },
+              {
+                "response": "coffee",
+                "message": "Coffee significa café. Para água, use water."
+              },
+              {
+                "response": "watter",
+                "message": "Confira a grafia: water tem apenas um t."
+              },
+              {
+                "response": "woter",
+                "message": "Confira a grafia: water."
+              }
+            ],
+            "example": "water"
+          }
+        }
+      },
+      "response": " \n WATER!!! ",
+      "result": {
+        "outcome": "correct",
+        "message": "Resposta aceita nesta atividade.",
+        "example": null,
+        "rule_version": "text-variants-v1"
+      }
+    },
+    {
+      "id": "known-wrong-word",
+      "activity": {
+        "type": "written_recall",
+        "modality": "writing",
+        "expected": {
+          "comparison": {
+            "version": "text-variants-v1",
+            "accepted": [
+              "water"
+            ],
+            "corrections": [
+              {
+                "response": "tea",
+                "message": "Tea significa chá. Para água, use water."
+              },
+              {
+                "response": "coffee",
+                "message": "Coffee significa café. Para água, use water."
+              },
+              {
+                "response": "watter",
+                "message": "Confira a grafia: water tem apenas um t."
+              },
+              {
+                "response": "woter",
+                "message": "Confira a grafia: water."
+              }
+            ],
+            "example": "water"
+          }
+        }
+      },
+      "response": "Coffee.",
+      "result": {
+        "outcome": "incorrect",
+        "message": "Coffee significa café. Para água, use water.",
+        "example": "water",
+        "rule_version": "text-variants-v1"
+      }
+    },
+    {
+      "id": "known-spelling",
+      "activity": {
+        "type": "written_recall",
+        "modality": "writing",
+        "expected": {
+          "comparison": {
+            "version": "text-variants-v1",
+            "accepted": [
+              "water"
+            ],
+            "corrections": [
+              {
+                "response": "tea",
+                "message": "Tea significa chá. Para água, use water."
+              },
+              {
+                "response": "coffee",
+                "message": "Coffee significa café. Para água, use water."
+              },
+              {
+                "response": "watter",
+                "message": "Confira a grafia: water tem apenas um t."
+              },
+              {
+                "response": "woter",
+                "message": "Confira a grafia: water."
+              }
+            ],
+            "example": "water"
+          }
+        }
+      },
+      "response": "watter",
+      "result": {
+        "outcome": "incorrect",
+        "message": "Confira a grafia: water tem apenas um t.",
+        "example": "water",
+        "rule_version": "text-variants-v1"
+      }
+    },
+    {
+      "id": "unknown-not-automatically-wrong",
+      "activity": {
+        "type": "written_recall",
+        "modality": "writing",
+        "expected": {
+          "comparison": {
+            "version": "text-variants-v1",
+            "accepted": [
+              "water"
+            ],
+            "corrections": [
+              {
+                "response": "tea",
+                "message": "Tea significa chá. Para água, use water."
+              },
+              {
+                "response": "coffee",
+                "message": "Coffee significa café. Para água, use water."
+              },
+              {
+                "response": "watter",
+                "message": "Confira a grafia: water tem apenas um t."
+              },
+              {
+                "response": "woter",
+                "message": "Confira a grafia: water."
+              }
+            ],
+            "example": "water"
+          }
+        }
+      },
+      "response": "H2O",
+      "result": {
+        "outcome": "unverified",
+        "message": "Ainda não confirmei esta forma. Compare com o exemplo; outra resposta também pode ser válida.",
+        "example": "water",
+        "rule_version": "text-variants-v1"
+      }
+    },
+    {
+      "id": "short-request",
+      "activity": {
+        "type": "written_recall",
+        "modality": "writing",
+        "expected": {
+          "comparison": {
+            "version": "text-variants-v1",
+            "accepted": [
+              "A tea, please.",
+              "Tea, please.",
+              "I would like a tea, please.",
+              "I'd like a tea, please.",
+              "Can I have a tea, please?",
+              "Could I have a tea, please?",
+              "May I have a tea, please?",
+              "A cup of tea, please.",
+              "I would like a cup of tea, please.",
+              "I want a tea, please.",
+              "I would like a tea.",
+              "I'd like a tea.",
+              "Can I have a tea.",
+              "Could I have a tea.",
+              "May I have a tea.",
+              "I would like tea, please.",
+              "I would like some tea, please.",
+              "I'd like tea, please.",
+              "I'd like some tea, please.",
+              "Could I have tea, please.",
+              "Could I have some tea, please."
+            ],
+            "corrections": [
+              {
+                "response": "A coffee, please.",
+                "message": "Você pediu café. O objetivo desta atividade é pedir chá."
+              },
+              {
+                "response": "Coffee, please.",
+                "message": "Você pediu café. O objetivo desta atividade é pedir chá."
+              },
+              {
+                "response": "A tee, please.",
+                "message": "Para chá, escreva tea."
+              },
+              {
+                "response": "I would like a coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A cup of coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a cup of coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I want a coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like some coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like some coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have some coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A cup of water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a cup of water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I want a water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like some water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like some water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have some water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              }
+            ],
+            "example": "A tea, please."
+          }
+        }
+      },
+      "response": "Tea, please!",
+      "result": {
+        "outcome": "correct",
+        "message": "Resposta aceita nesta atividade.",
+        "example": null,
+        "rule_version": "text-variants-v1"
+      }
+    },
+    {
+      "id": "valid-alternative",
+      "activity": {
+        "type": "written_recall",
+        "modality": "writing",
+        "expected": {
+          "comparison": {
+            "version": "text-variants-v1",
+            "accepted": [
+              "A tea, please.",
+              "Tea, please.",
+              "I would like a tea, please.",
+              "I'd like a tea, please.",
+              "Can I have a tea, please?",
+              "Could I have a tea, please?",
+              "May I have a tea, please?",
+              "A cup of tea, please.",
+              "I would like a cup of tea, please.",
+              "I want a tea, please.",
+              "I would like a tea.",
+              "I'd like a tea.",
+              "Can I have a tea.",
+              "Could I have a tea.",
+              "May I have a tea.",
+              "I would like tea, please.",
+              "I would like some tea, please.",
+              "I'd like tea, please.",
+              "I'd like some tea, please.",
+              "Could I have tea, please.",
+              "Could I have some tea, please."
+            ],
+            "corrections": [
+              {
+                "response": "A coffee, please.",
+                "message": "Você pediu café. O objetivo desta atividade é pedir chá."
+              },
+              {
+                "response": "Coffee, please.",
+                "message": "Você pediu café. O objetivo desta atividade é pedir chá."
+              },
+              {
+                "response": "A tee, please.",
+                "message": "Para chá, escreva tea."
+              },
+              {
+                "response": "I would like a coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A cup of coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a cup of coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I want a coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like some coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like some coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have some coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A cup of water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a cup of water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I want a water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like some water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like some water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have some water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              }
+            ],
+            "example": "A tea, please."
+          }
+        }
+      },
+      "response": "Could I have a tea, please?",
+      "result": {
+        "outcome": "correct",
+        "message": "Resposta aceita nesta atividade.",
+        "example": null,
+        "rule_version": "text-variants-v1"
+      }
+    },
+    {
+      "id": "spaces-and-nbsp",
+      "activity": {
+        "type": "written_recall",
+        "modality": "writing",
+        "expected": {
+          "comparison": {
+            "version": "text-variants-v1",
+            "accepted": [
+              "A tea, please.",
+              "Tea, please.",
+              "I would like a tea, please.",
+              "I'd like a tea, please.",
+              "Can I have a tea, please?",
+              "Could I have a tea, please?",
+              "May I have a tea, please?",
+              "A cup of tea, please.",
+              "I would like a cup of tea, please.",
+              "I want a tea, please.",
+              "I would like a tea.",
+              "I'd like a tea.",
+              "Can I have a tea.",
+              "Could I have a tea.",
+              "May I have a tea.",
+              "I would like tea, please.",
+              "I would like some tea, please.",
+              "I'd like tea, please.",
+              "I'd like some tea, please.",
+              "Could I have tea, please.",
+              "Could I have some tea, please."
+            ],
+            "corrections": [
+              {
+                "response": "A coffee, please.",
+                "message": "Você pediu café. O objetivo desta atividade é pedir chá."
+              },
+              {
+                "response": "Coffee, please.",
+                "message": "Você pediu café. O objetivo desta atividade é pedir chá."
+              },
+              {
+                "response": "A tee, please.",
+                "message": "Para chá, escreva tea."
+              },
+              {
+                "response": "I would like a coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A cup of coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a cup of coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I want a coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like some coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like some coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have some coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A cup of water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a cup of water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I want a water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like some water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like some water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have some water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              }
+            ],
+            "example": "A tea, please."
+          }
+        }
+      },
+      "response": " Can  I\thave a tea, please?\n",
+      "result": {
+        "outcome": "correct",
+        "message": "Resposta aceita nesta atividade.",
+        "example": null,
+        "rule_version": "text-variants-v1"
+      }
+    },
+    {
+      "id": "wrong-drink",
+      "activity": {
+        "type": "written_recall",
+        "modality": "writing",
+        "expected": {
+          "comparison": {
+            "version": "text-variants-v1",
+            "accepted": [
+              "A tea, please.",
+              "Tea, please.",
+              "I would like a tea, please.",
+              "I'd like a tea, please.",
+              "Can I have a tea, please?",
+              "Could I have a tea, please?",
+              "May I have a tea, please?",
+              "A cup of tea, please.",
+              "I would like a cup of tea, please.",
+              "I want a tea, please.",
+              "I would like a tea.",
+              "I'd like a tea.",
+              "Can I have a tea.",
+              "Could I have a tea.",
+              "May I have a tea.",
+              "I would like tea, please.",
+              "I would like some tea, please.",
+              "I'd like tea, please.",
+              "I'd like some tea, please.",
+              "Could I have tea, please.",
+              "Could I have some tea, please."
+            ],
+            "corrections": [
+              {
+                "response": "A coffee, please.",
+                "message": "Você pediu café. O objetivo desta atividade é pedir chá."
+              },
+              {
+                "response": "Coffee, please.",
+                "message": "Você pediu café. O objetivo desta atividade é pedir chá."
+              },
+              {
+                "response": "A tee, please.",
+                "message": "Para chá, escreva tea."
+              },
+              {
+                "response": "I would like a coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A cup of coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a cup of coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I want a coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like some coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like some coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have some coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A cup of water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a cup of water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I want a water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like some water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like some water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have some water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              }
+            ],
+            "example": "A tea, please."
+          }
+        }
+      },
+      "response": "A coffee, please.",
+      "result": {
+        "outcome": "incorrect",
+        "message": "Você pediu café. O objetivo desta atividade é pedir chá.",
+        "example": "A tea, please.",
+        "rule_version": "text-variants-v1"
+      }
+    },
+    {
+      "id": "curly-apostrophe",
+      "activity": {
+        "type": "written_recall",
+        "modality": "writing",
+        "expected": {
+          "comparison": {
+            "version": "text-variants-v1",
+            "accepted": [
+              "A small tea, please.",
+              "Small tea, please.",
+              "I would like a small tea, please.",
+              "I'd like a small tea, please.",
+              "Can I have a small tea, please?",
+              "Could I have a small tea, please?",
+              "May I have a small tea, please?",
+              "A small cup of tea, please.",
+              "I would like a small cup of tea, please.",
+              "I want a small tea, please.",
+              "I would like a small tea.",
+              "I'd like a small tea.",
+              "Can I have a small tea.",
+              "Could I have a small tea.",
+              "May I have a small tea."
+            ],
+            "corrections": [
+              {
+                "response": "A large tea, please.",
+                "message": "A bebida está certa. Large é grande; o pedido aqui é pequeno: small."
+              },
+              {
+                "response": "A small coffee, please.",
+                "message": "O tamanho está certo. O pedido aqui é chá: tea."
+              },
+              {
+                "response": "Large tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I would like a large tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I'd like a large tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "Can I have a large tea, please?",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "Could I have a large tea, please?",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "May I have a large tea, please?",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "A large cup of tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I would like a large cup of tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I want a large tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I would like a large tea.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I'd like a large tea.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "Can I have a large tea.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "Could I have a large tea.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "May I have a large tea.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "Small coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a small coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a small coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a small coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a small coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A small cup of coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small cup of coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I want a small coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a small coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a small coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a small coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a small coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A small water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Small water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a small water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a small water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a small water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a small water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A small cup of water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small cup of water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I want a small water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a small water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a small water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a small water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a small water.",
+                "message": "O pedido desta atividade é chá: tea."
+              }
+            ],
+            "example": "A small tea, please."
+          }
+        }
+      },
+      "response": "I’d like a small tea, please.",
+      "result": {
+        "outcome": "correct",
+        "message": "Resposta aceita nesta atividade.",
+        "example": null,
+        "rule_version": "text-variants-v1"
+      }
+    },
+    {
+      "id": "ascii-apostrophe",
+      "activity": {
+        "type": "written_recall",
+        "modality": "writing",
+        "expected": {
+          "comparison": {
+            "version": "text-variants-v1",
+            "accepted": [
+              "A small tea, please.",
+              "Small tea, please.",
+              "I would like a small tea, please.",
+              "I'd like a small tea, please.",
+              "Can I have a small tea, please?",
+              "Could I have a small tea, please?",
+              "May I have a small tea, please?",
+              "A small cup of tea, please.",
+              "I would like a small cup of tea, please.",
+              "I want a small tea, please.",
+              "I would like a small tea.",
+              "I'd like a small tea.",
+              "Can I have a small tea.",
+              "Could I have a small tea.",
+              "May I have a small tea."
+            ],
+            "corrections": [
+              {
+                "response": "A large tea, please.",
+                "message": "A bebida está certa. Large é grande; o pedido aqui é pequeno: small."
+              },
+              {
+                "response": "A small coffee, please.",
+                "message": "O tamanho está certo. O pedido aqui é chá: tea."
+              },
+              {
+                "response": "Large tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I would like a large tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I'd like a large tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "Can I have a large tea, please?",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "Could I have a large tea, please?",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "May I have a large tea, please?",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "A large cup of tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I would like a large cup of tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I want a large tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I would like a large tea.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I'd like a large tea.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "Can I have a large tea.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "Could I have a large tea.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "May I have a large tea.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "Small coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a small coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a small coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a small coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a small coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A small cup of coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small cup of coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I want a small coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a small coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a small coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a small coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a small coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A small water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Small water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a small water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a small water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a small water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a small water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A small cup of water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small cup of water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I want a small water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a small water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a small water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a small water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a small water.",
+                "message": "O pedido desta atividade é chá: tea."
+              }
+            ],
+            "example": "A small tea, please."
+          }
+        }
+      },
+      "response": "I'd like a small tea, please",
+      "result": {
+        "outcome": "correct",
+        "message": "Resposta aceita nesta atividade.",
+        "example": null,
+        "rule_version": "text-variants-v1"
+      }
+    },
+    {
+      "id": "missing-apostrophe",
+      "activity": {
+        "type": "written_recall",
+        "modality": "writing",
+        "expected": {
+          "comparison": {
+            "version": "text-variants-v1",
+            "accepted": [
+              "A small tea, please.",
+              "Small tea, please.",
+              "I would like a small tea, please.",
+              "I'd like a small tea, please.",
+              "Can I have a small tea, please?",
+              "Could I have a small tea, please?",
+              "May I have a small tea, please?",
+              "A small cup of tea, please.",
+              "I would like a small cup of tea, please.",
+              "I want a small tea, please.",
+              "I would like a small tea.",
+              "I'd like a small tea.",
+              "Can I have a small tea.",
+              "Could I have a small tea.",
+              "May I have a small tea."
+            ],
+            "corrections": [
+              {
+                "response": "A large tea, please.",
+                "message": "A bebida está certa. Large é grande; o pedido aqui é pequeno: small."
+              },
+              {
+                "response": "A small coffee, please.",
+                "message": "O tamanho está certo. O pedido aqui é chá: tea."
+              },
+              {
+                "response": "Large tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I would like a large tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I'd like a large tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "Can I have a large tea, please?",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "Could I have a large tea, please?",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "May I have a large tea, please?",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "A large cup of tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I would like a large cup of tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I want a large tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I would like a large tea.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I'd like a large tea.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "Can I have a large tea.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "Could I have a large tea.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "May I have a large tea.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "Small coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a small coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a small coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a small coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a small coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A small cup of coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small cup of coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I want a small coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a small coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a small coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a small coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a small coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A small water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Small water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a small water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a small water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a small water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a small water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A small cup of water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small cup of water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I want a small water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a small water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a small water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a small water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a small water.",
+                "message": "O pedido desta atividade é chá: tea."
+              }
+            ],
+            "example": "A small tea, please."
+          }
+        }
+      },
+      "response": "Id like a small tea, please.",
+      "result": {
+        "outcome": "unverified",
+        "message": "Ainda não confirmei esta forma. Compare com o exemplo; outra resposta também pode ser válida.",
+        "example": "A small tea, please.",
+        "rule_version": "text-variants-v1"
+      }
+    },
+    {
+      "id": "wrong-size",
+      "activity": {
+        "type": "written_recall",
+        "modality": "writing",
+        "expected": {
+          "comparison": {
+            "version": "text-variants-v1",
+            "accepted": [
+              "A small tea, please.",
+              "Small tea, please.",
+              "I would like a small tea, please.",
+              "I'd like a small tea, please.",
+              "Can I have a small tea, please?",
+              "Could I have a small tea, please?",
+              "May I have a small tea, please?",
+              "A small cup of tea, please.",
+              "I would like a small cup of tea, please.",
+              "I want a small tea, please.",
+              "I would like a small tea.",
+              "I'd like a small tea.",
+              "Can I have a small tea.",
+              "Could I have a small tea.",
+              "May I have a small tea."
+            ],
+            "corrections": [
+              {
+                "response": "A large tea, please.",
+                "message": "A bebida está certa. Large é grande; o pedido aqui é pequeno: small."
+              },
+              {
+                "response": "A small coffee, please.",
+                "message": "O tamanho está certo. O pedido aqui é chá: tea."
+              },
+              {
+                "response": "Large tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I would like a large tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I'd like a large tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "Can I have a large tea, please?",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "Could I have a large tea, please?",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "May I have a large tea, please?",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "A large cup of tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I would like a large cup of tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I want a large tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I would like a large tea.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I'd like a large tea.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "Can I have a large tea.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "Could I have a large tea.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "May I have a large tea.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "Small coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a small coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a small coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a small coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a small coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A small cup of coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small cup of coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I want a small coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a small coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a small coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a small coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a small coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A small water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Small water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a small water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a small water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a small water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a small water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A small cup of water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small cup of water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I want a small water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a small water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a small water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a small water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a small water.",
+                "message": "O pedido desta atividade é chá: tea."
+              }
+            ],
+            "example": "A small tea, please."
+          }
+        }
+      },
+      "response": "A large tea, please.",
+      "result": {
+        "outcome": "incorrect",
+        "message": "A bebida está certa. Large é grande; o pedido aqui é pequeno: small.",
+        "example": "A small tea, please.",
+        "rule_version": "text-variants-v1"
+      }
+    },
+    {
+      "id": "expanded-form",
+      "activity": {
+        "type": "written_recall",
+        "modality": "writing",
+        "expected": {
+          "comparison": {
+            "version": "text-variants-v1",
+            "accepted": [
+              "I would like a tea, please."
+            ],
+            "corrections": [
+              {
+                "response": "I'd like a tea, please.",
+                "message": "Troque I’d por I would para praticar a forma completa."
+              },
+              {
+                "response": "I had like a tea, please.",
+                "message": "Neste pedido, I’d corresponde a I would."
+              }
+            ],
+            "example": "I would like a tea, please."
+          }
+        }
+      },
+      "response": "I would like a tea, please.",
+      "result": {
+        "outcome": "correct",
+        "message": "Resposta aceita nesta atividade.",
+        "example": null,
+        "rule_version": "text-variants-v1"
+      }
+    },
+    {
+      "id": "ambiguous-id-not-had",
+      "activity": {
+        "type": "written_recall",
+        "modality": "writing",
+        "expected": {
+          "comparison": {
+            "version": "text-variants-v1",
+            "accepted": [
+              "I would like a tea, please."
+            ],
+            "corrections": [
+              {
+                "response": "I'd like a tea, please.",
+                "message": "Troque I’d por I would para praticar a forma completa."
+              },
+              {
+                "response": "I had like a tea, please.",
+                "message": "Neste pedido, I’d corresponde a I would."
+              }
+            ],
+            "example": "I would like a tea, please."
+          }
+        }
+      },
+      "response": "I had like a tea, please.",
+      "result": {
+        "outcome": "incorrect",
+        "message": "Neste pedido, I’d corresponde a I would.",
+        "example": "I would like a tea, please.",
+        "rule_version": "text-variants-v1"
+      }
+    },
+    {
+      "id": "contracted-form",
+      "activity": {
+        "type": "written_recall",
+        "modality": "writing",
+        "expected": {
+          "comparison": {
+            "version": "text-variants-v1",
+            "accepted": [
+              "I'd like a small coffee, please."
+            ],
+            "corrections": [
+              {
+                "response": "I would like a small coffee, please.",
+                "message": "A frase comunica o pedido. Para esta prática de contração, troque I would por I’d."
+              }
+            ],
+            "example": "I'd like a small coffee, please."
+          }
+        }
+      },
+      "response": "I’D LIKE A SMALL COFFEE, PLEASE!",
+      "result": {
+        "outcome": "correct",
+        "message": "Resposta aceita nesta atividade.",
+        "example": null,
+        "rule_version": "text-variants-v1"
+      }
+    },
+    {
+      "id": "task-specific-contraction",
+      "activity": {
+        "type": "written_recall",
+        "modality": "writing",
+        "expected": {
+          "comparison": {
+            "version": "text-variants-v1",
+            "accepted": [
+              "I'd like a small coffee, please."
+            ],
+            "corrections": [
+              {
+                "response": "I would like a small coffee, please.",
+                "message": "A frase comunica o pedido. Para esta prática de contração, troque I would por I’d."
+              }
+            ],
+            "example": "I'd like a small coffee, please."
+          }
+        }
+      },
+      "response": "I would like a small coffee, please.",
+      "result": {
+        "outcome": "incorrect",
+        "message": "A frase comunica o pedido. Para esta prática de contração, troque I would por I’d.",
+        "example": "I'd like a small coffee, please.",
+        "rule_version": "text-variants-v1"
+      }
+    },
+    {
+      "id": "transfer-alternative",
+      "activity": {
+        "type": "communicative_task",
+        "modality": "writing",
+        "expected": {
+          "comparison": {
+            "version": "text-variants-v1",
+            "accepted": [
+              "A large coffee, please.",
+              "Large coffee, please.",
+              "I would like a large coffee, please.",
+              "I'd like a large coffee, please.",
+              "Can I have a large coffee, please?",
+              "Could I have a large coffee, please?",
+              "May I have a large coffee, please?",
+              "A large cup of coffee, please.",
+              "I would like a large cup of coffee, please.",
+              "I want a large coffee, please.",
+              "I would like a large coffee.",
+              "I'd like a large coffee.",
+              "Can I have a large coffee.",
+              "Could I have a large coffee.",
+              "May I have a large coffee."
+            ],
+            "corrections": [
+              {
+                "response": "I would like a small coffee, please.",
+                "message": "A bebida está certa. O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "I'd like a large tea, please.",
+                "message": "O tamanho está certo. A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "A small coffee, please.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "Small coffee, please.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "I'd like a small coffee, please.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "Can I have a small coffee, please?",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "Could I have a small coffee, please?",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "May I have a small coffee, please?",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "A small cup of coffee, please.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "I would like a small cup of coffee, please.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "I want a small coffee, please.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "I would like a small coffee.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "I'd like a small coffee.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "Can I have a small coffee.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "Could I have a small coffee.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "May I have a small coffee.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "A large tea, please.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "Large tea, please.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "I would like a large tea, please.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "Can I have a large tea, please?",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "Could I have a large tea, please?",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "May I have a large tea, please?",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "A large cup of tea, please.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "I would like a large cup of tea, please.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "I want a large tea, please.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "I would like a large tea.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "I'd like a large tea.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "Can I have a large tea.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "Could I have a large tea.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "May I have a large tea.",
+                "message": "A bebida pedida aqui é café: coffee."
+              }
+            ],
+            "example": "I would like a large coffee, please."
+          }
+        }
+      },
+      "response": "May I have a large coffee, please?",
+      "result": {
+        "outcome": "correct",
+        "message": "Resposta aceita nesta atividade.",
+        "example": null,
+        "rule_version": "text-variants-v1"
+      }
+    },
+    {
+      "id": "communicatively-valid-short-form",
+      "activity": {
+        "type": "communicative_task",
+        "modality": "writing",
+        "expected": {
+          "comparison": {
+            "version": "text-variants-v1",
+            "accepted": [
+              "A large coffee, please.",
+              "Large coffee, please.",
+              "I would like a large coffee, please.",
+              "I'd like a large coffee, please.",
+              "Can I have a large coffee, please?",
+              "Could I have a large coffee, please?",
+              "May I have a large coffee, please?",
+              "A large cup of coffee, please.",
+              "I would like a large cup of coffee, please.",
+              "I want a large coffee, please.",
+              "I would like a large coffee.",
+              "I'd like a large coffee.",
+              "Can I have a large coffee.",
+              "Could I have a large coffee.",
+              "May I have a large coffee."
+            ],
+            "corrections": [
+              {
+                "response": "I would like a small coffee, please.",
+                "message": "A bebida está certa. O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "I'd like a large tea, please.",
+                "message": "O tamanho está certo. A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "A small coffee, please.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "Small coffee, please.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "I'd like a small coffee, please.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "Can I have a small coffee, please?",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "Could I have a small coffee, please?",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "May I have a small coffee, please?",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "A small cup of coffee, please.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "I would like a small cup of coffee, please.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "I want a small coffee, please.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "I would like a small coffee.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "I'd like a small coffee.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "Can I have a small coffee.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "Could I have a small coffee.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "May I have a small coffee.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "A large tea, please.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "Large tea, please.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "I would like a large tea, please.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "Can I have a large tea, please?",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "Could I have a large tea, please?",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "May I have a large tea, please?",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "A large cup of tea, please.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "I would like a large cup of tea, please.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "I want a large tea, please.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "I would like a large tea.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "I'd like a large tea.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "Can I have a large tea.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "Could I have a large tea.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "May I have a large tea.",
+                "message": "A bebida pedida aqui é café: coffee."
+              }
+            ],
+            "example": "I would like a large coffee, please."
+          }
+        }
+      },
+      "response": "A large coffee, please.",
+      "result": {
+        "outcome": "correct",
+        "message": "Resposta aceita nesta atividade.",
+        "example": null,
+        "rule_version": "text-variants-v1"
+      }
+    },
+    {
+      "id": "negation-not-discarded",
+      "activity": {
+        "type": "communicative_task",
+        "modality": "writing",
+        "expected": {
+          "comparison": {
+            "version": "text-variants-v1",
+            "accepted": [
+              "A large coffee, please.",
+              "Large coffee, please.",
+              "I would like a large coffee, please.",
+              "I'd like a large coffee, please.",
+              "Can I have a large coffee, please?",
+              "Could I have a large coffee, please?",
+              "May I have a large coffee, please?",
+              "A large cup of coffee, please.",
+              "I would like a large cup of coffee, please.",
+              "I want a large coffee, please.",
+              "I would like a large coffee.",
+              "I'd like a large coffee.",
+              "Can I have a large coffee.",
+              "Could I have a large coffee.",
+              "May I have a large coffee."
+            ],
+            "corrections": [
+              {
+                "response": "I would like a small coffee, please.",
+                "message": "A bebida está certa. O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "I'd like a large tea, please.",
+                "message": "O tamanho está certo. A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "A small coffee, please.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "Small coffee, please.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "I'd like a small coffee, please.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "Can I have a small coffee, please?",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "Could I have a small coffee, please?",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "May I have a small coffee, please?",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "A small cup of coffee, please.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "I would like a small cup of coffee, please.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "I want a small coffee, please.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "I would like a small coffee.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "I'd like a small coffee.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "Can I have a small coffee.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "Could I have a small coffee.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "May I have a small coffee.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "A large tea, please.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "Large tea, please.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "I would like a large tea, please.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "Can I have a large tea, please?",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "Could I have a large tea, please?",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "May I have a large tea, please?",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "A large cup of tea, please.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "I would like a large cup of tea, please.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "I want a large tea, please.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "I would like a large tea.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "I'd like a large tea.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "Can I have a large tea.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "Could I have a large tea.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "May I have a large tea.",
+                "message": "A bebida pedida aqui é café: coffee."
+              }
+            ],
+            "example": "I would like a large coffee, please."
+          }
+        }
+      },
+      "response": "I would not like a large coffee, please.",
+      "result": {
+        "outcome": "unverified",
+        "message": "Ainda não confirmei esta forma. Compare com o exemplo; outra resposta também pode ser válida.",
+        "example": "I would like a large coffee, please.",
+        "rule_version": "text-variants-v1"
+      }
+    },
+    {
+      "id": "unlisted-valid-alternative",
+      "activity": {
+        "type": "communicative_task",
+        "modality": "writing",
+        "expected": {
+          "comparison": {
+            "version": "text-variants-v1",
+            "accepted": [
+              "A large coffee, please.",
+              "Large coffee, please.",
+              "I would like a large coffee, please.",
+              "I'd like a large coffee, please.",
+              "Can I have a large coffee, please?",
+              "Could I have a large coffee, please?",
+              "May I have a large coffee, please?",
+              "A large cup of coffee, please.",
+              "I would like a large cup of coffee, please.",
+              "I want a large coffee, please.",
+              "I would like a large coffee.",
+              "I'd like a large coffee.",
+              "Can I have a large coffee.",
+              "Could I have a large coffee.",
+              "May I have a large coffee."
+            ],
+            "corrections": [
+              {
+                "response": "I would like a small coffee, please.",
+                "message": "A bebida está certa. O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "I'd like a large tea, please.",
+                "message": "O tamanho está certo. A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "A small coffee, please.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "Small coffee, please.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "I'd like a small coffee, please.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "Can I have a small coffee, please?",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "Could I have a small coffee, please?",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "May I have a small coffee, please?",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "A small cup of coffee, please.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "I would like a small cup of coffee, please.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "I want a small coffee, please.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "I would like a small coffee.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "I'd like a small coffee.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "Can I have a small coffee.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "Could I have a small coffee.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "May I have a small coffee.",
+                "message": "O tamanho pedido aqui é grande: large."
+              },
+              {
+                "response": "A large tea, please.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "Large tea, please.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "I would like a large tea, please.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "Can I have a large tea, please?",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "Could I have a large tea, please?",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "May I have a large tea, please?",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "A large cup of tea, please.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "I would like a large cup of tea, please.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "I want a large tea, please.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "I would like a large tea.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "I'd like a large tea.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "Can I have a large tea.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "Could I have a large tea.",
+                "message": "A bebida pedida aqui é café: coffee."
+              },
+              {
+                "response": "May I have a large tea.",
+                "message": "A bebida pedida aqui é café: coffee."
+              }
+            ],
+            "example": "I would like a large coffee, please."
+          }
+        }
+      },
+      "response": "May I please get one large coffee?",
+      "result": {
+        "outcome": "unverified",
+        "message": "Ainda não confirmei esta forma. Compare com o exemplo; outra resposta também pode ser válida.",
+        "example": "I would like a large coffee, please.",
+        "rule_version": "text-variants-v1"
+      }
+    },
+    {
+      "id": "empty-is-not-correct",
+      "activity": {
+        "type": "written_recall",
+        "modality": "writing",
+        "expected": {
+          "comparison": {
+            "version": "text-variants-v1",
+            "accepted": [
+              "water"
+            ],
+            "corrections": [
+              {
+                "response": "tea",
+                "message": "Tea significa chá. Para água, use water."
+              },
+              {
+                "response": "coffee",
+                "message": "Coffee significa café. Para água, use water."
+              },
+              {
+                "response": "watter",
+                "message": "Confira a grafia: water tem apenas um t."
+              },
+              {
+                "response": "woter",
+                "message": "Confira a grafia: water."
+              }
+            ],
+            "example": "water"
+          }
+        }
+      },
+      "response": "   ",
+      "result": {
+        "outcome": "unverified",
+        "message": "Ainda não confirmei esta forma. Compare com o exemplo; outra resposta também pode ser válida.",
+        "example": "water",
+        "rule_version": "text-variants-v1"
+      }
+    },
+    {
+      "id": "polite-without-please",
+      "activity": {
+        "type": "written_recall",
+        "modality": "writing",
+        "expected": {
+          "comparison": {
+            "version": "text-variants-v1",
+            "accepted": [
+              "A tea, please.",
+              "Tea, please.",
+              "I would like a tea, please.",
+              "I'd like a tea, please.",
+              "Can I have a tea, please?",
+              "Could I have a tea, please?",
+              "May I have a tea, please?",
+              "A cup of tea, please.",
+              "I would like a cup of tea, please.",
+              "I want a tea, please.",
+              "I would like a tea.",
+              "I'd like a tea.",
+              "Can I have a tea.",
+              "Could I have a tea.",
+              "May I have a tea.",
+              "I would like tea, please.",
+              "I would like some tea, please.",
+              "I'd like tea, please.",
+              "I'd like some tea, please.",
+              "Could I have tea, please.",
+              "Could I have some tea, please."
+            ],
+            "corrections": [
+              {
+                "response": "A coffee, please.",
+                "message": "Você pediu café. O objetivo desta atividade é pedir chá."
+              },
+              {
+                "response": "Coffee, please.",
+                "message": "Você pediu café. O objetivo desta atividade é pedir chá."
+              },
+              {
+                "response": "A tee, please.",
+                "message": "Para chá, escreva tea."
+              },
+              {
+                "response": "I would like a coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A cup of coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a cup of coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I want a coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like some coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like some coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have some coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A cup of water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a cup of water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I want a water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like some water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like some water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have some water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              }
+            ],
+            "example": "A tea, please."
+          }
+        }
+      },
+      "response": "I would like a tea.",
+      "result": {
+        "outcome": "correct",
+        "message": "Resposta aceita nesta atividade.",
+        "example": null,
+        "rule_version": "text-variants-v1"
+      }
+    },
+    {
+      "id": "wrong-choice-in-full-sentence",
+      "activity": {
+        "type": "written_recall",
+        "modality": "writing",
+        "expected": {
+          "comparison": {
+            "version": "text-variants-v1",
+            "accepted": [
+              "A small tea, please.",
+              "Small tea, please.",
+              "I would like a small tea, please.",
+              "I'd like a small tea, please.",
+              "Can I have a small tea, please?",
+              "Could I have a small tea, please?",
+              "May I have a small tea, please?",
+              "A small cup of tea, please.",
+              "I would like a small cup of tea, please.",
+              "I want a small tea, please.",
+              "I would like a small tea.",
+              "I'd like a small tea.",
+              "Can I have a small tea.",
+              "Could I have a small tea.",
+              "May I have a small tea."
+            ],
+            "corrections": [
+              {
+                "response": "A large tea, please.",
+                "message": "A bebida está certa. Large é grande; o pedido aqui é pequeno: small."
+              },
+              {
+                "response": "A small coffee, please.",
+                "message": "O tamanho está certo. O pedido aqui é chá: tea."
+              },
+              {
+                "response": "Large tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I would like a large tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I'd like a large tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "Can I have a large tea, please?",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "Could I have a large tea, please?",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "May I have a large tea, please?",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "A large cup of tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I would like a large cup of tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I want a large tea, please.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I would like a large tea.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "I'd like a large tea.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "Can I have a large tea.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "Could I have a large tea.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "May I have a large tea.",
+                "message": "O pedido desta atividade é pequeno: small."
+              },
+              {
+                "response": "Small coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a small coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a small coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a small coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a small coffee, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A small cup of coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small cup of coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I want a small coffee, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a small coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a small coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a small coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a small coffee.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A small water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Small water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a small water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a small water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a small water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a small water, please?",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "A small cup of water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small cup of water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I want a small water, please.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I would like a small water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "I'd like a small water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Can I have a small water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "Could I have a small water.",
+                "message": "O pedido desta atividade é chá: tea."
+              },
+              {
+                "response": "May I have a small water.",
+                "message": "O pedido desta atividade é chá: tea."
+              }
+            ],
+            "example": "A small tea, please."
+          }
+        }
+      },
+      "response": "I'd like a small coffee, please.",
+      "result": {
+        "outcome": "incorrect",
+        "message": "O pedido desta atividade é chá: tea.",
+        "example": "A small tea, please.",
+        "rule_version": "text-variants-v1"
+      }
+    },
+    {
+      "id": "legacy-content-not-regraded",
+      "activity": {
+        "type": "written_recall",
+        "modality": "writing",
+        "expected": {
+          "human_review": true,
+          "valid_examples": [
+            "A tea, please."
+          ]
+        }
+      },
+      "response": "A tea, please.",
+      "result": {
+        "outcome": "unverified",
+        "message": "Prática registrada. Respostas abertas precisam de avaliação independente.",
+        "example": null,
+        "rule_version": null
+      }
+    }
+  ]
+}

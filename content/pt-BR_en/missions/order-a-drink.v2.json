@@ -1,0 +1,316 @@
+{
+  "schema_version": "1.0.0",
+  "id": "order-a-drink",
+  "version": 2,
+  "minimum_reader_version": "1.0.0",
+  "status": "draft",
+  "purpose": "training",
+  "title": "Um pedido no café",
+  "language_pair": "pt-BR_en",
+  "capability_ids": [
+    "request-drink",
+    "ask-for-clarification",
+    "understand-destination"
+  ],
+  "prerequisite_ids": [],
+  "targets": [
+    {
+      "id": "request-drink-polite",
+      "expression": "I'd like a small coffee, please.",
+      "meaning": "Fazer um pedido educado, especificando item e tamanho.",
+      "rationale": "Permite transmitir uma escolha na situação de compra."
+    },
+    {
+      "id": "request-clarification",
+      "expression": "Could you explain that, please?",
+      "meaning": "Pedir esclarecimento por mensagem quando uma informação não está clara.",
+      "rationale": "Permite reparar uma interação escrita sem fingir compreensão."
+    },
+    {
+      "id": "understand-destination",
+      "expression": "For here or to go?",
+      "meaning": "Identificar se o pedido é para consumir no local ou levar.",
+      "rationale": "Permite responder à pergunta do atendente."
+    }
+  ],
+  "provenance": {
+    "author_type": "ai_assisted_draft",
+    "license": "pending_owner_decision",
+    "reviewer": null,
+    "reviewed_at": null
+  },
+  "assets": [],
+  "rubric": {
+    "id": "drink-request",
+    "version": 2,
+    "dimensions": [
+      {
+        "id": "item-and-size",
+        "essential": true,
+        "criterion": "Interlocutor identifica item e tamanho solicitados."
+      },
+      {
+        "id": "repair",
+        "essential": true,
+        "criterion": "Pede esclarecimento por escrito quando necessário."
+      },
+      {
+        "id": "answer-followup",
+        "essential": true,
+        "criterion": "Responde à pergunta de continuidade de acordo com a situação."
+      },
+      {
+        "id": "target-form",
+        "essential": false,
+        "criterion": "Demonstra a expressão-alvo; alternativas válidas podem cumprir o objetivo sem demonstrá-la."
+      },
+      {
+        "id": "comprehensibility",
+        "essential": true,
+        "criterion": "A mensagem escrita é compreensível; não há avaliação de fala ou escuta nesta versão."
+      }
+    ]
+  },
+  "activities": [
+    {
+      "id": "purpose",
+      "type": "purpose",
+      "modality": "reading",
+      "prompt": "Faça um pedido por mensagem e esclareça uma informação quando precisar.",
+      "target_ids": [
+        "request-drink-polite",
+        "request-clarification"
+      ],
+      "supports": [],
+      "content": {
+        "phase_id": "understand",
+        "phase_title": "Compreender",
+        "phase_description": "Leia uma conversa e identifique o que ela comunica.",
+        "label": "Seu objetivo"
+      },
+      "expected": {
+        "evidence": "none"
+      },
+      "feedback": "Observe o sentido da mensagem. Você pode consultar um apoio e tentar novamente; produções abertas aguardam avaliação independente."
+    },
+    {
+      "id": "dialogue",
+      "type": "dialogue",
+      "modality": "reading",
+      "prompt": "Leia a conversa no café.",
+      "target_ids": [
+        "request-drink-polite",
+        "request-clarification",
+        "understand-destination"
+      ],
+      "supports": [],
+      "content": {
+        "phase_id": "understand",
+        "phase_title": "Compreender",
+        "phase_description": "Leia uma conversa e identifique o que ela comunica.",
+        "label": "Uma conversa",
+        "messages": [
+          {
+            "speaker": "Cliente",
+            "text": "I'd like a small coffee, please."
+          },
+          {
+            "speaker": "Atendente",
+            "text": "For here or to go?"
+          },
+          {
+            "speaker": "Cliente",
+            "text": "Could you explain that, please?"
+          },
+          {
+            "speaker": "Atendente",
+            "text": "Will you have it here or take it with you?"
+          },
+          {
+            "speaker": "Cliente",
+            "text": "To go, please."
+          }
+        ]
+      },
+      "expected": {
+        "evidence": "exposure_only"
+      },
+      "feedback": "Observe o sentido da mensagem. Você pode consultar um apoio e tentar novamente; produções abertas aguardam avaliação independente."
+    },
+    {
+      "id": "meaning",
+      "type": "information_question",
+      "modality": "reading",
+      "prompt": "O cliente vai consumir no local ou levar?",
+      "target_ids": [
+        "understand-destination"
+      ],
+      "supports": [],
+      "content": {
+        "phase_id": "understand",
+        "phase_title": "Compreender",
+        "phase_description": "Leia uma conversa e identifique o que ela comunica.",
+        "label": "Entenda o pedido",
+        "options": [
+          "No local",
+          "Levar"
+        ]
+      },
+      "expected": {
+        "accepted": [
+          "Levar"
+        ],
+        "dimension": "meaning"
+      },
+      "feedback": "Observe o sentido da mensagem. Você pode consultar um apoio e tentar novamente; produções abertas aguardam avaliação independente."
+    },
+    {
+      "id": "form",
+      "type": "explanation",
+      "modality": "reading",
+      "prompt": "Um jeito de fazer seu pedido.",
+      "target_ids": [
+        "request-drink-polite"
+      ],
+      "supports": [],
+      "content": {
+        "phase_id": "build",
+        "phase_title": "Construir",
+        "phase_description": "Observe um exemplo e escreva seu próprio pedido.",
+        "label": "Observe o exemplo",
+        "examples": [
+          "I'd like a small coffee, please.",
+          "I'd like a large tea, please."
+        ],
+        "pt_BR_note": "I'd like apresenta um pedido. Troque o tamanho e a bebida para comunicar sua escolha."
+      },
+      "expected": {
+        "evidence": "exposure_only"
+      },
+      "feedback": "Observe o sentido da mensagem. Você pode consultar um apoio e tentar novamente; produções abertas aguardam avaliação independente."
+    },
+    {
+      "id": "recall",
+      "type": "written_recall",
+      "modality": "writing",
+      "prompt": "Escreva um pedido de chá grande, com suas palavras.",
+      "target_ids": [
+        "request-drink-polite"
+      ],
+      "supports": [
+        {
+          "id": "request-hint",
+          "kind": "hint",
+          "content": "Você pode começar com I'd like… e informar o tamanho e a bebida.",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": false
+        }
+      ],
+      "content": {
+        "phase_id": "build",
+        "phase_title": "Construir",
+        "phase_description": "Observe um exemplo e escreva seu próprio pedido.",
+        "label": "Escreva seu pedido"
+      },
+      "expected": {
+        "human_review": true,
+        "valid_examples": [
+          "I'd like a large tea, please.",
+          "A large tea, please."
+        ],
+        "literal_equality_is_insufficient": true
+      },
+      "feedback": "Observe o sentido da mensagem. Você pode consultar um apoio e tentar novamente; produções abertas aguardam avaliação independente."
+    },
+    {
+      "id": "clarify",
+      "type": "information_question",
+      "modality": "reading",
+      "prompt": "Você recebeu a mensagem ‘Please collect your order at the counter.’ Qual resposta pede esclarecimento?",
+      "target_ids": [
+        "request-clarification"
+      ],
+      "supports": [],
+      "content": {
+        "phase_id": "use",
+        "phase_title": "Usar",
+        "phase_description": "Peça esclarecimento e adapte sua mensagem a outra situação.",
+        "label": "Peça esclarecimento",
+        "options": [
+          "Could you explain that, please?",
+          "I'd like a small tea, please."
+        ]
+      },
+      "expected": {
+        "accepted": [
+          "Could you explain that, please?"
+        ],
+        "dimension": "repair"
+      },
+      "feedback": "Observe o sentido da mensagem. Você pode consultar um apoio e tentar novamente; produções abertas aguardam avaliação independente."
+    },
+    {
+      "id": "transfer",
+      "type": "communicative_task",
+      "modality": "writing",
+      "prompt": "Peça uma água pequena para consumir no local. Responda “For here or to go?” e escreva como pedir esclarecimento.",
+      "target_ids": [
+        "request-drink-polite",
+        "request-clarification",
+        "understand-destination"
+      ],
+      "supports": [
+        {
+          "id": "clarification-hint",
+          "kind": "hint",
+          "content": "Comunique a bebida e o tamanho, indique se é para consumir no local e inclua uma pergunta de esclarecimento.",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": false
+        }
+      ],
+      "content": {
+        "phase_id": "use",
+        "phase_title": "Usar",
+        "phase_description": "Peça esclarecimento e adapte sua mensagem a outra situação.",
+        "label": "Uma nova situação"
+      },
+      "expected": {
+        "human_review": true,
+        "required_meaning": [
+          "small water",
+          "for here",
+          "request clarification"
+        ],
+        "literal_equality_is_insufficient": true
+      },
+      "feedback": "Observe o sentido da mensagem. Você pode consultar um apoio e tentar novamente; produções abertas aguardam avaliação independente."
+    },
+    {
+      "id": "summary",
+      "type": "summary",
+      "modality": "reading",
+      "prompt": "Prática encerrada.",
+      "target_ids": [
+        "request-drink-polite",
+        "request-clarification",
+        "understand-destination"
+      ],
+      "supports": [],
+      "content": {
+        "phase_id": "use",
+        "phase_title": "Usar",
+        "phase_description": "Peça esclarecimento e adapte sua mensagem a outra situação.",
+        "label": "Feche a prática",
+        "clear_end": true
+      },
+      "expected": {
+        "evidence": "none"
+      },
+      "feedback": "Observe o sentido da mensagem. Você pode consultar um apoio e tentar novamente; produções abertas aguardam avaliação independente."
+    }
+  ]
+}
