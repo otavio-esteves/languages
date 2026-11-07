@@ -1,11 +1,11 @@
 export type Support = { id: string; kind: string; content: string; affected_modalities: string[]; reveals_answer: boolean };
 export type Activity = {
   id: string; type: string; modality: string; prompt: string; target_ids: string[]; supports: Support[];
-  content: { phase_id?: string; phase_title?: string; phase_description?: string; label?: string; messages?: { speaker: string; text: string }[]; examples?: string[]; options?: string[]; pt_BR_note?: string; options_language?: string; study_text?: string; vocabulary?: { word: string; meaning: string }[]; glossary?: Record<string, Gloss> };
+  content: { phase_id?: string; phase_title?: string; phase_description?: string; phase_level?: string; label?: string; messages?: { speaker: string; text: string }[]; examples?: string[]; options?: string[]; pt_BR_note?: string; options_language?: string; study_text?: string; vocabulary?: { word: string; meaning: string }[]; glossary?: Record<string, Gloss> };
   expected: { accepted?: string[]; comparison?: Comparison }; feedback: string;
 };
 export type Mission = { id: string; version: number; title: string; assets?: unknown[]; activities: Activity[] };
-export type TrailPhase = { id: string; title: string; description: string; steps: { index: number; label: string }[] };
+export type TrailPhase = { id: string; title: string; description: string; level?: string; steps: { index: number; label: string }[] };
 export function phaseId(activity: Activity): string { return activity.content.phase_id || 'practice'; }
 export function phases(mission: Mission): TrailPhase[] {
   const result: TrailPhase[] = [];
@@ -13,7 +13,7 @@ export function phases(mission: Mission): TrailPhase[] {
     const id = phaseId(activity);
     let phase = result.find(item => item.id === id);
     if (!phase) {
-      phase = { id, title: activity.content.phase_title || 'Praticar', description: activity.content.phase_description || '', steps: [] };
+      phase = { id, title: activity.content.phase_title || 'Praticar', description: activity.content.phase_description || '', level: activity.content.phase_level, steps: [] };
       result.push(phase);
     }
     phase.steps.push({ index, label: activity.content.label || 'Atividade' });
@@ -52,4 +52,11 @@ export function dayLessons(day: TrailPhase): { steps: TrailPhase['steps'] }[] {
 }
 export function lessonIndex(day: TrailPhase, cursor: number): number {
   return dayLessons(day).findIndex(lesson => lesson.steps.some(step => step.index === cursor));
+}
+export function lessonKey(day: TrailPhase, lesson: number): string { return `${day.id}:${lesson}`; }
+export function legacyLessons(days: TrailPhase[], cursor: number, finished = false): string[] {
+  return days.flatMap(day => dayLessons(day).flatMap((lesson, index) => finished || lesson.steps.every(step => step.index < cursor) ? [lessonKey(day, index)] : []));
+}
+export function completedInDay(day: TrailPhase, completed: string[]): number {
+  return dayLessons(day).filter((_, index) => completed.includes(lessonKey(day, index))).length;
 }

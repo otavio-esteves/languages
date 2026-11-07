@@ -19,3 +19,14 @@ test('each day has three complete lesson groups without losing activities', asyn
     assert.equal(lessonIndex(day, lessons[1].steps[0].index), 1);
   }
 });
+
+test('day progress counts completed lessons without treating navigation as completion', async () => {
+  const { phases, completedInDay, legacyLessons } = await import('../../resources/js/lib/textTrail.ts');
+  const mission = JSON.parse(readFileSync(new URL('../../../../content/pt-BR_en/missions/order-a-drink.v4.json', import.meta.url), 'utf8'));
+  const days = phases(mission);
+  assert.deepEqual(days.map(day => day.level), ['A1', 'A1', 'A1']);
+  const done = ['sentences:0', 'words:0', 'words:1'];
+  assert.deepEqual(days.map(day => completedInDay(day, done)), [2, 0, 1]);
+  assert.deepEqual(legacyLessons(days, 3), ['words:0', 'words:1', 'words:2']);
+  assert.deepEqual(days.map(day => completedInDay(day, [...done, 'words:2'])), [3, 0, 1]);
+});

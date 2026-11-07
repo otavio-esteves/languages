@@ -361,6 +361,18 @@
                     }
                   }
                 }
+              },
+              "phase_level": {
+                "enum": [
+                  "Pre-A1",
+                  "A1",
+                  "A2",
+                  "B1",
+                  "B2",
+                  "C1",
+                  "C2"
+                ],
+                "description": "Referência editorial do conteúdo, sem certificar o nível do aluno."
               }
             }
           },

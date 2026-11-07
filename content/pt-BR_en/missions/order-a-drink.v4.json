@@ -1,0 +1,2164 @@
+{
+  "schema_version": "1.0.0",
+  "id": "order-a-drink",
+  "version": 4,
+  "minimum_reader_version": "1.0.0",
+  "status": "draft",
+  "purpose": "training",
+  "title": "Primeiros pedidos em inglês",
+  "language_pair": "pt-BR_en",
+  "capability_ids": [
+    "request-drink"
+  ],
+  "prerequisite_ids": [],
+  "targets": [
+    {
+      "id": "drink-words",
+      "expression": "tea · coffee · water",
+      "meaning": "Reconhecer e escrever nomes de bebidas neste contexto.",
+      "rationale": "Começar com palavras frequentes antes de compor pedidos."
+    },
+    {
+      "id": "short-request",
+      "expression": "A tea, please.",
+      "meaning": "Fazer um pedido curto e educado.",
+      "rationale": "Combinar palavras conhecidas sem exigir uma frase longa."
+    },
+    {
+      "id": "request-size",
+      "expression": "A small tea, please.",
+      "meaning": "Informar a bebida e o tamanho.",
+      "rationale": "Ampliar um pedido conhecido com uma informação útil."
+    },
+    {
+      "id": "full-request",
+      "expression": "I would like… / I'd like…",
+      "meaning": "Usar uma frase de pedido e reconhecer sua contração neste contexto.",
+      "rationale": "Apresentar a forma completa antes da contração."
+    }
+  ],
+  "provenance": {
+    "author_type": "ai_assisted_draft",
+    "license": "pending_owner_decision",
+    "reviewer": null,
+    "reviewed_at": null
+  },
+  "assets": [],
+  "rubric": {
+    "id": "drink-request-text",
+    "version": 3,
+    "dimensions": [
+      {
+        "id": "choice",
+        "essential": true,
+        "criterion": "Comunica a bebida e o tamanho solicitados, quando pertinentes."
+      },
+      {
+        "id": "meaning",
+        "essential": true,
+        "criterion": "Relaciona a palavra ou pedido ao sentido no contexto escrito."
+      },
+      {
+        "id": "form",
+        "essential": false,
+        "criterion": "A forma-alvo é observada separadamente; uma alternativa comunicativamente adequada não é rejeitada por usar outra construção."
+      }
+    ]
+  },
+  "activities": [
+    {
+      "id": "words",
+      "type": "explanation",
+      "modality": "reading",
+      "prompt": "Três palavras para começar.",
+      "target_ids": [
+        "drink-words"
+      ],
+      "supports": [
+        {
+          "id": "gloss-coffee",
+          "kind": "hint",
+          "content": "café",
+          "affected_modalities": [
+            "reading"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-tea",
+          "kind": "hint",
+          "content": "chá",
+          "affected_modalities": [
+            "reading"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-water",
+          "kind": "hint",
+          "content": "água",
+          "affected_modalities": [
+            "reading"
+          ],
+          "reveals_answer": true
+        }
+      ],
+      "content": {
+        "phase_id": "words",
+        "phase_title": "Palavras",
+        "phase_description": "Comece com chá, café e água.",
+        "label": "Conheça as palavras",
+        "vocabulary": [
+          {
+            "word": "tea",
+            "meaning": "chá"
+          },
+          {
+            "word": "coffee",
+            "meaning": "café"
+          },
+          {
+            "word": "water",
+            "meaning": "água"
+          }
+        ],
+        "pt_BR_note": "Passe o mouse nas palavras para consultar o significado. No celular, toque.",
+        "glossary": {
+          "coffee": {
+            "meaning": "café",
+            "support_id": "gloss-coffee"
+          },
+          "tea": {
+            "meaning": "chá",
+            "support_id": "gloss-tea"
+          },
+          "water": {
+            "meaning": "água",
+            "support_id": "gloss-water"
+          }
+        },
+        "phase_level": "A1"
+      },
+      "expected": {
+        "evidence": "exposure_only"
+      },
+      "feedback": "Confira o sentido do pedido. Você pode consultar significados e tentar novamente; os apoios ficam registrados."
+    },
+    {
+      "id": "recognize-tea",
+      "type": "information_question",
+      "modality": "reading",
+      "prompt": "Qual palavra significa chá?",
+      "target_ids": [
+        "drink-words"
+      ],
+      "supports": [
+        {
+          "id": "gloss-coffee",
+          "kind": "hint",
+          "content": "café",
+          "affected_modalities": [
+            "reading"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-tea",
+          "kind": "hint",
+          "content": "chá",
+          "affected_modalities": [
+            "reading"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-water",
+          "kind": "hint",
+          "content": "água",
+          "affected_modalities": [
+            "reading"
+          ],
+          "reveals_answer": true
+        }
+      ],
+      "content": {
+        "phase_id": "words",
+        "phase_title": "Palavras",
+        "phase_description": "Comece com chá, café e água.",
+        "label": "Reconheça uma palavra",
+        "options": [
+          "tea",
+          "coffee",
+          "water"
+        ],
+        "options_language": "en",
+        "glossary": {
+          "coffee": {
+            "meaning": "café",
+            "support_id": "gloss-coffee"
+          },
+          "tea": {
+            "meaning": "chá",
+            "support_id": "gloss-tea"
+          },
+          "water": {
+            "meaning": "água",
+            "support_id": "gloss-water"
+          }
+        },
+        "phase_level": "A1"
+      },
+      "expected": {
+        "accepted": [
+          "tea"
+        ]
+      },
+      "feedback": "Confira o sentido do pedido. Você pode consultar significados e tentar novamente; os apoios ficam registrados."
+    },
+    {
+      "id": "write-water",
+      "type": "written_recall",
+      "modality": "writing",
+      "prompt": "Escreva água em inglês.",
+      "target_ids": [
+        "drink-words"
+      ],
+      "supports": [
+        {
+          "id": "comparison-example",
+          "kind": "solution",
+          "content": "water",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-water",
+          "kind": "hint",
+          "content": "água",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        }
+      ],
+      "content": {
+        "phase_id": "words",
+        "phase_title": "Palavras",
+        "phase_description": "Comece com chá, café e água.",
+        "label": "Escreva uma palavra",
+        "glossary": {
+          "water": {
+            "meaning": "água",
+            "support_id": "gloss-water"
+          }
+        },
+        "phase_level": "A1"
+      },
+      "expected": {
+        "comparison": {
+          "version": "text-variants-v1",
+          "accepted": [
+            "water"
+          ],
+          "corrections": [
+            {
+              "response": "tea",
+              "message": "Tea significa chá. Para água, use water."
+            },
+            {
+              "response": "coffee",
+              "message": "Coffee significa café. Para água, use water."
+            },
+            {
+              "response": "watter",
+              "message": "Confira a grafia: water tem apenas um t."
+            },
+            {
+              "response": "woter",
+              "message": "Confira a grafia: water."
+            }
+          ],
+          "example": "water"
+        }
+      },
+      "feedback": "Confira o sentido do pedido. Você pode consultar significados e tentar novamente; os apoios ficam registrados."
+    },
+    {
+      "id": "short-model",
+      "type": "explanation",
+      "modality": "reading",
+      "prompt": "Um pedido com poucas palavras.",
+      "target_ids": [
+        "short-request"
+      ],
+      "supports": [
+        {
+          "id": "gloss-a",
+          "kind": "hint",
+          "content": "um / uma",
+          "affected_modalities": [
+            "reading"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-coffee",
+          "kind": "hint",
+          "content": "café",
+          "affected_modalities": [
+            "reading"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-please",
+          "kind": "hint",
+          "content": "por favor",
+          "affected_modalities": [
+            "reading"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-tea",
+          "kind": "hint",
+          "content": "chá",
+          "affected_modalities": [
+            "reading"
+          ],
+          "reveals_answer": true
+        }
+      ],
+      "content": {
+        "phase_id": "requests",
+        "phase_title": "Pedidos curtos",
+        "phase_description": "Junte poucas palavras para fazer um pedido.",
+        "label": "Um pedido curto",
+        "examples": [
+          "A tea, please.",
+          "A coffee, please."
+        ],
+        "pt_BR_note": "Please torna o pedido educado. Primeiro, pratique esta forma curta.",
+        "glossary": {
+          "a": {
+            "meaning": "um / uma",
+            "support_id": "gloss-a"
+          },
+          "coffee": {
+            "meaning": "café",
+            "support_id": "gloss-coffee"
+          },
+          "please": {
+            "meaning": "por favor",
+            "support_id": "gloss-please"
+          },
+          "tea": {
+            "meaning": "chá",
+            "support_id": "gloss-tea"
+          }
+        },
+        "phase_level": "A1"
+      },
+      "expected": {
+        "evidence": "exposure_only"
+      },
+      "feedback": "Confira o sentido do pedido. Você pode consultar significados e tentar novamente; os apoios ficam registrados."
+    },
+    {
+      "id": "write-tea",
+      "type": "written_recall",
+      "modality": "writing",
+      "prompt": "Peça um chá, de forma educada.",
+      "target_ids": [
+        "short-request"
+      ],
+      "supports": [
+        {
+          "id": "comparison-example",
+          "kind": "solution",
+          "content": "A tea, please.",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "writing-hint",
+          "kind": "hint",
+          "content": "Use o nome da bebida e uma expressão de cortesia.",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": false
+        },
+        {
+          "id": "gloss-a",
+          "kind": "hint",
+          "content": "um / uma",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-can",
+          "kind": "hint",
+          "content": "em “Can I have…?”: posso pedir…?",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-could",
+          "kind": "hint",
+          "content": "em “Could I have…?”: poderia pedir…?",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-cup",
+          "kind": "hint",
+          "content": "xícara",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-have",
+          "kind": "hint",
+          "content": "em um pedido: receber / pedir",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-i",
+          "kind": "hint",
+          "content": "eu",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-i-d",
+          "kind": "hint",
+          "content": "neste pedido: I would → eu gostaria",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-like",
+          "kind": "hint",
+          "content": "em “I would like”: gostaria",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-may",
+          "kind": "hint",
+          "content": "em “May I have…?”: posso pedir…?",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-of",
+          "kind": "hint",
+          "content": "de",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-please",
+          "kind": "hint",
+          "content": "por favor",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-some",
+          "kind": "hint",
+          "content": "um pouco de",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-tea",
+          "kind": "hint",
+          "content": "chá",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-want",
+          "kind": "hint",
+          "content": "quero",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-would",
+          "kind": "hint",
+          "content": "em “I would like”: indica um pedido educado",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        }
+      ],
+      "content": {
+        "phase_id": "requests",
+        "phase_title": "Pedidos curtos",
+        "phase_description": "Junte poucas palavras para fazer um pedido.",
+        "label": "Faça seu pedido",
+        "glossary": {
+          "a": {
+            "meaning": "um / uma",
+            "support_id": "gloss-a"
+          },
+          "can": {
+            "meaning": "em “Can I have…?”: posso pedir…?",
+            "support_id": "gloss-can"
+          },
+          "could": {
+            "meaning": "em “Could I have…?”: poderia pedir…?",
+            "support_id": "gloss-could"
+          },
+          "cup": {
+            "meaning": "xícara",
+            "support_id": "gloss-cup"
+          },
+          "have": {
+            "meaning": "em um pedido: receber / pedir",
+            "support_id": "gloss-have"
+          },
+          "i": {
+            "meaning": "eu",
+            "support_id": "gloss-i"
+          },
+          "i'd": {
+            "meaning": "neste pedido: I would → eu gostaria",
+            "support_id": "gloss-i-d"
+          },
+          "like": {
+            "meaning": "em “I would like”: gostaria",
+            "support_id": "gloss-like"
+          },
+          "may": {
+            "meaning": "em “May I have…?”: posso pedir…?",
+            "support_id": "gloss-may"
+          },
+          "of": {
+            "meaning": "de",
+            "support_id": "gloss-of"
+          },
+          "please": {
+            "meaning": "por favor",
+            "support_id": "gloss-please"
+          },
+          "some": {
+            "meaning": "um pouco de",
+            "support_id": "gloss-some"
+          },
+          "tea": {
+            "meaning": "chá",
+            "support_id": "gloss-tea"
+          },
+          "want": {
+            "meaning": "quero",
+            "support_id": "gloss-want"
+          },
+          "would": {
+            "meaning": "em “I would like”: indica um pedido educado",
+            "support_id": "gloss-would"
+          }
+        },
+        "phase_level": "A1"
+      },
+      "expected": {
+        "comparison": {
+          "version": "text-variants-v1",
+          "accepted": [
+            "A tea, please.",
+            "Tea, please.",
+            "I would like a tea, please.",
+            "I'd like a tea, please.",
+            "Can I have a tea, please?",
+            "Could I have a tea, please?",
+            "May I have a tea, please?",
+            "A cup of tea, please.",
+            "I would like a cup of tea, please.",
+            "I want a tea, please.",
+            "I would like a tea.",
+            "I'd like a tea.",
+            "Can I have a tea.",
+            "Could I have a tea.",
+            "May I have a tea.",
+            "I would like tea, please.",
+            "I would like some tea, please.",
+            "I'd like tea, please.",
+            "I'd like some tea, please.",
+            "Could I have tea, please.",
+            "Could I have some tea, please."
+          ],
+          "corrections": [
+            {
+              "response": "A coffee, please.",
+              "message": "Você pediu café. O objetivo desta atividade é pedir chá."
+            },
+            {
+              "response": "Coffee, please.",
+              "message": "Você pediu café. O objetivo desta atividade é pedir chá."
+            },
+            {
+              "response": "A tee, please.",
+              "message": "Para chá, escreva tea."
+            },
+            {
+              "response": "I would like a coffee, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I'd like a coffee, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "Can I have a coffee, please?",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "Could I have a coffee, please?",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "May I have a coffee, please?",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "A cup of coffee, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I would like a cup of coffee, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I want a coffee, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I would like a coffee.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I'd like a coffee.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "Can I have a coffee.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "Could I have a coffee.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "May I have a coffee.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I would like coffee, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I would like some coffee, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I'd like coffee, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I'd like some coffee, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "Could I have coffee, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "Could I have some coffee, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "A water, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "Water, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I would like a water, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I'd like a water, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "Can I have a water, please?",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "Could I have a water, please?",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "May I have a water, please?",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "A cup of water, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I would like a cup of water, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I want a water, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I would like a water.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I'd like a water.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "Can I have a water.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "Could I have a water.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "May I have a water.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I would like water, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I would like some water, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I'd like water, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I'd like some water, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "Could I have water, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "Could I have some water, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            }
+          ],
+          "example": "A tea, please."
+        }
+      },
+      "feedback": "Confira o sentido do pedido. Você pode consultar significados e tentar novamente; os apoios ficam registrados."
+    },
+    {
+      "id": "size-model",
+      "type": "explanation",
+      "modality": "reading",
+      "prompt": "Agora acrescente o tamanho.",
+      "target_ids": [
+        "request-size"
+      ],
+      "supports": [
+        {
+          "id": "gloss-a",
+          "kind": "hint",
+          "content": "um / uma",
+          "affected_modalities": [
+            "reading"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-coffee",
+          "kind": "hint",
+          "content": "café",
+          "affected_modalities": [
+            "reading"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-large",
+          "kind": "hint",
+          "content": "grande",
+          "affected_modalities": [
+            "reading"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-please",
+          "kind": "hint",
+          "content": "por favor",
+          "affected_modalities": [
+            "reading"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-small",
+          "kind": "hint",
+          "content": "pequeno / pequena",
+          "affected_modalities": [
+            "reading"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-tea",
+          "kind": "hint",
+          "content": "chá",
+          "affected_modalities": [
+            "reading"
+          ],
+          "reveals_answer": true
+        }
+      ],
+      "content": {
+        "phase_id": "requests",
+        "phase_title": "Pedidos curtos",
+        "phase_description": "Junte poucas palavras para fazer um pedido.",
+        "label": "Acrescente um detalhe",
+        "examples": [
+          "A small tea, please.",
+          "A large coffee, please."
+        ],
+        "pt_BR_note": "Small é pequeno; large é grande. Acrescente apenas esse detalhe ao pedido conhecido.",
+        "glossary": {
+          "a": {
+            "meaning": "um / uma",
+            "support_id": "gloss-a"
+          },
+          "coffee": {
+            "meaning": "café",
+            "support_id": "gloss-coffee"
+          },
+          "large": {
+            "meaning": "grande",
+            "support_id": "gloss-large"
+          },
+          "please": {
+            "meaning": "por favor",
+            "support_id": "gloss-please"
+          },
+          "small": {
+            "meaning": "pequeno / pequena",
+            "support_id": "gloss-small"
+          },
+          "tea": {
+            "meaning": "chá",
+            "support_id": "gloss-tea"
+          }
+        },
+        "phase_level": "A1"
+      },
+      "expected": {
+        "evidence": "exposure_only"
+      },
+      "feedback": "Confira o sentido do pedido. Você pode consultar significados e tentar novamente; os apoios ficam registrados."
+    },
+    {
+      "id": "write-small-tea",
+      "type": "written_recall",
+      "modality": "writing",
+      "prompt": "Peça um chá pequeno, de forma educada.",
+      "target_ids": [
+        "request-size"
+      ],
+      "supports": [
+        {
+          "id": "comparison-example",
+          "kind": "solution",
+          "content": "A small tea, please.",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-a",
+          "kind": "hint",
+          "content": "um / uma",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-can",
+          "kind": "hint",
+          "content": "em “Can I have…?”: posso pedir…?",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-could",
+          "kind": "hint",
+          "content": "em “Could I have…?”: poderia pedir…?",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-cup",
+          "kind": "hint",
+          "content": "xícara",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-have",
+          "kind": "hint",
+          "content": "em um pedido: receber / pedir",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-i",
+          "kind": "hint",
+          "content": "eu",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-i-d",
+          "kind": "hint",
+          "content": "neste pedido: I would → eu gostaria",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-like",
+          "kind": "hint",
+          "content": "em “I would like”: gostaria",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-may",
+          "kind": "hint",
+          "content": "em “May I have…?”: posso pedir…?",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-of",
+          "kind": "hint",
+          "content": "de",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-please",
+          "kind": "hint",
+          "content": "por favor",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-small",
+          "kind": "hint",
+          "content": "pequeno / pequena",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-tea",
+          "kind": "hint",
+          "content": "chá",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-want",
+          "kind": "hint",
+          "content": "quero",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-would",
+          "kind": "hint",
+          "content": "em “I would like”: indica um pedido educado",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        }
+      ],
+      "content": {
+        "phase_id": "requests",
+        "phase_title": "Pedidos curtos",
+        "phase_description": "Junte poucas palavras para fazer um pedido.",
+        "label": "Bebida e tamanho",
+        "glossary": {
+          "a": {
+            "meaning": "um / uma",
+            "support_id": "gloss-a"
+          },
+          "can": {
+            "meaning": "em “Can I have…?”: posso pedir…?",
+            "support_id": "gloss-can"
+          },
+          "could": {
+            "meaning": "em “Could I have…?”: poderia pedir…?",
+            "support_id": "gloss-could"
+          },
+          "cup": {
+            "meaning": "xícara",
+            "support_id": "gloss-cup"
+          },
+          "have": {
+            "meaning": "em um pedido: receber / pedir",
+            "support_id": "gloss-have"
+          },
+          "i": {
+            "meaning": "eu",
+            "support_id": "gloss-i"
+          },
+          "i'd": {
+            "meaning": "neste pedido: I would → eu gostaria",
+            "support_id": "gloss-i-d"
+          },
+          "like": {
+            "meaning": "em “I would like”: gostaria",
+            "support_id": "gloss-like"
+          },
+          "may": {
+            "meaning": "em “May I have…?”: posso pedir…?",
+            "support_id": "gloss-may"
+          },
+          "of": {
+            "meaning": "de",
+            "support_id": "gloss-of"
+          },
+          "please": {
+            "meaning": "por favor",
+            "support_id": "gloss-please"
+          },
+          "small": {
+            "meaning": "pequeno / pequena",
+            "support_id": "gloss-small"
+          },
+          "tea": {
+            "meaning": "chá",
+            "support_id": "gloss-tea"
+          },
+          "want": {
+            "meaning": "quero",
+            "support_id": "gloss-want"
+          },
+          "would": {
+            "meaning": "em “I would like”: indica um pedido educado",
+            "support_id": "gloss-would"
+          }
+        },
+        "phase_level": "A1"
+      },
+      "expected": {
+        "comparison": {
+          "version": "text-variants-v1",
+          "accepted": [
+            "A small tea, please.",
+            "Small tea, please.",
+            "I would like a small tea, please.",
+            "I'd like a small tea, please.",
+            "Can I have a small tea, please?",
+            "Could I have a small tea, please?",
+            "May I have a small tea, please?",
+            "A small cup of tea, please.",
+            "I would like a small cup of tea, please.",
+            "I want a small tea, please.",
+            "I would like a small tea.",
+            "I'd like a small tea.",
+            "Can I have a small tea.",
+            "Could I have a small tea.",
+            "May I have a small tea."
+          ],
+          "corrections": [
+            {
+              "response": "A large tea, please.",
+              "message": "A bebida está certa. Large é grande; o pedido aqui é pequeno: small."
+            },
+            {
+              "response": "A small coffee, please.",
+              "message": "O tamanho está certo. O pedido aqui é chá: tea."
+            },
+            {
+              "response": "Large tea, please.",
+              "message": "O pedido desta atividade é pequeno: small."
+            },
+            {
+              "response": "I would like a large tea, please.",
+              "message": "O pedido desta atividade é pequeno: small."
+            },
+            {
+              "response": "I'd like a large tea, please.",
+              "message": "O pedido desta atividade é pequeno: small."
+            },
+            {
+              "response": "Can I have a large tea, please?",
+              "message": "O pedido desta atividade é pequeno: small."
+            },
+            {
+              "response": "Could I have a large tea, please?",
+              "message": "O pedido desta atividade é pequeno: small."
+            },
+            {
+              "response": "May I have a large tea, please?",
+              "message": "O pedido desta atividade é pequeno: small."
+            },
+            {
+              "response": "A large cup of tea, please.",
+              "message": "O pedido desta atividade é pequeno: small."
+            },
+            {
+              "response": "I would like a large cup of tea, please.",
+              "message": "O pedido desta atividade é pequeno: small."
+            },
+            {
+              "response": "I want a large tea, please.",
+              "message": "O pedido desta atividade é pequeno: small."
+            },
+            {
+              "response": "I would like a large tea.",
+              "message": "O pedido desta atividade é pequeno: small."
+            },
+            {
+              "response": "I'd like a large tea.",
+              "message": "O pedido desta atividade é pequeno: small."
+            },
+            {
+              "response": "Can I have a large tea.",
+              "message": "O pedido desta atividade é pequeno: small."
+            },
+            {
+              "response": "Could I have a large tea.",
+              "message": "O pedido desta atividade é pequeno: small."
+            },
+            {
+              "response": "May I have a large tea.",
+              "message": "O pedido desta atividade é pequeno: small."
+            },
+            {
+              "response": "Small coffee, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I would like a small coffee, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I'd like a small coffee, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "Can I have a small coffee, please?",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "Could I have a small coffee, please?",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "May I have a small coffee, please?",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "A small cup of coffee, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I would like a small cup of coffee, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I want a small coffee, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I would like a small coffee.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I'd like a small coffee.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "Can I have a small coffee.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "Could I have a small coffee.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "May I have a small coffee.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "A small water, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "Small water, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I would like a small water, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I'd like a small water, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "Can I have a small water, please?",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "Could I have a small water, please?",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "May I have a small water, please?",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "A small cup of water, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I would like a small cup of water, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I want a small water, please.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I would like a small water.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "I'd like a small water.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "Can I have a small water.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "Could I have a small water.",
+              "message": "O pedido desta atividade é chá: tea."
+            },
+            {
+              "response": "May I have a small water.",
+              "message": "O pedido desta atividade é chá: tea."
+            }
+          ],
+          "example": "A small tea, please."
+        }
+      },
+      "feedback": "Confira o sentido do pedido. Você pode consultar significados e tentar novamente; os apoios ficam registrados."
+    },
+    {
+      "id": "full-model",
+      "type": "explanation",
+      "modality": "reading",
+      "prompt": "Da frase completa à contração.",
+      "target_ids": [
+        "full-request"
+      ],
+      "supports": [
+        {
+          "id": "gloss-a",
+          "kind": "hint",
+          "content": "um / uma",
+          "affected_modalities": [
+            "reading"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-i",
+          "kind": "hint",
+          "content": "eu",
+          "affected_modalities": [
+            "reading"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-i-d",
+          "kind": "hint",
+          "content": "neste pedido: I would → eu gostaria",
+          "affected_modalities": [
+            "reading"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-like",
+          "kind": "hint",
+          "content": "em “I would like”: gostaria",
+          "affected_modalities": [
+            "reading"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-please",
+          "kind": "hint",
+          "content": "por favor",
+          "affected_modalities": [
+            "reading"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-small",
+          "kind": "hint",
+          "content": "pequeno / pequena",
+          "affected_modalities": [
+            "reading"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-tea",
+          "kind": "hint",
+          "content": "chá",
+          "affected_modalities": [
+            "reading"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-would",
+          "kind": "hint",
+          "content": "em “I would like”: indica um pedido educado",
+          "affected_modalities": [
+            "reading"
+          ],
+          "reveals_answer": true
+        }
+      ],
+      "content": {
+        "phase_id": "sentences",
+        "phase_title": "Frases e contrações",
+        "phase_description": "Amplie o pedido e depois conheça a contração.",
+        "label": "Uma frase maior",
+        "examples": [
+          "I would like a small tea, please.",
+          "I'd like a small tea, please."
+        ],
+        "pt_BR_note": "Neste pedido, I’d é a forma contraída de I would. As duas frases comunicam a mesma escolha.",
+        "glossary": {
+          "a": {
+            "meaning": "um / uma",
+            "support_id": "gloss-a"
+          },
+          "i": {
+            "meaning": "eu",
+            "support_id": "gloss-i"
+          },
+          "i'd": {
+            "meaning": "neste pedido: I would → eu gostaria",
+            "support_id": "gloss-i-d"
+          },
+          "like": {
+            "meaning": "em “I would like”: gostaria",
+            "support_id": "gloss-like"
+          },
+          "please": {
+            "meaning": "por favor",
+            "support_id": "gloss-please"
+          },
+          "small": {
+            "meaning": "pequeno / pequena",
+            "support_id": "gloss-small"
+          },
+          "tea": {
+            "meaning": "chá",
+            "support_id": "gloss-tea"
+          },
+          "would": {
+            "meaning": "em “I would like”: indica um pedido educado",
+            "support_id": "gloss-would"
+          }
+        },
+        "phase_level": "A1"
+      },
+      "expected": {
+        "evidence": "exposure_only"
+      },
+      "feedback": "Confira o sentido do pedido. Você pode consultar significados e tentar novamente; os apoios ficam registrados."
+    },
+    {
+      "id": "expand",
+      "type": "written_recall",
+      "modality": "writing",
+      "prompt": "Reescreva a frase sem a contração.",
+      "target_ids": [
+        "full-request"
+      ],
+      "supports": [
+        {
+          "id": "comparison-example",
+          "kind": "solution",
+          "content": "I would like a tea, please.",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-a",
+          "kind": "hint",
+          "content": "um / uma",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-i",
+          "kind": "hint",
+          "content": "eu",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-i-d",
+          "kind": "hint",
+          "content": "neste pedido: I would → eu gostaria",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-like",
+          "kind": "hint",
+          "content": "em “I would like”: gostaria",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-please",
+          "kind": "hint",
+          "content": "por favor",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-tea",
+          "kind": "hint",
+          "content": "chá",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-would",
+          "kind": "hint",
+          "content": "em “I would like”: indica um pedido educado",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        }
+      ],
+      "content": {
+        "phase_id": "sentences",
+        "phase_title": "Frases e contrações",
+        "phase_description": "Amplie o pedido e depois conheça a contração.",
+        "label": "Abra a contração",
+        "study_text": "I'd like a tea, please.",
+        "glossary": {
+          "a": {
+            "meaning": "um / uma",
+            "support_id": "gloss-a"
+          },
+          "i": {
+            "meaning": "eu",
+            "support_id": "gloss-i"
+          },
+          "i'd": {
+            "meaning": "neste pedido: I would → eu gostaria",
+            "support_id": "gloss-i-d"
+          },
+          "like": {
+            "meaning": "em “I would like”: gostaria",
+            "support_id": "gloss-like"
+          },
+          "please": {
+            "meaning": "por favor",
+            "support_id": "gloss-please"
+          },
+          "tea": {
+            "meaning": "chá",
+            "support_id": "gloss-tea"
+          },
+          "would": {
+            "meaning": "em “I would like”: indica um pedido educado",
+            "support_id": "gloss-would"
+          }
+        },
+        "phase_level": "A1"
+      },
+      "expected": {
+        "comparison": {
+          "version": "text-variants-v1",
+          "accepted": [
+            "I would like a tea, please."
+          ],
+          "corrections": [
+            {
+              "response": "I'd like a tea, please.",
+              "message": "Troque I’d por I would para praticar a forma completa."
+            },
+            {
+              "response": "I had like a tea, please.",
+              "message": "Neste pedido, I’d corresponde a I would."
+            }
+          ],
+          "example": "I would like a tea, please."
+        }
+      },
+      "feedback": "Confira o sentido do pedido. Você pode consultar significados e tentar novamente; os apoios ficam registrados."
+    },
+    {
+      "id": "contract",
+      "type": "written_recall",
+      "modality": "writing",
+      "prompt": "Agora escreva a frase usando a contração.",
+      "target_ids": [
+        "full-request"
+      ],
+      "supports": [
+        {
+          "id": "comparison-example",
+          "kind": "solution",
+          "content": "I'd like a small coffee, please.",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-a",
+          "kind": "hint",
+          "content": "um / uma",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-coffee",
+          "kind": "hint",
+          "content": "café",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-i",
+          "kind": "hint",
+          "content": "eu",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-i-d",
+          "kind": "hint",
+          "content": "neste pedido: I would → eu gostaria",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-like",
+          "kind": "hint",
+          "content": "em “I would like”: gostaria",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-please",
+          "kind": "hint",
+          "content": "por favor",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-small",
+          "kind": "hint",
+          "content": "pequeno / pequena",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-would",
+          "kind": "hint",
+          "content": "em “I would like”: indica um pedido educado",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        }
+      ],
+      "content": {
+        "phase_id": "sentences",
+        "phase_title": "Frases e contrações",
+        "phase_description": "Amplie o pedido e depois conheça a contração.",
+        "label": "Use a contração",
+        "study_text": "I would like a small coffee, please.",
+        "glossary": {
+          "a": {
+            "meaning": "um / uma",
+            "support_id": "gloss-a"
+          },
+          "coffee": {
+            "meaning": "café",
+            "support_id": "gloss-coffee"
+          },
+          "i": {
+            "meaning": "eu",
+            "support_id": "gloss-i"
+          },
+          "i'd": {
+            "meaning": "neste pedido: I would → eu gostaria",
+            "support_id": "gloss-i-d"
+          },
+          "like": {
+            "meaning": "em “I would like”: gostaria",
+            "support_id": "gloss-like"
+          },
+          "please": {
+            "meaning": "por favor",
+            "support_id": "gloss-please"
+          },
+          "small": {
+            "meaning": "pequeno / pequena",
+            "support_id": "gloss-small"
+          },
+          "would": {
+            "meaning": "em “I would like”: indica um pedido educado",
+            "support_id": "gloss-would"
+          }
+        },
+        "phase_level": "A1"
+      },
+      "expected": {
+        "comparison": {
+          "version": "text-variants-v1",
+          "accepted": [
+            "I'd like a small coffee, please."
+          ],
+          "corrections": [
+            {
+              "response": "I would like a small coffee, please.",
+              "message": "A frase comunica o pedido. Para esta prática de contração, troque I would por I’d."
+            }
+          ],
+          "example": "I'd like a small coffee, please."
+        }
+      },
+      "feedback": "Confira o sentido do pedido. Você pode consultar significados e tentar novamente; os apoios ficam registrados."
+    },
+    {
+      "id": "transfer",
+      "type": "communicative_task",
+      "modality": "writing",
+      "prompt": "Peça um café grande, de forma educada. Experimente uma frase completa.",
+      "target_ids": [
+        "full-request",
+        "request-size"
+      ],
+      "supports": [
+        {
+          "id": "comparison-example",
+          "kind": "solution",
+          "content": "I would like a large coffee, please.",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-a",
+          "kind": "hint",
+          "content": "um / uma",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-can",
+          "kind": "hint",
+          "content": "em “Can I have…?”: posso pedir…?",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-coffee",
+          "kind": "hint",
+          "content": "café",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-could",
+          "kind": "hint",
+          "content": "em “Could I have…?”: poderia pedir…?",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-cup",
+          "kind": "hint",
+          "content": "xícara",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-have",
+          "kind": "hint",
+          "content": "em um pedido: receber / pedir",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-i",
+          "kind": "hint",
+          "content": "eu",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-i-d",
+          "kind": "hint",
+          "content": "neste pedido: I would → eu gostaria",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-large",
+          "kind": "hint",
+          "content": "grande",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-like",
+          "kind": "hint",
+          "content": "em “I would like”: gostaria",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-may",
+          "kind": "hint",
+          "content": "em “May I have…?”: posso pedir…?",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-of",
+          "kind": "hint",
+          "content": "de",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-please",
+          "kind": "hint",
+          "content": "por favor",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-want",
+          "kind": "hint",
+          "content": "quero",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        },
+        {
+          "id": "gloss-would",
+          "kind": "hint",
+          "content": "em “I would like”: indica um pedido educado",
+          "affected_modalities": [
+            "writing"
+          ],
+          "reveals_answer": true
+        }
+      ],
+      "content": {
+        "phase_id": "sentences",
+        "phase_title": "Frases e contrações",
+        "phase_description": "Amplie o pedido e depois conheça a contração.",
+        "label": "Use em outro pedido",
+        "glossary": {
+          "a": {
+            "meaning": "um / uma",
+            "support_id": "gloss-a"
+          },
+          "can": {
+            "meaning": "em “Can I have…?”: posso pedir…?",
+            "support_id": "gloss-can"
+          },
+          "coffee": {
+            "meaning": "café",
+            "support_id": "gloss-coffee"
+          },
+          "could": {
+            "meaning": "em “Could I have…?”: poderia pedir…?",
+            "support_id": "gloss-could"
+          },
+          "cup": {
+            "meaning": "xícara",
+            "support_id": "gloss-cup"
+          },
+          "have": {
+            "meaning": "em um pedido: receber / pedir",
+            "support_id": "gloss-have"
+          },
+          "i": {
+            "meaning": "eu",
+            "support_id": "gloss-i"
+          },
+          "i'd": {
+            "meaning": "neste pedido: I would → eu gostaria",
+            "support_id": "gloss-i-d"
+          },
+          "large": {
+            "meaning": "grande",
+            "support_id": "gloss-large"
+          },
+          "like": {
+            "meaning": "em “I would like”: gostaria",
+            "support_id": "gloss-like"
+          },
+          "may": {
+            "meaning": "em “May I have…?”: posso pedir…?",
+            "support_id": "gloss-may"
+          },
+          "of": {
+            "meaning": "de",
+            "support_id": "gloss-of"
+          },
+          "please": {
+            "meaning": "por favor",
+            "support_id": "gloss-please"
+          },
+          "want": {
+            "meaning": "quero",
+            "support_id": "gloss-want"
+          },
+          "would": {
+            "meaning": "em “I would like”: indica um pedido educado",
+            "support_id": "gloss-would"
+          }
+        },
+        "phase_level": "A1"
+      },
+      "expected": {
+        "comparison": {
+          "version": "text-variants-v1",
+          "accepted": [
+            "A large coffee, please.",
+            "Large coffee, please.",
+            "I would like a large coffee, please.",
+            "I'd like a large coffee, please.",
+            "Can I have a large coffee, please?",
+            "Could I have a large coffee, please?",
+            "May I have a large coffee, please?",
+            "A large cup of coffee, please.",
+            "I would like a large cup of coffee, please.",
+            "I want a large coffee, please.",
+            "I would like a large coffee.",
+            "I'd like a large coffee.",
+            "Can I have a large coffee.",
+            "Could I have a large coffee.",
+            "May I have a large coffee."
+          ],
+          "corrections": [
+            {
+              "response": "I would like a small coffee, please.",
+              "message": "A bebida está certa. O tamanho pedido aqui é grande: large."
+            },
+            {
+              "response": "I'd like a large tea, please.",
+              "message": "O tamanho está certo. A bebida pedida aqui é café: coffee."
+            },
+            {
+              "response": "A small coffee, please.",
+              "message": "O tamanho pedido aqui é grande: large."
+            },
+            {
+              "response": "Small coffee, please.",
+              "message": "O tamanho pedido aqui é grande: large."
+            },
+            {
+              "response": "I'd like a small coffee, please.",
+              "message": "O tamanho pedido aqui é grande: large."
+            },
+            {
+              "response": "Can I have a small coffee, please?",
+              "message": "O tamanho pedido aqui é grande: large."
+            },
+            {
+              "response": "Could I have a small coffee, please?",
+              "message": "O tamanho pedido aqui é grande: large."
+            },
+            {
+              "response": "May I have a small coffee, please?",
+              "message": "O tamanho pedido aqui é grande: large."
+            },
+            {
+              "response": "A small cup of coffee, please.",
+              "message": "O tamanho pedido aqui é grande: large."
+            },
+            {
+              "response": "I would like a small cup of coffee, please.",
+              "message": "O tamanho pedido aqui é grande: large."
+            },
+            {
+              "response": "I want a small coffee, please.",
+              "message": "O tamanho pedido aqui é grande: large."
+            },
+            {
+              "response": "I would like a small coffee.",
+              "message": "O tamanho pedido aqui é grande: large."
+            },
+            {
+              "response": "I'd like a small coffee.",
+              "message": "O tamanho pedido aqui é grande: large."
+            },
+            {
+              "response": "Can I have a small coffee.",
+              "message": "O tamanho pedido aqui é grande: large."
+            },
+            {
+              "response": "Could I have a small coffee.",
+              "message": "O tamanho pedido aqui é grande: large."
+            },
+            {
+              "response": "May I have a small coffee.",
+              "message": "O tamanho pedido aqui é grande: large."
+            },
+            {
+              "response": "A large tea, please.",
+              "message": "A bebida pedida aqui é café: coffee."
+            },
+            {
+              "response": "Large tea, please.",
+              "message": "A bebida pedida aqui é café: coffee."
+            },
+            {
+              "response": "I would like a large tea, please.",
+              "message": "A bebida pedida aqui é café: coffee."
+            },
+            {
+              "response": "Can I have a large tea, please?",
+              "message": "A bebida pedida aqui é café: coffee."
+            },
+            {
+              "response": "Could I have a large tea, please?",
+              "message": "A bebida pedida aqui é café: coffee."
+            },
+            {
+              "response": "May I have a large tea, please?",
+              "message": "A bebida pedida aqui é café: coffee."
+            },
+            {
+              "response": "A large cup of tea, please.",
+              "message": "A bebida pedida aqui é café: coffee."
+            },
+            {
+              "response": "I would like a large cup of tea, please.",
+              "message": "A bebida pedida aqui é café: coffee."
+            },
+            {
+              "response": "I want a large tea, please.",
+              "message": "A bebida pedida aqui é café: coffee."
+            },
+            {
+              "response": "I would like a large tea.",
+              "message": "A bebida pedida aqui é café: coffee."
+            },
+            {
+              "response": "I'd like a large tea.",
+              "message": "A bebida pedida aqui é café: coffee."
+            },
+            {
+              "response": "Can I have a large tea.",
+              "message": "A bebida pedida aqui é café: coffee."
+            },
+            {
+              "response": "Could I have a large tea.",
+              "message": "A bebida pedida aqui é café: coffee."
+            },
+            {
+              "response": "May I have a large tea.",
+              "message": "A bebida pedida aqui é café: coffee."
+            }
+          ],
+          "example": "I would like a large coffee, please."
+        }
+      },
+      "feedback": "Confira o sentido do pedido. Você pode consultar significados e tentar novamente; os apoios ficam registrados."
+    },
+    {
+      "id": "summary",
+      "type": "summary",
+      "modality": "reading",
+      "prompt": "Prática encerrada.",
+      "target_ids": [
+        "drink-words",
+        "short-request",
+        "request-size",
+        "full-request"
+      ],
+      "supports": [],
+      "content": {
+        "phase_id": "sentences",
+        "phase_title": "Frases e contrações",
+        "phase_description": "Amplie o pedido e depois conheça a contração.",
+        "label": "Feche a prática",
+        "glossary": {},
+        "phase_level": "A1"
+      },
+      "expected": {
+        "evidence": "none"
+      },
+      "feedback": "Confira o sentido do pedido. Você pode consultar significados e tentar novamente; os apoios ficam registrados."
+    }
+  ]
+}
