@@ -2,7 +2,7 @@
 
 Fundação de um aplicativo de inglês para adultos falantes de português brasileiro. Um monorepo reúne Laravel/API e Vue em `apps/platform`, Android/Kotlin em `apps/android` e contratos compartilhados em `contracts`. Cada aplicação tem build e release independentes.
 
-O foco atual é uma interface minimalista e uma trilha de leitura e escrita por dias, exibindo apenas o dia atual: Palavras, Pedidos curtos e Frases e contrações. A missão de texto está na versão 3, em rascunho, com retomada e sincronização no Android e prévia editorial na web. A escrita possui comparação automática com variantes previstas; formas desconhecidas permanecem sem confirmação. Significados do vocabulário podem ser consultados por mouse, teclado ou toque e ficam registrados como apoio. Áudio e voz ficam para uma etapa posterior; os contratos e materiais da implementação anterior foram preservados. A trilha representa o percurso das atividades, sem declarar domínio. O catálogo dos alunos continua vazio até a revisão e publicação. Revisão humana, teste formativo e avaliação humana operacional permanecem pendentes; F2 não está pedagogicamente concluída.
+O foco atual é uma interface com cards de lições arredondados, temas claro e escuro e uma trilha de leitura e escrita por dias, exibindo um dia por vez, com setas e seleção rolável: Palavras, Pedidos curtos e Frases e contrações. Os dias atuais têm conteúdo de referência A1; isso não certifica o aluno. A barra conta conclusões de lições do dia selecionado, independentemente da navegação. A missão de texto está na versão 4, em rascunho, com retomada e sincronização no Android e prévia editorial na web. A escrita possui comparação automática com variantes previstas; formas desconhecidas permanecem sem confirmação. Significados do vocabulário podem ser consultados por mouse, teclado ou toque e ficam registrados como apoio. Áudio e voz ficam para uma etapa posterior; os contratos e materiais da implementação anterior foram preservados. A trilha representa o percurso das atividades, sem declarar domínio. O catálogo dos alunos continua vazio até a revisão e publicação. Revisão humana, teste formativo e avaliação humana operacional permanecem pendentes; F2 não está pedagogicamente concluída.
 
 ## Executar a plataforma local
 
@@ -45,6 +45,10 @@ Entre com uma conta criada na plataforma. A tela lê o catálogo pela API, persi
 Editores podem baixar a trilha de texto na seção editorial do Android. O pacote atual não contém mídia e é verificado por SHA-256 antes da ativação. Apoios são registrados antes da revelação; resposta, posição e pendência são persistidas numa única transação. O fluxo atual trabalha apenas com leitura e escrita e não solicita microfone. Os registros anteriores permanecem separados por modalidade; não há upload nem avaliação oral automática. A sincronização ocorre com rede disponível e sessão válida. Uma conta expirada precisa entrar novamente, sem perder a fila. O uso validado nesta fase é em um aparelho por pessoa.
 
 ## Verificações
+
+Práticas salvas continuam acessíveis quando o catálogo recebe outra versão. A web prioriza o percurso salvo mais recente e oferece “Abrir trilha atual”; no Android, práticas anteriores permanecem na lista para retomada. Cada uma conserva seu conteúdo, progresso e registros originais. No Android, reabrir retoma a última sessão utilizada dentro daquele pacote, inclusive ao voltar a um dia anterior.
+
+Na prévia web, rascunhos não enviados são preservados por atividade enquanto a página permanece aberta. Isso permite alternar dias e lições sem perder o texto; recarregar ou sair da página ainda encerra esse estado temporário. O Android mantém a persistência local de respostas e rascunhos com Room. A confirmação de envio e a busca de resultados são pendências distintas: falhas ao buscar resultados continuam sendo recuperadas, mesmo quando os eventos já foram recebidos pelo servidor.
 
 Após o bootstrap:
 
