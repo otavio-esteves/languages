@@ -16,7 +16,17 @@ import java.security.MessageDigest
 import java.time.Instant
 import java.util.UUID
 
-data class OpenPractice(val installed: InstalledPackage, val document: MissionDocument, val session: PracticeSession, val events: List<PracticeEvent>)
+data class OpenPractice(val installed: InstalledPackage, val document: MissionDocument, val session: PracticeSession, val events: List<PracticeEvent>, val completedLessons: Set<String> = emptySet())
+fun OpenPractice.revealedSupports(): Set<String> {
+    val activity = document.activities[session.cursor]
+    return events.filter { it.kind == "exposure" }.mapNotNull { event ->
+        val payload = Json.parseToJsonElement(event.payload).jsonObject
+        payload.text("support_id")?.takeIf { support ->
+            payload.text("session_id") == session.id && payload.text("package_hash") == installed.hash &&
+                payload.text("activity_id") == activity.id && activity.supports.any { it.id == support }
+        }
+    }.toSet()
+}
 class PracticeRepository(private val context: Context, private val database: CatalogDatabase, private val catalog: CatalogRepository, private val api: PracticeApi) {
     private val dao = database.practiceDao()
     private val json = Json { ignoreUnknownKeys = true }
@@ -26,7 +36,11 @@ class PracticeRepository(private val context: Context, private val database: Cat
     @OptIn(ExperimentalCoroutinesApi::class)
     val installed = catalog.session.flatMapLatest { it?.let { dao.installed(it.account.id) } ?: flowOf(emptyList()) }
     @OptIn(ExperimentalCoroutinesApi::class)
+    val savedPackages = catalog.session.flatMapLatest { it?.let { dao.savedPackages(it.account.id) } ?: flowOf(emptyList()) }
+    @OptIn(ExperimentalCoroutinesApi::class)
     val pending = catalog.session.flatMapLatest { it?.let { dao.pendingCount(it.account.id) } ?: flowOf(0) }
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val blocked = catalog.session.flatMapLatest { it?.let { dao.blocked(it.account.id) } ?: flowOf(emptyList()) }
     private val deviceId: String by lazy {
         val prefs = context.getSharedPreferences("practice-device", Context.MODE_PRIVATE)
         prefs.getString("id", null) ?: UUID.randomUUID().toString().also { check(prefs.edit().putString("id", it).commit()) }
@@ -57,14 +71,28 @@ class PracticeRepository(private val context: Context, private val database: Cat
                 require(audio.size.toLong() == asset.bytes && sha(audio) == asset.sha256) { "Áudio incompleto ou corrompido." }
                 durable(File(stage,"${asset.id}.wav"), audio)
             }
-            check(catalog.session.value == user) { "A conta mudou durante o download." }
-            val target = File(root, manifest.package_hash)
-            if (target.exists()) stage.deleteRecursively() else check(stage.renameTo(target)) { "Não foi possível ativar o pacote." }
-            InstalledPackage(user.account.id,manifest.package_hash,doc.id,doc.version,doc.title,manifest.is_preview,target.absolutePath).also { dao.install(it) }
+            lock.withLock {
+                check(catalog.session.value == user) { "A conta mudou durante o download." }
+                val previous = dao.packageByHash(user.account.id, manifest.package_hash)?.let { File(it.directory) }
+                    ?: File(root, manifest.package_hash)
+                val reusable = runCatching {
+                    File(previous, "package.json").readBytes().contentEquals(bytes) && doc.assets.all { asset ->
+                        sha(File(previous, "${asset.id}.wav").readBytes()) == asset.sha256
+                    }
+                }.getOrDefault(false)
+                // Switch the Room pointer only after the replacement is complete. A crash
+                // must not remove the directory referenced by the existing installation.
+                val target = if (reusable) previous else File(root, "${manifest.package_hash}-${UUID.randomUUID()}")
+                if (!reusable) check(stage.renameTo(target)) { "Não foi possível ativar o pacote." }
+                val installed = InstalledPackage(user.account.id,manifest.package_hash,doc.id,doc.version,doc.title,manifest.is_preview,target.absolutePath)
+                dao.install(installed)
+                if (!reusable && previous.exists()) previous.deleteRecursively()
+                installed
+            }
         } finally { stage.deleteRecursively() }
     }
 
-    suspend fun open(hash: String, newSession: Boolean = false): OpenPractice = withContext(Dispatchers.IO) {
+    suspend fun open(hash: String, newSession: Boolean = false): OpenPractice = withContext(Dispatchers.IO) { lock.withLock {
         val user = account()
         val installed = dao.packageByHash(user.account.id,hash) ?: error("Baixe a missão antes de abrir.")
         check(!installed.preview || user.account.is_editor)
@@ -72,14 +100,31 @@ class PracticeRepository(private val context: Context, private val database: Cat
         require(sha(bytes) == hash) { "O pacote foi alterado. Baixe-o novamente." }
         val doc = json.decodeFromString<MissionDocument>(bytes.toString(Charsets.UTF_8)).also { it.validate() }
         for (asset in doc.assets) require(sha(File(installed.directory,"${asset.id}.wav").readBytes()) == asset.sha256) { "Áudio corrompido. Baixe novamente." }
-        val session = (if (newSession) null else dao.unfinished(user.account.id,hash)) ?: PracticeSession(user.account.id,UUID.randomUUID().toString(),hash,0,"",-1,null,false,System.currentTimeMillis()).also { dao.saveSession(it) }
+        if (dao.progress(user.account.id, hash) == null) {
+            val previous = dao.latest(user.account.id, hash)
+            dao.saveProgress(PracticeProgress(user.account.id, hash, json.encodeToString(doc.phases().legacyLessons(previous?.cursor ?: 0, previous?.completed ?: false))))
+        }
+        val active = dao.progress(user.account.id, hash)?.activeSessionId?.let { dao.session(user.account.id, it) }?.takeIf { it.packageHash == hash }
+        val session = (if (newSession) null else active ?: dao.latest(user.account.id,hash)) ?: PracticeSession(user.account.id,UUID.randomUUID().toString(),hash,0,"",-1,null,false,System.currentTimeMillis()).also { dao.saveSession(it) }
+        dao.activate(user.account.id, hash, session.id)
         check(catalog.session.value == user)
-        OpenPractice(installed,doc,session,dao.events(user.account.id,session.id))
-    }
+        OpenPractice(installed,doc,session,dao.events(user.account.id,session.id), completedLessons(user.account.id, hash))
+    } }
     suspend fun reload(value: OpenPractice): OpenPractice {
         val user = account()
         check(user.account.id == value.session.ownerId)
-        return value.copy(session=dao.session(user.account.id,value.session.id) ?: error("Sessão indisponível"), events=dao.events(user.account.id,value.session.id))
+        return value.copy(session=dao.session(user.account.id,value.session.id) ?: error("Sessão indisponível"), events=dao.events(user.account.id,value.session.id), completedLessons=completedLessons(user.account.id, value.installed.hash))
+    }
+    private suspend fun completedLessons(owner: Long, hash: String): Set<String> = dao.progress(owner, hash)?.let { json.decodeFromString<Set<String>>(it.completedLessons) } ?: emptySet()
+    suspend fun selectLesson(value: OpenPractice, day: Int, lesson: Int): OpenPractice = lock.withLock {
+        val user = account(); check(user.account.id == value.session.ownerId)
+        val phase = value.document.phases()[day]
+        val indices = phase.lessons()[lesson].map { it.index }
+        val current = dao.session(user.account.id, value.session.id) ?: error("Sessão ausente")
+        val session = if (current.cursor in indices && !current.completed) current else
+            dao.forLesson(user.account.id, value.installed.hash, indices) ?: PracticeSession(user.account.id, UUID.randomUUID().toString(), value.installed.hash, indices.first(), "", -1, null, false, System.currentTimeMillis()).also { dao.saveSession(it) }
+        dao.activate(user.account.id, value.installed.hash, session.id)
+        reload(value.copy(session=session))
     }
     suspend fun draft(value: OpenPractice, text: String) = lock.withLock {
         val session = dao.session(value.session.ownerId,value.session.id) ?: return@withLock
@@ -156,6 +201,12 @@ class PracticeRepository(private val context: Context, private val database: Cat
         val next=if(retry) session.copy(draft="",answeredIndex=-1,recordingPath=null) else if(last) session.copy(completed=true) else session.copy(cursor=session.cursor+1,draft="",answeredIndex=-1,recordingPath=null)
         database.withTransaction {
             dao.saveSession(next)
+            val phase = value.document.phases().first { it.id == value.document.activities[session.cursor].phaseId() }
+            val lesson = phase.lessonIndex(session.cursor)
+            if (!retry && session.cursor == phase.lessons()[lesson].last().index) {
+                val done = completedLessons(user.account.id, value.installed.hash) + phase.lessonKey(lesson)
+                dao.saveProgress(PracticeProgress(user.account.id, value.installed.hash, json.encodeToString(done), session.id))
+            }
             if(!retry && !next.completed && value.document.activities[next.cursor].type=="explanation" && value.document.activities[next.cursor].phaseId()==value.document.activities[session.cursor].phaseId() && value.document.phases().first { it.id==value.document.activities[session.cursor].phaseId() }.let { it.lessonIndex(session.cursor)==it.lessonIndex(next.cursor) }) {
                 val target=value.document.activities[next.cursor]
                 append(value.copy(session=next),"exposure",buildJsonObject {
@@ -168,7 +219,7 @@ class PracticeRepository(private val context: Context, private val database: Cat
     }
     suspend fun clearLocal() = lock.withLock {
         val owner=account().account.id
-        database.withTransaction { dao.deleteEvents(owner);dao.deleteSessions(owner);dao.deletePackages(owner) }
+        database.withTransaction { dao.deleteEvents(owner);dao.deleteSessions(owner);dao.deletePackages(owner);dao.deleteProgress(owner);dao.deleteResultRequests(owner) }
         withContext(Dispatchers.IO) {
             for(kind in listOf("recordings","packages")) {
                 val directory=File(context.filesDir,"$kind/$owner")
@@ -176,30 +227,49 @@ class PracticeRepository(private val context: Context, private val database: Cat
             }
         }
     }
+    suspend fun retryBlocked() = lock.withLock {
+        val user = account()
+        dao.retryBlocked(user.account.id)
+        scheduleSync(user.account.id)
+    }
     suspend fun sync(): Boolean {
         val user = account()
         try { repeat(8) {
             if(catalog.session.value != user) return false
             val batch = dao.pending(user.account.id)
-            if(batch.isEmpty()) return true
             for(kind in listOf("exposure","attempt")) {
                 val events = batch.filter { it.kind == kind }
                 if(events.isEmpty()) continue
                 if(catalog.session.value != user) return false
                 val receipts = api.send(user.token,kind,events.map { json.parseToJsonElement(it.payload).jsonObject })
-                for(receipt in receipts.results) {
+                database.withTransaction { for(receipt in receipts.results) {
                     if(events.none { it.id == receipt.id }) continue
                     val state = when(receipt.status) { "accepted","duplicate" -> "received"; "rejected","conflict" -> "blocked"; else -> continue }
-                    dao.receipt(user.account.id,receipt.id!!,state,receipt.message)
+                    val issue = receipt.message ?: if (receipt.status == "conflict") "Este registro diverge do que foi recebido anteriormente. Ele foi preservado neste aparelho para revisão." else null
+                    dao.receipt(user.account.id,receipt.id!!,state,issue)
+                    if (state == "received") {
+                        val sessionId = events.single { it.id == receipt.id }.sessionId
+                        dao.requestResults(PracticeResultRequest(user.account.id, sessionId, UUID.randomUUID().toString()))
+                    }
+                } }
+            }
+            val requests = dao.resultRequests(user.account.id)
+            if (batch.isEmpty() && requests.isEmpty()) return true
+            for(request in requests) {
+                if(catalog.session.value != user) return false
+                val remote = api.results(user.token,request.sessionId)
+                check(remote.session_id == request.sessionId) { "Resultados de outra sessão." }
+                if(catalog.session.value != user) return false
+                database.withTransaction {
+                    if (dao.resultRequest(user.account.id, request.sessionId)?.generation == request.generation) {
+                        val ids = dao.events(user.account.id, request.sessionId).map { it.id }.toSet()
+                        remote.events.filter { it.id in ids }.forEach { event -> event.assessment?.let { dao.assessment(user.account.id,event.id,json.encodeToString(it)) } }
+                        dao.resultsFetched(user.account.id,request.sessionId,request.generation)
+                    }
                 }
             }
-            for(id in batch.map { it.sessionId }.distinct()) {
-                if(catalog.session.value != user) return false
-                val remote = api.results(user.token,id)
-                remote.events.forEach { event -> event.assessment?.let { dao.assessment(user.account.id,event.id,json.encodeToString(it)) } }
-            }
         }
-        return false
+        return catalog.session.value == user && dao.pending(user.account.id).isEmpty() && dao.resultRequests(user.account.id).isEmpty()
         } catch(failure: ApiFailure) {
             if(failure.status == 401) catalog.invalidate(user)
             throw failure

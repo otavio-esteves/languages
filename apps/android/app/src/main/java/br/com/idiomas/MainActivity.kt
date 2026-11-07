@@ -2,7 +2,6 @@ package br.com.idiomas
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.BorderStroke
@@ -24,10 +23,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT),
-        )
+        enableEdgeToEdge()
         setContent {
             IdiomasTheme {
                 val app = application as IdiomasApplication
@@ -53,8 +49,11 @@ private fun MissionCard(title: String, description: String, action: String, enab
 fun CatalogScreen(vm: CatalogViewModel, practice: PracticeViewModel) {
     val practiceState by practice.screen.collectAsStateWithLifecycle()
     val installed by practice.installed.collectAsStateWithLifecycle()
+    val savedPackages by practice.savedPackages.collectAsStateWithLifecycle()
     val pending by practice.pending.collectAsStateWithLifecycle()
+    val blockedEvents by practice.blocked.collectAsStateWithLifecycle()
     val session by vm.session.collectAsStateWithLifecycle()
+    val blocked = blockedEvents.filter { it.ownerId == session?.account?.id }
     val catalog by vm.catalog.collectAsStateWithLifecycle()
     val screen by vm.screen.collectAsStateWithLifecycle()
     var confirmClear by remember(session?.account?.id) { mutableStateOf(false) }
@@ -65,14 +64,14 @@ fun CatalogScreen(vm: CatalogViewModel, practice: PracticeViewModel) {
         AlertDialog(
             onDismissRequest = { confirmClear = false },
             title = { Text("Apagar prática deste aparelho?") },
-            text = { Text("Serão removidos downloads, gravações e respostas locais desta conta. $pending registros aguardam envio e serão descartados. Registros já enviados permanecem no servidor.") },
-            confirmButton = { TextButton(onClick = { confirmClear = false; practice.clearLocal() }) { Text("Apagar dados locais") } },
-            dismissButton = { TextButton(onClick = { confirmClear = false }) { Text("Cancelar") } },
+            text = { Text("Serão removidos downloads, gravações e respostas locais desta conta. ${pending + blocked.size} registros ainda não confirmados serão descartados. Registros já enviados permanecem no servidor.") },
+            confirmButton = { JourneyTextButton(onClick = { confirmClear = false; practice.clearLocal() }) { Text("Apagar dados locais") } },
+            dismissButton = { JourneyTextButton(onClick = { confirmClear = false }) { Text("Cancelar") } },
         )
     }
     Scaffold { padding ->
         if (practiceState.open != null && session != null && practiceState.open?.session?.ownerId == session?.account?.id) {
-            Box(Modifier.padding(padding)) { PracticeScreen(practice, practiceState, pending) }
+            Box(Modifier.padding(padding)) { PracticeScreen(practice, practiceState, pending, blocked) }
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(padding).imePadding(),
@@ -82,7 +81,8 @@ fun CatalogScreen(vm: CatalogViewModel, practice: PracticeViewModel) {
                 item {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         BrandMark()
-                        if (session != null) TextButton(onClick = vm::logout, enabled = !screen.busy) { Text("Sair") }
+                        ThemeToggle()
+                        if (session != null) JourneyTextButton(onClick = vm::logout, enabled = !screen.busy) { Text("Sair") }
                     }
                 }
                 if (session == null) {
@@ -120,11 +120,17 @@ fun CatalogScreen(vm: CatalogViewModel, practice: PracticeViewModel) {
                     }
                     if (installed.isNotEmpty()) {
                         item { Text("Missões neste aparelho", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold) }
-                        items(installed.groupBy { it.packageId }.values.map { versions -> versions.maxBy { it.version } }, key = { "installed:${it.hash}" }) { mission ->
+                        val savedHashes = savedPackages.filter { it.ownerId == session?.account?.id }.map { it.hash }.toSet()
+                        val visiblePackages = installed.filter { it.ownerId == session?.account?.id }.groupBy { it.packageId }.values.flatMap { versions ->
+                            val latest = versions.maxBy { it.version }
+                            listOf(latest) + versions.filter { it.hash != latest.hash && it.hash in savedHashes }.sortedByDescending { it.version }
+                        }
+                        items(visiblePackages, key = { "installed:${it.hash}" }) { mission ->
+                            val previous = installed.any { it.packageId == mission.packageId && it.version > mission.version }
                             MissionCard(
                                 title = mission.title,
-                                description = if (mission.preview) "Rascunho para revisão. A sessão não confirma capacidades." else "Disponível neste aparelho, mesmo sem internet.",
-                                action = "Abrir trilha",
+                                description = if (previous) "Prática salva. Seu percurso e suas respostas continuam disponíveis." + if (mission.preview) " Rascunho para revisão." else "" else if (mission.preview) "Rascunho para revisão. A sessão não confirma capacidades." else "Disponível neste aparelho, mesmo sem internet.",
+                                action = if (previous) "Retomar prática salva" else "Abrir trilha",
                                 enabled = !practiceState.busy,
                                 onClick = { practice.open(mission) },
                             )
@@ -133,7 +139,7 @@ fun CatalogScreen(vm: CatalogViewModel, practice: PracticeViewModel) {
                     item {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                             Text("Missões disponíveis", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                            TextButton(onClick = vm::refresh, enabled = !screen.busy) { Text("Atualizar") }
+                            JourneyTextButton(onClick = vm::refresh, enabled = !screen.busy) { Text("Atualizar") }
                         }
                     }
                     if (catalog.isEmpty() && !screen.busy) {
@@ -156,7 +162,7 @@ fun CatalogScreen(vm: CatalogViewModel, practice: PracticeViewModel) {
                             Spacer(Modifier.height(20.dp))
                             Text("PRÉVIA EDITORIAL", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Spacer(Modifier.height(12.dp))
-                            OutlinedButton(onClick = practice::previews, enabled = !practiceState.busy, modifier = Modifier.fillMaxWidth()) { Text("Carregar prévias para revisão") }
+                            OutlinedButton(colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onPrimaryContainer), onClick = practice::previews, enabled = !practiceState.busy, modifier = Modifier.fillMaxWidth()) { Text("Carregar prévias para revisão") }
                         }
                         items(practiceState.previews, key = { "preview:${it.id}:${it.version}" }) { mission ->
                             MissionCard(mission.title, "Rascunho · sem confirmação de capacidades", "Abrir trilha de texto", !practiceState.busy, { practice.download(mission, true) })
@@ -165,14 +171,15 @@ fun CatalogScreen(vm: CatalogViewModel, practice: PracticeViewModel) {
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             Text(if (pending == 0) "Nenhum registro aguardando envio automático." else "$pending registros aguardam envio. Sua prática está salva neste aparelho.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            TextButton(onClick = { confirmClear = true }, enabled = !practiceState.busy) { Text("Apagar prática deste aparelho") }
+                            JourneyTextButton(onClick = { confirmClear = true }, enabled = !practiceState.busy) { Text("Apagar prática deste aparelho") }
                         }
                     }
+                    if (blocked.isNotEmpty()) item { SyncIssues(blocked, practiceState.busy, practice::retryBlocked) }
                     practiceState.message?.let { message -> item { Text(message) } }
                     if (practiceState.busy) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
                 }
                 if (screen.busy) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
-                screen.message?.let { message -> item { Surface(color = WarmPaper, shape = MaterialTheme.shapes.medium) { Text(message, Modifier.padding(18.dp)) } } }
+                screen.message?.let { message -> item { Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.medium) { Text(message, Modifier.padding(18.dp)) } } }
             }
         }
     }

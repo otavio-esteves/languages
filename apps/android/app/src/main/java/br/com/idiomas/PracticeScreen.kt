@@ -22,7 +22,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 
 @Composable
-fun PracticeScreen(vm: PracticeViewModel, state: PracticeScreenState, pending: Int) {
+fun PracticeScreen(vm: PracticeViewModel, state: PracticeScreenState, pending: Int, blocked: List<PracticeEvent>) {
     val value = state.open ?: return
     val activity = value.document.activities[value.session.cursor]
     val phases = remember(value.installed.hash) { value.document.phases() }
@@ -39,7 +39,7 @@ fun PracticeScreen(vm: PracticeViewModel, state: PracticeScreenState, pending: I
         }
     }
     selectedMeaning?.takeIf { it.second.supportId in state.revealed }?.let { (word, meaning) ->
-        AlertDialog(onDismissRequest = { selectedMeaning = null }, title = { Text(word) }, text = { Text(meaning.meaning) }, confirmButton = { TextButton(onClick = { selectedMeaning = null }) { Text("Fechar") } })
+        AlertDialog(onDismissRequest = { selectedMeaning = null }, title = { Text(word) }, text = { Text(meaning.meaning) }, confirmButton = { JourneyTextButton(onClick = { selectedMeaning = null }) { Text("Fechar") } })
     }
     val scroll = rememberLazyListState()
     BackHandler { if (!state.busy) { if (state.trail) vm.exit() else vm.showTrail() } }
@@ -48,7 +48,8 @@ fun PracticeScreen(vm: PracticeViewModel, state: PracticeScreenState, pending: I
         if (!state.trail) item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 BrandMark()
-                TextButton(onClick = { if (state.trail) vm.exit() else vm.showTrail() }, enabled = !state.busy) { Text(if (state.trail) "Voltar" else "Trilha") }
+                ThemeToggle()
+                JourneyTextButton(onClick = { if (state.trail) vm.exit() else vm.showTrail() }, enabled = !state.busy) { Text(if (state.trail) "Voltar" else "Trilha") }
             }
         }
         if (!value.document.isTextOnly()) {
@@ -56,13 +57,13 @@ fun PracticeScreen(vm: PracticeViewModel, state: PracticeScreenState, pending: I
             item { Text("Esta versão foi guardada no histórico. Baixe a versão atual na prévia editorial.") }
             item { JourneyButton("Voltar às missões", vm::exit, !state.busy, Modifier.fillMaxWidth()) }
         } else if (state.trail) {
-            item { LearningTrail(phases, value.session.cursor, value.session.completed, state.busy, vm::begin) }
+            item { LearningTrail(phases, state.selectedDay, value.completedLessons, state.busy, vm::selectDay, vm::begin) }
         } else if (value.session.completed) {
             item { Text("Percurso concluído.", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold) }
             item { Text("Você chegou ao fim desta prática de texto.") }
             item { JourneyButton("Ver meu percurso", vm::showTrail, !state.busy, Modifier.fillMaxWidth()) }
         } else {
-            item { SessionProgress(phase.lessonIndex(value.session.cursor).coerceAtLeast(0), phase.lessons().size) }
+            item { SessionProgress(phase.completedCount(value.completedLessons), phase.lessons().size) }
             item { Text("DIA ${phases.indexOf(phase) + 1} · ${phase.title}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             item { Text(activity.prompt, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold, modifier = Modifier.semantics { heading() }) }
             activity.content["messages"]?.jsonArray?.let { turns ->
@@ -95,7 +96,7 @@ fun PracticeScreen(vm: PracticeViewModel, state: PracticeScreenState, pending: I
             }
             for (support in activity.supports.filter { !it.id.startsWith("gloss-") && it.kind != "solution" }) item {
                 if (support.id in state.revealed) Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.small) { Text(support.content, Modifier.padding(18.dp), style = MaterialTheme.typography.bodyMedium) }
-                else TextButton(onClick = { vm.support(support.id) }, enabled = !state.busy) { Text("Consultar apoio") }
+                else JourneyTextButton(onClick = { vm.support(support.id) }, enabled = !state.busy) { Text("Consultar apoio") }
             }
             if (activity.type == "information_question" && !answered) {
                 item {
@@ -139,7 +140,7 @@ fun PracticeScreen(vm: PracticeViewModel, state: PracticeScreenState, pending: I
                     }
                 }
                 item { JourneyButton("Continuar", { vm.next() }, !state.busy, Modifier.fillMaxWidth()) }
-                item { TextButton(onClick = { vm.next(true) }, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) { Text("Tentar de novo") } }
+                item { JourneyTextButton(onClick = { vm.next(true) }, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) { Text("Tentar de novo") } }
             }
             if (activity.type in listOf("purpose", "dialogue", "explanation")) item { JourneyButton("Continuar", vm::passive, !state.busy, Modifier.fillMaxWidth()) }
             if (activity.type == "summary") {
@@ -150,9 +151,22 @@ fun PracticeScreen(vm: PracticeViewModel, state: PracticeScreenState, pending: I
         }
         if (!state.trail) item {
             if (pending > 0) Text("$pending registros aguardam envio. Sua prática está salva neste aparelho.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            TextButton(onClick = vm::sync, enabled = !state.busy) { Text("Sincronizar") }
+            JourneyTextButton(onClick = vm::sync, enabled = !state.busy) { Text("Sincronizar") }
         }
         if (state.busy && !state.trail) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
+        if (blocked.isNotEmpty()) item { SyncIssues(blocked, state.busy, vm::retryBlocked) }
         state.message?.let { message -> item { Text(message, color = MaterialTheme.colorScheme.onSurfaceVariant) } }
+    }
+}
+
+@Composable
+fun SyncIssues(events: List<PracticeEvent>, busy: Boolean, retry: () -> Unit) {
+    OutlinedCard {
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text("${events.size} registros não foram aceitos", fontWeight = FontWeight.SemiBold)
+            Text("Sua prática permanece neste aparelho. Esses registros ainda não foram confirmados pelo servidor.")
+            for (reason in events.map { it.issue ?: "O servidor não confirmou este registro." }.distinct()) Text(reason)
+            JourneyTextButton(onClick = retry, enabled = !busy) { Text("Tentar enviar novamente") }
+        }
     }
 }

@@ -62,4 +62,13 @@ class TextTrailTest {
         assertTrue(previous.activities.any { it.modality == "listening" })
         assertTrue(previous.activities.any { it.modality == "speaking" })
     }
+
+    @Test fun day_progress_counts_explicit_lessons_and_keeps_content_levels_separate() {
+        val days=mission(4).phases()
+        assertEquals(listOf("A1","A1","A1"),days.map {it.level})
+        val done=setOf("sentences:0","words:0","words:1")
+        assertEquals(listOf(2,0,1),days.map {it.completedCount(done)})
+        assertEquals(setOf("words:0","words:1","words:2"),days.legacyLessons(3,false))
+        assertEquals(listOf(3,0,1),days.map {it.completedCount(done+"words:2")})
+    }
 }

@@ -9,12 +9,14 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-data class PracticeScreenState(val busy: Boolean = false, val message: String? = null, val previews: List<CatalogItem> = emptyList(), val open: OpenPractice? = null, val revealed: Set<String> = emptySet(), val playPath: String? = null, val playNonce: Int = 0, val trail: Boolean = true)
+data class PracticeScreenState(val busy: Boolean = false, val message: String? = null, val previews: List<CatalogItem> = emptyList(), val open: OpenPractice? = null, val revealed: Set<String> = emptySet(), val playPath: String? = null, val playNonce: Int = 0, val trail: Boolean = true, val selectedDay: Int = 0)
 class PracticeViewModel(private val practice: PracticeRepository, private val catalog: CatalogRepository) : ViewModel() {
     private val mutable = MutableStateFlow(PracticeScreenState())
     val screen = mutable.asStateFlow()
     val installed = practice.installed.stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000),emptyList())
+    val savedPackages = practice.savedPackages.stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000),emptyList())
     val pending = practice.pending.stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000),0)
+    val blocked = practice.blocked.stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000),emptyList())
     init { viewModelScope.launch { catalog.session.collect { session -> mutable.value=PracticeScreenState();session?.let { practice.scheduleSync(it.account.id) } } } }
     private fun publish(expected: Session?, change: (PracticeScreenState)->PracticeScreenState) { if(catalog.session.value==expected) mutable.update(change) }
     private fun action(block: suspend (Session?)->Unit) {
@@ -31,17 +33,23 @@ class PracticeViewModel(private val practice: PracticeRepository, private val ca
     fun previews() = action { identity -> val values=practice.previews();publish(identity) { it.copy(previews=values) } }
     fun download(item: CatalogItem, preview: Boolean) = action { identity ->
         val installed=practice.download(item,preview);val open=practice.open(installed.hash)
-        publish(identity) { it.copy(open=open,revealed=emptySet(),trail=true) }
+        publish(identity) { it.copy(open=open,revealed=open.revealedSupports(),trail=true,selectedDay=dayOf(open)) }
     }
-    fun open(installed: InstalledPackage) = action { identity -> val open=practice.open(installed.hash);publish(identity) { it.copy(open=open,revealed=emptySet(),trail=true) } }
+    fun open(installed: InstalledPackage) = action { identity -> val open=practice.open(installed.hash);publish(identity) { it.copy(open=open,revealed=open.revealedSupports(),trail=true,selectedDay=dayOf(open)) } }
     fun exit() { mutable.update { it.copy(open=null,revealed=emptySet(),playPath=null,trail=true) } }
     fun showTrail() { mutable.update { it.copy(trail=true,playPath=null) } }
-    fun begin() = action { identity ->
-        val value=mutable.value.open ?: return@action
+    private fun dayOf(value: OpenPractice): Int = value.document.phases().indexOfFirst { phase -> phase.steps.any { it.index == value.session.cursor } }.coerceAtLeast(0)
+    fun selectDay(day: Int) {
+        val value = mutable.value.open ?: return
+        if (!mutable.value.busy && day in value.document.phases().indices) mutable.update { it.copy(selectedDay=day) }
+    }
+    fun begin(lesson: Int) = action { identity ->
+        val previous=mutable.value.open ?: return@action
+        val value=practice.selectLesson(previous, mutable.value.selectedDay, lesson)
         check(value.document.isTextOnly())
         val activity=value.document.activities[value.session.cursor]
         val updated=if(activity.type in listOf("dialogue","explanation")) practice.exposure(value) else value
-        publish(identity) { it.copy(open=updated,trail=false) }
+        publish(identity) { it.copy(open=updated,revealed=updated.revealedSupports(),trail=false) }
     }
     private suspend fun presentNext(previous:OpenPractice,next:OpenPractice): Pair<OpenPractice,Boolean> {
         val oldPhase=previous.document.phases().first { it.id==previous.document.activities[previous.session.cursor].phaseId() }
@@ -93,8 +101,20 @@ class PracticeViewModel(private val practice: PracticeRepository, private val ca
         }
     }
     fun clearLocal() = action { identity -> practice.clearLocal();publish(identity) { it.copy(open=null,message="Prática local removida. Registros já enviados permanecem no servidor.") } }
+    fun retryBlocked() = action { identity ->
+        practice.retryBlocked()
+        publish(identity) { it.copy(message="Os registros serão reenviados quando houver conexão. Sua prática permanece salva.") }
+    }
     fun sync() = action { identity ->
-        practice.sync();mutable.value.open?.let { value -> val updated=practice.reload(value);publish(identity) { it.copy(open=updated,message="Registros sincronizados. Respostas abertas continuam sem avaliação independente.") } }
+        val sent = practice.sync()
+        val issues = practice.blocked.first()
+        val message = when {
+            issues.isNotEmpty() -> "Há registros que não foram aceitos. Consulte os detalhes abaixo."
+            !sent -> "A sincronização ainda está pendente. Sua prática permanece salva."
+            else -> "Registros sincronizados. Respostas abertas continuam sem avaliação independente."
+        }
+        val updated = mutable.value.open?.let { practice.reload(it) }
+        publish(identity) { it.copy(open=updated,message=message) }
     }
     companion object {
         fun factory(practice:PracticeRepository,catalog:CatalogRepository):ViewModelProvider.Factory=object:ViewModelProvider.Factory {

@@ -34,6 +34,7 @@ class PracticeDurabilityTest {
         val received=mutableSetOf<String>()
         var loseConfirmation=true
         var corrupt=false
+        var forcedReceipt: String? = null
         override suspend fun login(email:String,password:String)=LoginResponse("synthetic-token-$email","2030-01-01T00:00:00Z",Account(if(email=="first")1 else 2,"Synthetic",email,true))
         override suspend fun catalog(token:String)=CatalogResponse("1.0.0",emptyList())
         override suspend fun logout(token:String) {}
@@ -42,17 +43,153 @@ class PracticeDurabilityTest {
         override suspend fun document(token:String,hash:String)=if(corrupt) raw.copyOf().also {it[0]=0} else raw
         override suspend fun asset(token:String,hash:String,id:String)=error("No audio in storage fixture")
         override suspend fun send(token:String,kind:String,events:List<JsonObject>):BatchResult {
-            val result=events.map {value -> val id=value.text("id")!!;EventReceipt(id,if(received.add(id)) "accepted" else "duplicate")}
+            val result=events.map {value ->
+                val id=value.text("id")!!
+                forcedReceipt?.let { EventReceipt(id,it,"Synthetic $it") }
+                    ?: EventReceipt(id,if(received.add(id)) "accepted" else "duplicate")
+            }
             if(loseConfirmation) {loseConfirmation=false;throw IOException("Synthetic lost confirmation")}
             return BatchResult(result)
         }
         override suspend fun results(token:String,sessionId:String)=RemoteSession(sessionId,emptyList())
     }
 
+    @Test fun completed_trail_reopens_without_resetting_and_new_session_requires_explicit_request()=runBlocking {
+        val name="completed-test-${UUID.randomUUID()}.db"
+        val database=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
+        val api=FakeApi()
+        val catalog=CatalogRepository(api,RoomCatalogCache(database.catalogDao()))
+        val repo=PracticeRepository(context,database,catalog,api)
+        try {
+            catalog.login("first","synthetic")
+            val installed=repo.download(CatalogItem("synthetic",1,"Synthetic","pt-BR_en",listOf("synthetic-target")),true)
+            var open=repo.advance(repo.open(installed.hash))
+            open=repo.answer(open,"A tea, please.")
+            open=repo.advance(open)
+            assertTrue(open.session.completed)
+            val reopened=PracticeRepository(context,database,catalog,api).open(installed.hash)
+            assertEquals(open.session,reopened.session)
+            assertEquals(open.events,reopened.events)
+            val fresh=repo.open(installed.hash,newSession=true)
+            assertNotEquals(open.session.id,fresh.session.id)
+            assertEquals(0,fresh.session.cursor)
+            assertFalse(fresh.session.completed)
+            assertEquals(open.session,database.practiceDao().session(1,open.session.id))
+        } finally { database.close();context.deleteDatabase(name);fixtureRoot.deleteRecursively();context.deleteSharedPreferences("practice-device") }
+    }
+
+    @Test fun switching_days_preserves_drafts_and_counts_only_completed_lessons()=runBlocking {
+        val root=Json.parseToJsonElement(FakeApi().raw.toString(Charsets.UTF_8)).jsonObject.toMutableMap()
+        val template=root["activities"]!!.jsonArray[1].jsonObject
+        root["activities"]=JsonArray((0..5).map { index -> JsonObject(template.toMutableMap().apply {
+            put("id",JsonPrimitive("write-$index"))
+            put("content",buildJsonObject {put("phase_id",if(index<3) "first" else "second");put("phase_level","A1")})
+        }) })
+        val api=FakeApi(JsonObject(root).toString().toByteArray())
+        val name="navigation-test-${UUID.randomUUID()}.db"
+        var database=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(MIGRATION_1_2,MIGRATION_2_3,MIGRATION_3_4).build()
+        val catalog=CatalogRepository(api,RoomCatalogCache(database.catalogDao()))
+        var repo=PracticeRepository(context,database,catalog,api)
+        try {
+            catalog.login("first","synthetic")
+            val installed=repo.download(CatalogItem("synthetic",1,"Synthetic","pt-BR_en",listOf("synthetic-target")),true)
+            val original=repo.open(installed.hash)
+            repo.draft(original,"Preserved first-day draft")
+            var future=repo.selectLesson(original,1,0)
+            assertEquals(3,future.session.cursor)
+            assertTrue(future.completedLessons.isEmpty())
+            future=repo.advance(repo.answer(future,"A tea, please."))
+            assertEquals(setOf("second:0"),future.completedLessons)
+            var earlier=repo.selectLesson(future,0,0)
+            assertEquals(original.session.id,earlier.session.id)
+            assertEquals("Preserved first-day draft",earlier.session.draft)
+            earlier=repo.advance(repo.answer(earlier,"Water, please."))
+            assertEquals(setOf("first:0","second:0"),earlier.completedLessons)
+            assertEquals(listOf(1,1),earlier.document.phases().map {it.completedCount(earlier.completedLessons)})
+            database.close()
+            database=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(MIGRATION_1_2,MIGRATION_2_3,MIGRATION_3_4).build()
+            repo=PracticeRepository(context,database,catalog,api)
+            assertEquals(setOf("first:0","second:0"),repo.open(installed.hash).completedLessons)
+        } finally { database.close();context.deleteDatabase(name);fixtureRoot.deleteRecursively();context.deleteSharedPreferences("practice-device") }
+    }
+
+    @Test fun redownload_repairs_local_corruption_without_losing_draft_session_or_outbox()=runBlocking {
+        val name="repair-test-${UUID.randomUUID()}.db"
+        val database=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
+        val api=FakeApi()
+        val catalog=CatalogRepository(api,RoomCatalogCache(database.catalogDao()))
+        val repo=PracticeRepository(context,database,catalog,api)
+        try {
+            catalog.login("first","synthetic")
+            val item=CatalogItem("synthetic",1,"Synthetic","pt-BR_en",listOf("synthetic-target"))
+            val installed=repo.download(item,true)
+            var open=repo.advance(repo.exposure(repo.open(installed.hash)))
+            repo.draft(open,"My saved draft")
+            open=repo.reload(open)
+            val damaged=File(installed.directory,"package.json")
+            damaged.writeText("Synthetic corrupted content")
+            api.corrupt=true
+            try { repo.download(item,true);fail("A bad download must not replace the installation") } catch(_:IllegalArgumentException) {}
+            assertEquals(installed,database.practiceDao().packageByHash(1,installed.hash))
+            api.corrupt=false
+            database.openHelper.writableDatabase.execSQL("CREATE TRIGGER synthetic_install_failure BEFORE INSERT ON installed_packages BEGIN SELECT RAISE(ABORT,'synthetic activation interruption'); END")
+            try { repo.download(item,true);fail("Failed activation must retain the previous installation") } catch(_:android.database.sqlite.SQLiteException) {}
+            assertEquals(installed,database.practiceDao().packageByHash(1,installed.hash))
+            assertTrue(damaged.exists())
+            database.openHelper.writableDatabase.execSQL("DROP TRIGGER synthetic_install_failure")
+            val repaired=repo.download(item,true)
+            assertNotEquals(installed.directory,repaired.directory)
+            assertArrayEquals(api.raw,File(repaired.directory,"package.json").readBytes())
+            val reopened=repo.open(installed.hash)
+            assertEquals(open.session,reopened.session)
+            assertEquals(open.events,reopened.events)
+            assertEquals(1,database.practiceDao().pending(1).size)
+            assertEquals(repaired.directory,repo.download(item,true).directory)
+        } finally { database.close();context.deleteDatabase(name);fixtureRoot.deleteRecursively();context.deleteSharedPreferences("practice-device") }
+    }
+
+    @Test fun rejected_and_conflicting_events_remain_visible_per_account_and_can_be_retried()=runBlocking {
+        val name="blocked-test-${UUID.randomUUID()}.db"
+        val database=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
+        val api=FakeApi().apply { loseConfirmation=false }
+        val catalog=CatalogRepository(api,RoomCatalogCache(database.catalogDao()))
+        val repo=PracticeRepository(context,database,catalog,api)
+        try {
+            catalog.login("first","synthetic")
+            val installed=repo.download(CatalogItem("synthetic",1,"Synthetic","pt-BR_en",listOf("synthetic-target")),true)
+            var open=repo.open(installed.hash)
+            for (status in listOf("rejected","conflict")) {
+                open=repo.exposure(open)
+                val original=open.events.last()
+                api.forcedReceipt=status
+                assertTrue(repo.sync())
+                assertEquals(0,repo.pending.first())
+                val blocked=repo.blocked.first().single()
+                assertEquals(original.id,blocked.id)
+                assertEquals(original.payload,blocked.payload)
+                assertEquals("Synthetic $status",blocked.issue)
+                catalog.logout();catalog.login("second","synthetic")
+                assertTrue(repo.blocked.first().isEmpty())
+                repo.retryBlocked()
+                assertEquals(1,database.practiceDao().blocked(1).first().size)
+                catalog.logout();catalog.login("first","synthetic")
+                repo.retryBlocked()
+                assertTrue(repo.blocked.first().isEmpty())
+                assertEquals(original.id,database.practiceDao().pending(1).single().id)
+                assertEquals(original.payload,database.practiceDao().pending(1).single().payload)
+                api.forcedReceipt=null
+                assertTrue(repo.sync())
+                assertTrue(repo.blocked.first().isEmpty())
+                assertEquals(0,repo.pending.first())
+                open=repo.reload(open)
+            }
+        } finally { database.close();context.deleteDatabase(name);fixtureRoot.deleteRecursively();context.deleteSharedPreferences("practice-device") }
+    }
+
     @Test fun drafts_attempts_and_outbox_survive_reopening_and_lost_confirmation()=runBlocking {
         val name="practice-test-${UUID.randomUUID()}.db"
         val userId=1L
-        var database=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(MIGRATION_1_2).build()
+        var database=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
         val api=FakeApi();val vault=MemorySessionVault()
         var catalog=CatalogRepository(api,RoomCatalogCache(database.catalogDao()),vault)
         var repo=PracticeRepository(context,database,catalog,api)
@@ -71,7 +208,7 @@ class PracticeDurabilityTest {
             open=repo.answer(open,"A large tea, please.")
             val id=open.session.id
             database.close()
-            database=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(MIGRATION_1_2).build()
+            database=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
             catalog=CatalogRepository(api,RoomCatalogCache(database.catalogDao()),vault)
             repo=PracticeRepository(context,database,catalog,api)
             open=repo.open(installed.hash)
@@ -116,7 +253,7 @@ class PracticeDurabilityTest {
         activities[1]=JsonObject(writing);root["activities"]=JsonArray(activities)
         val api=FakeApi(JsonObject(root).toString().toByteArray())
         val name="comparison-test-${UUID.randomUUID()}.db"
-        var database=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(MIGRATION_1_2).build()
+        var database=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
         val vault=MemorySessionVault()
         var catalog=CatalogRepository(api,RoomCatalogCache(database.catalogDao()),vault)
         var repo=PracticeRepository(context,database,catalog,api)
@@ -135,7 +272,7 @@ class PracticeDurabilityTest {
             val solutionId=open.events[1].id
             val sessionId=open.session.id
             database.close()
-            database=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(MIGRATION_1_2).build()
+            database=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
             catalog=CatalogRepository(api,RoomCatalogCache(database.catalogDao()),vault)
             repo=PracticeRepository(context,database,catalog,api)
             open=repo.open(installed.hash)
@@ -155,7 +292,7 @@ class PracticeDurabilityTest {
         old.execSQL("CREATE TABLE catalog (ownerId INTEGER NOT NULL, missionId TEXT NOT NULL, payload TEXT NOT NULL, PRIMARY KEY(ownerId,missionId))")
         old.execSQL("INSERT INTO catalog VALUES(?,?,?)",arrayOf<Any>(1,"preserved",Json.encodeToString(expected)))
         old.version=1;old.close()
-        val database=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(MIGRATION_1_2).build()
+        val database=Room.databaseBuilder(context,CatalogDatabase::class.java,name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
         try {assertEquals(listOf(expected),RoomCatalogCache(database.catalogDao()).observe(1).first());assertTrue(database.practiceDao().pending(1).isEmpty())}
         finally {database.close();context.deleteDatabase(name)}
     }

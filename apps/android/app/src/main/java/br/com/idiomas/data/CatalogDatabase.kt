@@ -15,7 +15,7 @@ interface CatalogDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insert(rows: List<CatalogRow>)
     @Transaction suspend fun replace(ownerId: Long, rows: List<CatalogRow>) { clear(ownerId); insert(rows) }
 }
-@Database(entities = [CatalogRow::class, InstalledPackage::class, PracticeSession::class, PracticeEvent::class, PracticeClock::class], version = 2, exportSchema = true)
+@Database(entities = [CatalogRow::class, InstalledPackage::class, PracticeSession::class, PracticeEvent::class, PracticeClock::class, PracticeProgress::class, PracticeResultRequest::class], version = 4, exportSchema = true)
 abstract class CatalogDatabase : RoomDatabase() { abstract fun catalogDao(): CatalogDao; abstract fun practiceDao(): PracticeDao }
 interface CatalogCache {
     fun observe(ownerId: Long): Flow<List<CatalogItem>>

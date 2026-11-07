@@ -19,7 +19,7 @@ fun MissionActivity.wordMeanings(): Map<String, WordMeaning> = content["glossary
 
 @Composable
 fun GlossaryText(text: String, meanings: Map<String, WordMeaning>, onLookup: (String, WordMeaning) -> Unit, modifier: Modifier = Modifier, style: TextStyle = LocalTextStyle.current) {
-    val color = MaterialTheme.colorScheme.primary
+    val color = MaterialTheme.colorScheme.onPrimaryContainer
     val annotated = buildAnnotatedString {
         var cursor = 0
         for (match in Regex("[A-Za-z]+(?:['’‘ʼ][A-Za-z]+)*").findAll(text)) {

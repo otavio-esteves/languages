@@ -1,84 +1,92 @@
 package br.com.idiomas
 
+import android.app.Activity
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import br.com.idiomas.data.TrailPhase
-import br.com.idiomas.data.lessons
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.runtime.getValue
+import androidx.core.view.WindowCompat
+import androidx.core.content.edit
 
-val WarmPaper = Color(0xFFFFF8E6)
+private val LocalDarkTheme = compositionLocalOf { false }
+private val LocalToggleTheme = staticCompositionLocalOf<() -> Unit> { {} }
 
 @Composable
 fun IdiomasTheme(content: @Composable () -> Unit) {
-    MaterialTheme(
-        colorScheme = lightColorScheme(
-            primary = Color(0xFF17745B), onPrimary = Color.White,
-            primaryContainer = Color(0xFFEDF5EF), onPrimaryContainer = Color(0xFF105D48),
-            background = Color.White, onBackground = Color(0xFF263C33),
-            surface = Color.White, onSurface = Color(0xFF263C33),
-            surfaceVariant = Color(0xFFF5F7F3), onSurfaceVariant = Color(0xFF66736B),
-            outline = Color(0xFF829689), outlineVariant = Color(0xFFE4E9E4),
-        ),
-        shapes = Shapes(small = RoundedCornerShape(10.dp), medium = RoundedCornerShape(14.dp), large = RoundedCornerShape(18.dp)),
-        content = content,
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("appearance", 0) }
+    var choice by remember { mutableStateOf(if (prefs.contains("dark")) prefs.getBoolean("dark", false) else null) }
+    val dark = choice ?: isSystemInDarkTheme()
+    val view = LocalView.current
+    SideEffect {
+        (context as? Activity)?.let { activity ->
+            WindowCompat.getInsetsController(activity.window, view).apply {
+                isAppearanceLightStatusBars = !dark
+                isAppearanceLightNavigationBars = !dark
+            }
+        }
+    }
+    val scheme = if (dark) darkColorScheme(
+        primary=Color(0xFF89E219), onPrimary=Color(0xFF173600), primaryContainer=Color(0xFF233D24), onPrimaryContainer=Color(0xFFA2EF45),
+        secondary=Color(0xFF49C0FF), secondaryContainer=Color(0xFF173B50), onSecondaryContainer=Color(0xFFE1F4FF),
+        background=Color(0xFF131F24), onBackground=Color(0xFFF1F7FA), surface=Color(0xFF18282F), onSurface=Color(0xFFF1F7FA),
+        surfaceContainerHigh=Color(0xFF18282F), surfaceContainer=Color(0xFF18282F), surfaceVariant=Color(0xFF1D3039), onSurfaceVariant=Color(0xFFA8BAC3), outline=Color(0xFF718995), outlineVariant=Color(0xFF374B56),
+    ) else lightColorScheme(
+        primary=Color(0xFF58CC02), onPrimary=Color(0xFF173600), primaryContainer=Color(0xFFEFFFDC), onPrimaryContainer=Color(0xFF327400),
+        secondary=Color(0xFF1CB0F6), secondaryContainer=Color(0xFFE5F6FF), onSecondaryContainer=Color(0xFF14516E),
+        background=Color.White, onBackground=Color(0xFF3C3C3C), surface=Color.White, onSurface=Color(0xFF3C3C3C),
+        surfaceContainerHigh=Color.White, surfaceContainer=Color.White, surfaceVariant=Color(0xFFF7F9FA), onSurfaceVariant=Color(0xFF777777), outline=Color(0xFF999999), outlineVariant=Color(0xFFE5E5E5),
     )
+    CompositionLocalProvider(LocalDarkTheme provides dark, LocalToggleTheme provides {
+        choice = !dark; prefs.edit { putBoolean("dark", !dark) }
+    }) {
+        MaterialTheme(colorScheme=scheme, shapes=Shapes(small=RoundedCornerShape(14.dp), medium=RoundedCornerShape(20.dp), large=RoundedCornerShape(24.dp)), content=content)
+    }
+}
+
+@Composable
+fun ThemeToggle() {
+    val dark = LocalDarkTheme.current
+    OutlinedButton(onClick=LocalToggleTheme.current, modifier=Modifier.size(48.dp).semantics { contentDescription=if(dark) "Ativar tema claro" else "Ativar tema escuro" }, contentPadding=PaddingValues(0.dp), shape=RoundedCornerShape(14.dp), border=BorderStroke(2.dp,MaterialTheme.colorScheme.outlineVariant)) {
+        Text(if(dark) "☀" else "☾", color=MaterialTheme.colorScheme.onSurfaceVariant, style=MaterialTheme.typography.titleLarge)
+    }
 }
 
 @Composable
 fun BrandMark() {
-    Text("idiomas.", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
+    Text("idiomas.", color=MaterialTheme.colorScheme.onPrimaryContainer, style=MaterialTheme.typography.titleLarge, fontWeight=FontWeight.ExtraBold)
 }
 
 @Composable
 fun JourneyButton(text: String, onClick: () -> Unit, enabled: Boolean, modifier: Modifier = Modifier) {
-    Button(onClick = onClick, enabled = enabled, modifier = modifier.heightIn(min = 50.dp), shape = RoundedCornerShape(12.dp), contentPadding = PaddingValues(horizontal = 24.dp, vertical = 14.dp)) {
-        Text(text, fontWeight = FontWeight.SemiBold)
+    Button(onClick=onClick, enabled=enabled, modifier=modifier.heightIn(min=54.dp), shape=RoundedCornerShape(16.dp), border=BorderStroke(2.dp,if(enabled) Color(0xFF46A302) else MaterialTheme.colorScheme.outlineVariant), contentPadding=PaddingValues(horizontal=24.dp,vertical=14.dp)) {
+        Text(text,fontWeight=FontWeight.ExtraBold)
     }
 }
 
 @Composable
 fun SessionProgress(completed: Int, total: Int) {
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        LinearProgressIndicator(
-            progress = { if (total == 0) 0f else completed.toFloat() / total },
-            modifier = Modifier.weight(1f).height(8.dp),
-            trackColor = MaterialTheme.colorScheme.outlineVariant,
-            gapSize = 0.dp, drawStopIndicator = {},
-        )
-        Text("$completed / $total", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    val progress by animateFloatAsState(if(total==0) 0f else completed.toFloat()/total,label="Progresso do dia")
+    Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(16.dp)) {
+        LinearProgressIndicator(progress={progress},modifier=Modifier.weight(1f).height(14.dp),trackColor=MaterialTheme.colorScheme.outlineVariant,gapSize=0.dp,drawStopIndicator={})
+        Text("$completed / $total",style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
 @Composable
-fun LearningTrail(phases: List<TrailPhase>, cursor: Int, completed: Boolean, busy: Boolean, onBegin: () -> Unit) {
-    val day = phases.indexOfFirst { phase -> phase.steps.any { it.index == cursor } }.coerceAtLeast(0)
-    val lessons = phases[day].lessons()
-    val done = lessons.count { lesson -> completed || lesson.all { it.index < cursor } }
-    val progress by animateFloatAsState(done.toFloat() / lessons.size, label = "Lições concluídas")
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-        LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth().height(9.dp), trackColor = MaterialTheme.colorScheme.outlineVariant, gapSize = 0.dp, drawStopIndicator = {})
-        Spacer(Modifier.height(12.dp))
-        Text("Dia ${day + 1}", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.semantics { heading() })
-        for ((index, lesson) in lessons.withIndex()) {
-            val current = !completed && lesson.any { it.index == cursor }
-            val complete = completed || lesson.all { it.index < cursor }
-            OutlinedCard(onClick = onBegin, enabled = current && !busy, modifier = Modifier.fillMaxWidth().heightIn(min = 112.dp), border = BorderStroke(1.dp, if (current) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant), colors = CardDefaults.outlinedCardColors(containerColor = if (complete) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface, disabledContainerColor = if (complete) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface)) {
-                Text("Lição ${index + 1}", Modifier.padding(28.dp), style = MaterialTheme.typography.titleMedium)
-            }
-        }
-    }
+fun JourneyTextButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable RowScope.() -> Unit) {
+    TextButton(onClick=onClick, modifier=modifier, enabled=enabled, colors=ButtonDefaults.textButtonColors(contentColor=MaterialTheme.colorScheme.onPrimaryContainer), content=content)
 }
