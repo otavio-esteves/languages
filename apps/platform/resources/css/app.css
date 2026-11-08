@@ -17,7 +17,8 @@ button:disabled { opacity:.5; cursor:default; }
 .icon-button svg { width:23px; height:23px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 .brand { display:inline-flex; font-size:1.55rem; font-weight:900; letter-spacing:-.06em; color:var(--green-text); }
 .brand-dot { color:var(--green); }
-.site-header { display:flex; align-items:center; gap:20px; max-width:1050px; min-height:80px; padding:14px 28px; margin:auto; border-bottom:2px solid var(--line); }
+.site-header { display:flex; flex-wrap:wrap; align-items:center; gap:20px; max-width:1050px; min-height:80px; padding:14px 28px; margin:auto; border-bottom:2px solid var(--line); }
+.session-actions { display:flex; align-items:center; gap:8px; }
 .site-header>:last-child { margin-left:auto; }
 .header-context,.muted { color:var(--muted); font-size:.87rem; }
 .eyebrow { color:var(--muted); font-size:.72rem; letter-spacing:.08em; font-weight:800; margin-bottom:14px; }

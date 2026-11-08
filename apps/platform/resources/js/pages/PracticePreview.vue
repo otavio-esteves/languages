@@ -4,7 +4,7 @@ import { Link } from '@inertiajs/vue3';
 import BrandMark from '../components/BrandMark.vue';
 import TrailMap from '../components/TrailMap.vue';
 import GlossaryText from '../components/GlossaryText.vue';
-import ThemeToggle from '../components/ThemeToggle.vue';
+import SessionActions from '../components/SessionActions.vue';
 import { compareAnswer, dayLessons, lessonIndex, lessonKey, legacyLessons, completedInDay, isTextOnly, phaseId, phases, type Activity, type Mission, type Support, type Gloss, type ComparisonResult } from '../lib/textTrail';
 const props = defineProps<{ mission: Mission; manifest: { package_hash: string; is_preview: boolean }; progress?: { day: number; cursor?: number; completed: boolean; completed_lessons?: string[] } }>();
 const initialDay = phases(props.mission)[props.progress?.day || 0];
@@ -174,7 +174,7 @@ function retryPending() {
 onMounted(() => { if (textOnly.value && new URLSearchParams(window.location.search).get('start') === '1') begin(); });
 </script>
 <template>
-  <header v-if="!showTrail || finished" class="site-header"><BrandMark /><ThemeToggle /><span class="header-context">Leitura e escrita</span><button v-if="!showTrail && !finished" class="quiet" :disabled="busy" @click="backToTrail">Voltar à trilha</button><Link v-else href="/editorial" class="quiet exit-link">Voltar à revisão</Link></header>
+  <header v-if="!showTrail || finished" class="site-header"><BrandMark /><SessionActions /><span class="header-context">Leitura e escrita</span><button v-if="!showTrail && !finished" class="quiet" :disabled="busy" @click="backToTrail">Voltar à trilha</button><Link v-else href="/editorial" class="quiet exit-link">Voltar à revisão</Link></header>
   <main v-if="!textOnly" class="lesson-main"><h1>Continue na trilha de texto.</h1><p>Esta versão foi guardada no histórico. A versão atual está na revisão.</p><Link href="/editorial" class="button-link">Abrir trilha atual</Link></main>
   <main v-else-if="showTrail && !finished" class="day-only">
     <TrailMap :phases="trail" :day="selectedDay" :cursor="index" :completed-lessons="completedLessons" :busy="busy || hasPending" @day="selectDay" @start="begin" />

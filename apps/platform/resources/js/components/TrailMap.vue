@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, ref } from 'vue';
-import ThemeToggle from './ThemeToggle.vue';
+import SessionActions from './SessionActions.vue';
 import { completedInDay, dayLessons, lessonKey, type TrailPhase } from '../lib/textTrail';
 const props = defineProps<{ phases: TrailPhase[]; day: number; cursor: number; completedLessons: string[]; busy?: boolean }>();
 const emit = defineEmits<{ start: [cursor: number]; day: [day: number] }>();
@@ -38,7 +38,7 @@ function start(index: number) {
 </script>
 <template>
   <div class="daily-cards">
-    <div class="trail-brand"><span class="brand">idiomas<span class="brand-dot">.</span></span><ThemeToggle /></div>
+    <div class="trail-brand"><span class="brand">idiomas<span class="brand-dot">.</span></span><SessionActions /></div>
     <nav class="day-navigation" aria-label="Navegar entre dias">
       <button class="icon-button day-arrow" aria-label="Dia anterior" :disabled="busy || day === 0" @click="emit('day', day - 1)">‹</button>
       <button class="day-heading" aria-haspopup="dialog" :disabled="busy" @click="openPicker"><span>Dia {{ day + 1 }} <span class="chevron">⌄</span></span><small>{{ current.title }}</small></button>

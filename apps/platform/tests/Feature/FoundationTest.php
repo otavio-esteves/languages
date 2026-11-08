@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Services\DayProgress;
+use App\Services\LearningContent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -84,6 +86,24 @@ class FoundationTest extends TestCase
             $this->postJson('/api/v1/auth/token', ['email' => 'rate-test@example.test', 'password' => 'wrong', 'device_name' => 'test'])->assertUnprocessable();
         }
         $this->postJson('/api/v1/auth/token', ['email' => 'rate-test@example.test', 'password' => 'wrong', 'device_name' => 'test'])->assertStatus(429);
+    }
+
+    public function test_browser_logout_requires_login_again_and_preserves_saved_practice_and_device_tokens(): void
+    {
+        $user = $this->account(true);
+        File::copy(dirname(base_path(), 2).'/content/pt-BR_en/missions/order-a-drink.v3.json', $this->contentDirectory.'/draft.json');
+        $manifest = app(LearningContent::class)->manifest($user, 'order-a-drink', 3, true);
+        $progress = app(DayProgress::class);
+        $progress->save($user, $manifest['package_hash'], 0, false, 1, 'words:0');
+        $bearer = $this->bearer($user);
+        $this->actingAs($user)->get('/editorial')->assertOk();
+        $this->post('/logout')->assertRedirect('/login');
+        $this->assertGuest('web');
+        $this->get('/editorial')->assertRedirect('/login');
+        $this->get('/editorial/practice/order-a-drink/3')->assertRedirect('/login');
+        $this->get('/login')->assertOk();
+        $this->assertSame(['words:0'], $progress->get($user, $manifest['package_hash'])['completed_lessons']);
+        $this->getJson('/api/v1/me', $bearer)->assertOk()->assertJsonPath('id', $user->id);
     }
 
     public function test_device_tokens_are_isolated_and_revoking_one_preserves_the_other(): void
