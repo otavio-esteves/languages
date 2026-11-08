@@ -19,6 +19,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.flow.collect
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,16 +38,19 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun MissionCard(title: String, description: String, action: String, enabled: Boolean, onClick: () -> Unit) {
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-        Text(description, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-        JourneyButton(action, onClick, enabled, Modifier.fillMaxWidth())
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+    Surface(color=MaterialTheme.colorScheme.surface,shape=MaterialTheme.shapes.medium,border=BorderStroke(1.dp,MaterialTheme.colorScheme.outlineVariant)) {
+        Column(Modifier.fillMaxWidth().padding(22.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+            Text(description, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            JourneyButton(action, onClick, enabled, Modifier.fillMaxWidth())
+        }
     }
 }
 
 @Composable
 fun CatalogScreen(vm: CatalogViewModel, practice: PracticeViewModel) {
+    val sounds = LocalUiSounds.current
+    LaunchedEffect(practice, sounds) { practice.cues.collect { sounds?.play(it) } }
     val practiceState by practice.screen.collectAsStateWithLifecycle()
     val installed by practice.installed.collectAsStateWithLifecycle()
     val savedPackages by practice.savedPackages.collectAsStateWithLifecycle()
@@ -79,22 +83,21 @@ fun CatalogScreen(vm: CatalogViewModel, practice: PracticeViewModel) {
                 verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
                 item {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        BrandMark()
-                        ThemeToggle()
-                        if (session != null) JourneyTextButton(onClick = vm::logout, enabled = !screen.busy) { Text("Sair") }
+                    Column(Modifier.fillMaxWidth()) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) { BrandMark(); AppearanceControls() }
+                        if (session != null) JourneyTextButton(onClick = vm::logout, enabled = !screen.busy, modifier=Modifier.align(Alignment.End)) { Text("Sair") }
                     }
                 }
                 if (session == null) {
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                             Text("LEITURA E ESCRITA", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("Um passo de cada vez.", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold)
+                            Text("Uma página de cada vez.", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold)
                             Text("Aprenda inglês com uma trilha de leitura e escrita.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                     item {
-                        OutlinedCard(border = BorderStroke(2.dp, MaterialTheme.colorScheme.outlineVariant)) {
+                        OutlinedCard(border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
                             Column(Modifier.padding(22.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
                                 Text("Vamos começar?", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                                 Text("Entre para acessar suas missões.", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -144,7 +147,7 @@ fun CatalogScreen(vm: CatalogViewModel, practice: PracticeViewModel) {
                     }
                     if (catalog.isEmpty() && !screen.busy) {
                         item {
-                            OutlinedCard(border = BorderStroke(2.dp, MaterialTheme.colorScheme.outlineVariant)) {
+                            OutlinedCard(border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
                                 Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                     Text("EM PREPARAÇÃO", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     Text("As primeiras conversas vêm aí.", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)

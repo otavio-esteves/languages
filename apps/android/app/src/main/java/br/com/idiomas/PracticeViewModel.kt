@@ -11,6 +11,9 @@ import kotlinx.coroutines.launch
 
 data class PracticeScreenState(val busy: Boolean = false, val message: String? = null, val previews: List<CatalogItem> = emptyList(), val open: OpenPractice? = null, val revealed: Set<String> = emptySet(), val playPath: String? = null, val playNonce: Int = 0, val trail: Boolean = true, val selectedDay: Int = 0)
 class PracticeViewModel(private val practice: PracticeRepository, private val catalog: CatalogRepository) : ViewModel() {
+    private val mutableCues = MutableSharedFlow<InteractionCue>(extraBufferCapacity=4)
+    val cues = mutableCues.asSharedFlow()
+    private fun cue(identity: Session?, cue: InteractionCue) { if (catalog.session.value == identity) mutableCues.tryEmit(cue) }
     private val mutable = MutableStateFlow(PracticeScreenState())
     val screen = mutable.asStateFlow()
     val installed = practice.installed.stateIn(viewModelScope,SharingStarted.WhileSubscribed(5000),emptyList())
@@ -50,6 +53,7 @@ class PracticeViewModel(private val practice: PracticeRepository, private val ca
         val activity=value.document.activities[value.session.cursor]
         val updated=if(activity.type in listOf("dialogue","explanation")) practice.exposure(value) else value
         publish(identity) { it.copy(open=updated,revealed=updated.revealedSupports(),trail=false) }
+        cue(identity, InteractionCue.Tap)
     }
     private suspend fun presentNext(previous:OpenPractice,next:OpenPractice): Pair<OpenPractice,Boolean> {
         val oldPhase=previous.document.phases().first { it.id==previous.document.activities[previous.session.cursor].phaseId() }
@@ -73,14 +77,17 @@ class PracticeViewModel(private val practice: PracticeRepository, private val ca
         val exposed=if(current.type=="purpose") practice.exposure(value) else value
         val (next,trail)=presentNext(value,practice.advance(exposed))
         publish(identity) { it.copy(open=next,revealed=emptySet(),trail=trail) }
+        if (trail) cue(identity, InteractionCue.Complete)
     }
     fun answer(text:String?,path:String?=null,technical:String="valid") = action { identity ->
         val value=mutable.value.open ?: return@action
         val updated=practice.answer(value,text,path,technical);publish(identity) { it.copy(open=updated) }
+        cue(identity, feedbackCue(if (technical=="valid") compareAnswer(value.document.activities[value.session.cursor], text).outcome else "technical_issue"))
     }
     fun next(retry:Boolean=false) = action { identity ->
         val value=mutable.value.open ?: return@action
         val (updated,trail)=presentNext(value,practice.advance(value,retry));publish(identity) { it.copy(open=updated,revealed=emptySet(),trail=trail) }
+        if (trail && !retry) cue(identity, InteractionCue.Complete)
     }
     fun saveDraft(text:String) { val value=mutable.value.open ?: return;viewModelScope.launch { practice.draft(value,text) } }
     fun recordingFile(value:OpenPractice):File?=if(catalog.session.value?.account?.id==value.session.ownerId && mutable.value.open?.session?.id==value.session.id) practice.recordingFile(value) else null

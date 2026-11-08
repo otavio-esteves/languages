@@ -5,10 +5,12 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
@@ -23,6 +25,8 @@ import kotlinx.serialization.json.jsonObject
 
 @Composable
 fun PracticeScreen(vm: PracticeViewModel, state: PracticeScreenState, pending: Int, blocked: List<PracticeEvent>) {
+    val sounds = LocalUiSounds.current
+    val palette = MaterialTheme.colorScheme
     val value = state.open ?: return
     val activity = value.document.activities[value.session.cursor]
     val phases = remember(value.installed.hash) { value.document.phases() }
@@ -46,10 +50,9 @@ fun PracticeScreen(vm: PracticeViewModel, state: PracticeScreenState, pending: I
     LaunchedEffect(value.session.id, value.session.cursor, state.trail) { scroll.scrollToItem(0) }
     LazyColumn(state = scroll, modifier = Modifier.fillMaxSize().imePadding(), contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(22.dp)) {
         if (!state.trail) item {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                BrandMark()
-                ThemeToggle()
-                JourneyTextButton(onClick = { if (state.trail) vm.exit() else vm.showTrail() }, enabled = !state.busy) { Text(if (state.trail) "Voltar" else "Trilha") }
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) { BrandMark(); AppearanceControls() }
+                JourneyTextButton(onClick = vm::showTrail, enabled = !state.busy) { Text("Voltar à trilha") }
             }
         }
         if (!value.document.isTextOnly()) {
@@ -65,6 +68,11 @@ fun PracticeScreen(vm: PracticeViewModel, state: PracticeScreenState, pending: I
         } else {
             item { SessionProgress(phase.completedCount(value.completedLessons), phase.lessons().size) }
             item { Text("DIA ${phases.indexOf(phase) + 1} · ${phase.title}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            item {
+                Surface(color=palette.primaryContainer,shape=RoundedCornerShape(7.dp)) {
+                    Text(when(activity.type) { "written_recall","communicative_task" -> "SUA VEZ DE ESCREVER"; "information_question" -> "ENCONTRE O SENTIDO"; "summary" -> "HORA DE GUARDAR"; else -> "LEIA E DESCUBRA" },Modifier.padding(horizontal=10.dp,vertical=5.dp),style=MaterialTheme.typography.labelSmall,color=palette.onPrimaryContainer)
+                }
+            }
             item { Text(activity.prompt, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold, modifier = Modifier.semantics { heading() }) }
             activity.content["messages"]?.jsonArray?.let { turns ->
                 for ((position, turn) in turns.withIndex()) {
@@ -101,11 +109,12 @@ fun PracticeScreen(vm: PracticeViewModel, state: PracticeScreenState, pending: I
             if (activity.type == "information_question" && !answered) {
                 item {
                     Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        for (option in activity.content.strings("options")) {
+                        for ((optionIndex,option) in activity.content.strings("options").withIndex()) {
                             val chosen = selected == option
-                            Surface(shape = MaterialTheme.shapes.small, color = if (chosen) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface, border = BorderStroke(2.dp, if (chosen) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)) {
-                                Row(Modifier.fillMaxWidth().selectable(selected = chosen, enabled = !state.busy, role = Role.RadioButton, onClick = { selected = option }).padding(18.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Surface(shape = MaterialTheme.shapes.small, color = if (chosen) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface, border = BorderStroke(1.dp, if (chosen) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)) {
+                                Row(Modifier.fillMaxWidth().selectable(selected = chosen, enabled = !state.busy, role = Role.RadioButton, onClick = { if(selected != option) sounds?.play(InteractionCue.Tap); selected = option }).padding(18.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                     RadioButton(chosen, onClick = null)
+                                    Text(('A'.code+optionIndex).toChar().toString(),style=MaterialTheme.typography.labelSmall,color=palette.onSurfaceVariant)
                                     if (activity.content.text("options_language") == "en") GlossaryText(option, meanings, lookup, style = MaterialTheme.typography.bodyLarge)
                                     else Text(option, style = MaterialTheme.typography.bodyLarge)
                                 }
@@ -124,10 +133,15 @@ fun PracticeScreen(vm: PracticeViewModel, state: PracticeScreenState, pending: I
                 val data = latest?.payload?.let { Json.parseToJsonElement(it).jsonObject }
                 val technicalIssue = data?.text("technical_status") != "valid"
                 val comparison = if (technicalIssue) TextComparison("technical_issue", "Falha técnica registrada. Nenhuma conclusão linguística foi feita.") else compareAnswer(activity, value.session.draft)
+                val feedbackColor=when(comparison.outcome) { "correct" -> palette.tertiaryContainer; "incorrect" -> palette.secondaryContainer; else -> palette.primaryContainer }
+                val feedbackInk=when(comparison.outcome) { "correct" -> palette.onTertiaryContainer; "incorrect" -> palette.onSecondaryContainer; else -> palette.onPrimaryContainer }
                 item {
-                    Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.small) {
-                        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Text(when (comparison.outcome) { "correct" -> "Resposta aceita"; "incorrect" -> "Vamos ajustar"; else -> "Vamos conferir" }, fontWeight = FontWeight.SemiBold)
+                    Surface(color = feedbackColor, shape = MaterialTheme.shapes.medium, border = BorderStroke(1.dp,feedbackInk)) {
+                        Column(Modifier.padding(22.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+                                Text(when(comparison.outcome) { "correct" -> "✓"; "incorrect" -> "↺"; else -> "…" },color=feedbackInk,style=MaterialTheme.typography.titleLarge)
+                                Text(when (comparison.outcome) { "correct" -> "Resposta aceita"; "incorrect" -> "Vamos ajustar"; else -> "Vamos conferir" }, color=feedbackInk,fontWeight = FontWeight.SemiBold)
+                            }
                             Text(comparison.message)
                             Text("Você escreveu:", style = MaterialTheme.typography.labelSmall)
                             GlossaryText(value.session.draft, meanings, lookup)
@@ -144,6 +158,7 @@ fun PracticeScreen(vm: PracticeViewModel, state: PracticeScreenState, pending: I
             }
             if (activity.type in listOf("purpose", "dialogue", "explanation")) item { JourneyButton("Continuar", vm::passive, !state.busy, Modifier.fillMaxWidth()) }
             if (activity.type == "summary") {
+                item { Box(Modifier.fillMaxWidth(),contentAlignment=Alignment.Center) { Surface(modifier=Modifier.size(66.dp).rotate(-8f),color=palette.secondaryContainer,shape=RoundedCornerShape(33.dp,33.dp,14.dp,33.dp)) { Box(contentAlignment=Alignment.Center) { Text("✦",color=palette.secondary,style=MaterialTheme.typography.headlineMedium) } } } }
                 item { Text("Você praticou leitura e escrita nesta lição. As respostas previstas receberam correção automática de treino. Formas não reconhecidas continuam sem confirmação independente.") }
                 item { Text("Esta sessão não verifica escuta, fala ou retenção posterior.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                 item { JourneyButton("Concluir lição", { vm.next() }, !state.busy, Modifier.fillMaxWidth()) }
