@@ -1,0 +1,741 @@
+# Palavras no café | Observe nomes de bebidas; escreva palavras antes de montar pedidos.
+> Chá e café
+tea || chá
+coffee || café
+water || água
+> Água e leite
+milk || leite
+juice || suco
+tea and milk || chá e leite
+> Temperatura e tamanho
+hot || quente
+cold || frio
+cold water || água fria
+
+# Pedidos curtos | Use um item com please; acrescente tamanho e confirme a escolha.
+> Pedir com educação
+A tea, please. || Um chá, por favor.
+A coffee, please. || Um café, por favor.
+A water, please. || Uma água, por favor. || Some water, please.
+> Escolher o tamanho
+A small tea, please. || Um chá pequeno, por favor.
+A large coffee, please. || Um café grande, por favor.
+A small juice, please. || Um suco pequeno, por favor.
+> Confirmar o pedido
+Tea, not coffee, please. || Chá, não café, por favor.
+Cold water, please. || Água fria, por favor.
+A hot coffee, please. || Um café quente, por favor.
+
+# Frases e contrações | Relacione I would like a I'd like; ambas são possíveis em pedidos.
+> Um pedido completo
+I would like a tea, please. || Eu gostaria de um chá, por favor. || I'd like a tea, please.
+I would like a coffee, please. || Eu gostaria de um café, por favor. || I'd like a coffee, please.
+I would like some water, please. || Eu gostaria de um pouco de água, por favor. || I'd like some water, please.
+> Acrescentar detalhes
+I'd like a small tea, please. || Eu gostaria de um chá pequeno, por favor. || I would like a small tea, please.
+I'd like a large coffee, please. || Eu gostaria de um café grande, por favor. || I would like a large coffee, please.
+I'd like a cold juice, please. || Eu gostaria de um suco frio, por favor. || I would like a cold juice, please.
+> Perguntar em vez de afirmar
+Can I have a tea, please? || Posso pedir um chá, por favor?
+Can I have some milk, please? || Posso pedir um pouco de leite, por favor?
+Could I have a small coffee, please? || Poderia pedir um café pequeno, por favor? || Could I have a small coffee please?
+
+# Cumprimentar e agradecer | Escolha uma saudação adequada e encerre uma interação curta.
+> Chegar a um lugar
+Good morning! || Bom dia!
+Good afternoon! || Boa tarde!
+Good evening! || Boa noite ao chegar!
+> Uma troca breve
+Hello! How are you? || Olá! Como você está? || Hi! How are you?
+I'm fine, thank you. || Estou bem, obrigado. || I am fine, thank you.
+I'm fine. And you? || Estou bem. E você? || I am fine. And you?
+> Encerrar com educação
+Thank you very much. || Muito obrigado. || Thanks very much.
+You're welcome. || De nada. || You are welcome.
+Goodbye! See you tomorrow. || Tchau! Até amanhã. || Bye! See you tomorrow.
+
+# Apresentar-se | Use dados fictícios; não é necessário fornecer seus dados pessoais.
+> Dizer o nome
+My name is Mia. || Meu nome é Mia. || I'm Mia.
+His name is Leo. || O nome dele é Leo.
+Her name is Nina. || O nome dela é Nina.
+> Perguntar e responder
+What's your name? || Qual é o seu nome? || What is your name?
+Nice to meet you. || Prazer em conhecer você.
+My name is Leo. Nice to meet you. || Meu nome é Leo. Prazer em conhecer você. || I'm Leo. Nice to meet you.
+> Apresentar outra pessoa
+This is my friend Mia. || Esta é minha amiga Mia.
+This is my friend Leo. || Este é meu amigo Leo.
+This is Nina. She's my friend. || Esta é Nina. Ela é minha amiga. || This is Nina. She is my friend.
+
+# Origem e idiomas | Diga de onde uma personagem é e quais idiomas ela usa.
+> Falar de origem
+I'm from Brazil. || Sou do Brasil. || I am from Brazil.
+She's from Canada. || Ela é do Canadá. || She is from Canada.
+He's from Mexico. || Ele é do México. || He is from Mexico.
+> Falar de idiomas
+I speak Portuguese. || Eu falo português.
+I speak a little English. || Eu falo um pouco de inglês.
+I speak Portuguese and a little English. || Eu falo português e um pouco de inglês.
+> Conhecer alguém
+Where are you from? || De onde você é?
+Do you speak English? || Você fala inglês?
+I'm from Brazil. Where are you from? || Sou do Brasil. De onde você é? || I am from Brazil. Where are you from?
+
+# Encontro no café | Retome apresentações e pedidos em uma interação com outra pessoa.
+> Iniciar a conversa
+Hello! I'm Nina. || Olá! Sou Nina. || Hello! I am Nina.
+Hi, Nina. I'm Leo. || Oi, Nina. Sou Leo. || Hi, Nina. I am Leo.
+Nice to meet you, Leo. || Prazer em conhecer você, Leo.
+> Pedir para duas pessoas
+A tea and a coffee, please. || Um chá e um café, por favor.
+Two small coffees, please. || Dois cafés pequenos, por favor.
+I'd like a tea and some water, please. || Eu gostaria de um chá e um pouco de água, por favor. || I would like a tea and some water, please.
+> Trocar informações
+I'm from Brazil. I speak Portuguese. || Sou do Brasil. Falo português. || I am from Brazil. I speak Portuguese.
+I'm from Canada. I speak English. || Sou do Canadá. Falo inglês. || I am from Canada. I speak English.
+My name is Mia. A small tea, please. || Meu nome é Mia. Um chá pequeno, por favor. || I'm Mia. A small tea, please.
+
+# Números e quantidades | Use pequenas quantidades em pedidos; one e two mudam a quantidade.
+> Contar itens
+one ticket || uma passagem
+two tickets || duas passagens
+three tickets || três passagens
+> Comprar para um grupo
+Two teas, please. || Dois chás, por favor.
+Three coffees, please. || Três cafés, por favor.
+Four bottles of water, please. || Quatro garrafas de água, por favor.
+> Conferir a quantidade
+We need five cups. || Precisamos de cinco xícaras.
+We need six plates. || Precisamos de seis pratos.
+We need two cups and three plates. || Precisamos de duas xícaras e três pratos.
+
+# Preços e pagamento | Pergunte o preço e o meio de pagamento sem usar informações financeiras reais.
+> Ler preços
+The tea is two dollars. || O chá custa dois dólares.
+The coffee is three dollars. || O café custa três dólares.
+The juice is four dollars. || O suco custa quatro dólares.
+> Perguntar antes de pagar
+How much is the tea? || Quanto custa o chá?
+How much is the coffee? || Quanto custa o café?
+How much are two tickets? || Quanto custam duas passagens?
+> Escolher como pagar
+Can I pay by card? || Posso pagar com cartão?
+Can I pay in cash? || Posso pagar em dinheiro?
+Two coffees, please. Can I pay by card? || Dois cafés, por favor. Posso pagar com cartão?
+
+# Objetos e pertences | Use this, that e possessivos para identificar objetos.
+> Objetos próximos
+This is my bag. || Esta é minha bolsa.
+This is my book. || Este é meu livro.
+This is my phone. || Este é meu telefone.
+> Objetos de outra pessoa
+Is this your pen? || Esta é sua caneta?
+Is that your bag? || Aquela é sua bolsa?
+Is this your ticket? || Esta é sua passagem?
+> Entregar e agradecer
+Here is your book. || Aqui está seu livro. || Here's your book.
+Here is your bag. || Aqui está sua bolsa. || Here's your bag.
+Here is your ticket. Thank you. || Aqui está sua passagem. Obrigado. || Here's your ticket. Thank you.
+
+# Cores e roupas | Identifique uma peça pela cor; o adjetivo vem antes do nome neste padrão.
+> Escolher uma peça
+a blue shirt || uma camisa azul
+a red dress || um vestido vermelho
+a green jacket || uma jaqueta verde
+> Descrever o que procura
+I'd like a black shirt. || Eu gostaria de uma camisa preta. || I would like a black shirt.
+I'd like a white jacket. || Eu gostaria de uma jaqueta branca. || I would like a white jacket.
+I'd like a blue dress, please. || Eu gostaria de um vestido azul, por favor. || I would like a blue dress, please.
+> Conferir a escolha
+The shirt is blue, not green. || A camisa é azul, não verde.
+The jacket is black, not white. || A jaqueta é preta, não branca.
+The dress is red. How much is it? || O vestido é vermelho. Quanto custa?
+
+# Família e pessoas | Descreva uma família fictícia sem presumir uma estrutura familiar única.
+> Identificar pessoas
+This is my sister. || Esta é minha irmã.
+This is my brother. || Este é meu irmão.
+This is my mother. || Esta é minha mãe.
+> Dizer quem vive junto
+I live with my father. || Moro com meu pai.
+I live with my sister. || Moro com minha irmã.
+I live with my brother and my mother. || Moro com meu irmão e minha mãe.
+> Apresentar a família
+My sister's name is Nina. || O nome da minha irmã é Nina.
+My brother's name is Leo. || O nome do meu irmão é Leo.
+This is my sister. Her name is Mia. || Esta é minha irmã. O nome dela é Mia.
+
+# Trabalho e estudo | Use a ou an para apresentar ocupações e diga onde uma personagem trabalha.
+> Ocupações
+I'm a teacher. || Sou professor. || I am a teacher.
+I'm a student. || Sou estudante. || I am a student.
+I'm an engineer. || Sou engenheiro. || I am an engineer.
+> Locais de trabalho
+I work in a school. || Trabalho em uma escola.
+I work in a shop. || Trabalho em uma loja.
+I work in a hospital. || Trabalho em um hospital.
+> Perguntar sobre a rotina
+Where do you work? || Onde você trabalha?
+What do you do? || Qual é sua ocupação?
+I'm a teacher. I work in a school. || Sou professor. Trabalho em uma escola. || I am a teacher. I work in a school.
+
+# Feira de bairro | Combine quantidades, preços e descrições numa compra curta.
+> Ler a banca
+The red apples are three dollars. || As maçãs vermelhas custam três dólares.
+The green apples are two dollars. || As maçãs verdes custam dois dólares.
+The bananas are four dollars. || As bananas custam quatro dólares.
+> Fazer a compra
+Three red apples, please. || Três maçãs vermelhas, por favor.
+Two green apples, please. || Duas maçãs verdes, por favor.
+I'd like two bananas and one red apple. || Eu gostaria de duas bananas e uma maçã vermelha. || I would like two bananas and one red apple.
+> Pedir informação
+How much are the green apples? || Quanto custam as maçãs verdes?
+Can I pay by card here? || Posso pagar com cartão aqui?
+How much are three bananas? Can I pay in cash? || Quanto custam três bananas? Posso pagar em dinheiro?
+
+# Casa e cômodos | Localize objetos com in e on; observe there is para existência.
+> Conhecer a casa
+There is a table in the kitchen. || Há uma mesa na cozinha. || There's a table in the kitchen.
+There is a bed in the bedroom. || Há uma cama no quarto. || There's a bed in the bedroom.
+There is a chair in the living room. || Há uma cadeira na sala. || There's a chair in the living room.
+> Procurar objetos
+The book is on the table. || O livro está sobre a mesa.
+The bag is on the chair. || A bolsa está sobre a cadeira.
+The phone is in the kitchen. || O telefone está na cozinha.
+> Perguntar onde está
+Where is the book? || Onde está o livro? || Where's the book?
+Where is my bag? || Onde está minha bolsa? || Where's my bag?
+Where is my phone? It's in the bedroom. || Onde está meu telefone? Está no quarto. || Where is my phone? It is in the bedroom.
+
+# Lugares do bairro | Identifique serviços próximos usando next to e near.
+> Localizar serviços
+The bank is next to the shop. || O banco fica ao lado da loja.
+The pharmacy is next to the café. || A farmácia fica ao lado do café.
+The school is near the park. || A escola fica perto do parque.
+> Perguntar por um lugar
+Is there a bank near here? || Há um banco perto daqui?
+Is there a pharmacy near here? || Há uma farmácia perto daqui?
+Is there a café near the school? || Há um café perto da escola?
+> Explicar a localização
+The shop is near my house. || A loja fica perto da minha casa.
+The park is next to the school. || O parque fica ao lado da escola.
+The café is next to the bank and near the park. || O café fica ao lado do banco e perto do parque.
+
+# Pedir e dar direções | Leia instruções curtas em ordem; não são orientações para um trajeto real.
+> Seguir uma instrução
+Go straight ahead. || Siga em frente.
+Turn left at the bank. || Vire à esquerda no banco.
+Turn right at the café. || Vire à direita no café.
+> Combinar instruções
+Go straight ahead and turn left. || Siga em frente e vire à esquerda.
+Turn right. The shop is on your left. || Vire à direita. A loja fica à sua esquerda.
+Turn left. The park is on your right. || Vire à esquerda. O parque fica à sua direita.
+> Pedir ajuda no mapa
+Excuse me, where is the station? || Com licença, onde fica a estação? || Excuse me, where's the station?
+Excuse me, where is the park? || Com licença, onde fica o parque? || Excuse me, where's the park?
+Where is the pharmacy? Is it near here? || Onde fica a farmácia? Fica perto daqui? || Where's the pharmacy? Is it near here?
+
+# Transporte e passagens | Informe destino e quantidade num pedido de passagem.
+> Escolher transporte
+I go to work by bus. || Vou para o trabalho de ônibus.
+I go to school by train. || Vou para a escola de trem.
+I go to the park on foot. || Vou para o parque a pé.
+> Comprar a passagem
+One ticket to the city centre, please. || Uma passagem para o centro, por favor. || One ticket to the city center, please.
+Two tickets to the airport, please. || Duas passagens para o aeroporto, por favor.
+Three tickets to the station, please. || Três passagens para a estação, por favor.
+> Confirmar o destino
+Does this bus go to the airport? || Este ônibus vai para o aeroporto?
+Does this train go to the city centre? || Este trem vai para o centro? || Does this train go to the city center?
+Does this bus go to the station? How much is a ticket? || Este ônibus vai para a estação? Quanto custa uma passagem?
+
+# Horários | Use at com horários; leia números por extenso antes de abreviações.
+> Ler a hora
+It's seven o'clock. || São sete horas. || It is seven o'clock.
+It's half past eight. || São oito e meia. || It is half past eight.
+It's nine thirty. || São nove e trinta. || It is nine thirty.
+> Consultar horários
+The shop opens at nine. || A loja abre às nove.
+The café closes at six. || O café fecha às seis.
+The train leaves at ten thirty. || O trem parte às dez e meia.
+> Perguntar a hora
+What time does the shop open? || A que horas a loja abre?
+What time does the café close? || A que horas o café fecha?
+What time does the train leave? It leaves at eight. || A que horas o trem parte? Parte às oito.
+
+# Dias e compromissos | Use on com dias e at com a hora de um compromisso.
+> Marcar um dia
+The class is on Monday. || A aula é na segunda-feira.
+The meeting is on Tuesday. || A reunião é na terça-feira.
+The appointment is on Wednesday. || O compromisso é na quarta-feira.
+> Completar o horário
+The class is on Thursday at six. || A aula é na quinta-feira às seis.
+The meeting is on Friday at ten. || A reunião é na sexta-feira às dez.
+The appointment is on Saturday at nine. || O compromisso é no sábado às nove.
+> Confirmar a agenda
+Are you free on Sunday? || Você está livre no domingo?
+Are you free on Monday morning? || Você está livre na segunda de manhã?
+Are you free on Friday at five? || Você está livre na sexta às cinco?
+
+# Encontro na biblioteca | Retome lugar, direção, dia e horário em mensagens combinadas.
+> Um convite simples
+Let's meet at the library. || Vamos nos encontrar na biblioteca.
+Let's meet on Saturday. || Vamos nos encontrar no sábado.
+Let's meet at the library on Sunday. || Vamos nos encontrar na biblioteca no domingo.
+> Explicar como chegar
+The library is next to the school. || A biblioteca fica ao lado da escola.
+Go straight ahead. The library is on your left. || Siga em frente. A biblioteca fica à sua esquerda.
+Turn right at the bank. The library is near the park. || Vire à direita no banco. A biblioteca fica perto do parque.
+> Combinar os detalhes
+The library opens at nine on Saturday. || A biblioteca abre às nove no sábado.
+I'm free on Saturday at ten. || Estou livre no sábado às dez. || I am free on Saturday at ten.
+Let's meet at the library on Saturday at ten. || Vamos nos encontrar na biblioteca no sábado às dez.
+
+# Rotina da manhã | Use o presente para hábitos e observe a sequência das ações.
+> Começar o dia
+I get up at seven. || Eu me levanto às sete.
+I have breakfast at eight. || Tomo café da manhã às oito.
+I leave home at nine. || Saio de casa às nove.
+> Descrever a manhã
+I drink coffee in the morning. || Tomo café de manhã.
+I read a book before breakfast. || Leio um livro antes do café da manhã.
+I have tea after breakfast. || Tomo chá depois do café da manhã.
+> Perguntar sobre hábitos
+What time do you get up? || A que horas você se levanta?
+Do you have breakfast at home? || Você toma café da manhã em casa?
+I get up at six and have breakfast at seven. || Eu me levanto às seis e tomo café da manhã às sete.
+
+# Rotina de trabalho | Contraste I work e she works ao descrever rotinas fictícias.
+> A própria rotina
+I start work at nine. || Começo a trabalhar às nove.
+I finish work at five. || Termino de trabalhar às cinco.
+I have lunch at twelve. || Almoço ao meio-dia.
+> A rotina de outra pessoa
+She starts work at eight. || Ela começa a trabalhar às oito.
+He finishes work at six. || Ele termina de trabalhar às seis.
+She has lunch at one. || Ela almoça à uma.
+> Fazer perguntas
+What time do you start work? || A que horas você começa a trabalhar?
+Does she work in a school? || Ela trabalha em uma escola?
+He works in a shop and finishes at seven. || Ele trabalha em uma loja e termina às sete.
+
+# Frequência e hábitos | Always, sometimes e never informam frequência; não determinam qualidade do hábito.
+> Dizer com que frequência
+I always have breakfast. || Eu sempre tomo café da manhã.
+I sometimes drink tea. || Eu às vezes tomo chá.
+I never drink coffee at night. || Eu nunca tomo café à noite.
+> Falar de atividades
+I usually walk to work. || Eu geralmente vou a pé para o trabalho.
+She often reads in the evening. || Ela lê com frequência à noite.
+He sometimes takes the bus. || Ele às vezes pega o ônibus.
+> Perguntar sobre frequência
+Do you usually work on Saturdays? || Você geralmente trabalha aos sábados?
+Does she always get up early? || Ela sempre se levanta cedo?
+I usually walk to school, but I sometimes take the bus. || Eu geralmente vou a pé para a escola, mas às vezes pego o ônibus.
+
+# Gostos e preferências | Distinga gostar de algo e preferir uma opção a outra.
+> Dizer do que gosta
+I like music. || Eu gosto de música.
+I like reading. || Eu gosto de ler.
+I like cooking. || Eu gosto de cozinhar.
+> Dizer do que não gosta
+I don't like cold coffee. || Eu não gosto de café frio. || I do not like cold coffee.
+She doesn't like tea. || Ela não gosta de chá. || She does not like tea.
+I don't like getting up early. || Eu não gosto de me levantar cedo. || I do not like getting up early.
+> Comparar opções
+I prefer tea to coffee. || Eu prefiro chá a café.
+Do you like reading or cooking? || Você gosta de ler ou de cozinhar?
+I like music, but I prefer reading in the evening. || Eu gosto de música, mas prefiro ler à noite.
+
+# Alimentos e refeições | Combine nomes de alimentos com refeições e quantidades simples.
+> Conhecer uma refeição
+I have bread and eggs for breakfast. || Como pão e ovos no café da manhã.
+I have rice and beans for lunch. || Como arroz e feijão no almoço.
+I have soup for dinner. || Tomo sopa no jantar.
+> Pedir uma porção
+Some rice, please. || Um pouco de arroz, por favor.
+Two eggs, please. || Dois ovos, por favor.
+Some bread and a glass of water, please. || Um pouco de pão e um copo de água, por favor.
+> Informar uma preferência
+I like vegetables. || Eu gosto de legumes.
+I don't eat meat. || Eu não como carne. || I do not eat meat.
+I'd like rice and vegetables, please. || Eu gostaria de arroz e legumes, por favor. || I would like rice and vegetables, please.
+
+# Pedir no restaurante | Especifique o prato e um detalhe do pedido; without indica exclusão.
+> Ler o pedido
+I'd like the vegetable soup. || Eu gostaria da sopa de legumes. || I would like the vegetable soup.
+I'd like the chicken and rice. || Eu gostaria do frango com arroz. || I would like the chicken and rice.
+I'd like the fish and potatoes. || Eu gostaria do peixe com batatas. || I would like the fish and potatoes.
+> Acrescentar uma condição
+No sugar, please. || Sem açúcar, por favor.
+Without milk, please. || Sem leite, por favor.
+I'd like a tea without sugar, please. || Eu gostaria de um chá sem açúcar, por favor. || I would like a tea without sugar, please.
+> Encerrar a refeição
+Can I have the menu, please? || Posso pedir o cardápio, por favor?
+Can I have the bill, please? || Posso pedir a conta, por favor? || Can I have the check, please?
+The bill, please. Can I pay by card? || A conta, por favor. Posso pagar com cartão?
+
+# Almoço com amigos | Integre convite, horário, preferências e um pedido para duas pessoas.
+> Convidar para almoçar
+Would you like to have lunch? || Você gostaria de almoçar?
+Let's have lunch at one. || Vamos almoçar à uma.
+Would you like to have lunch on Saturday? || Você gostaria de almoçar no sábado?
+> Escolher o restaurante
+The restaurant is near the station. || O restaurante fica perto da estação.
+It opens at twelve on Sundays. || Ele abre ao meio-dia aos domingos.
+Let's meet at the restaurant at twelve thirty. || Vamos nos encontrar no restaurante ao meio-dia e meia.
+> Pedir para duas pessoas
+Two vegetable soups, please. || Duas sopas de legumes, por favor.
+A coffee without sugar, please. || Um café sem açúcar, por favor.
+I'd like rice and vegetables and a glass of water. || Eu gostaria de arroz com legumes e um copo de água. || I would like rice and vegetables and a glass of water.
+
+# Supermercado | Peça quantidades e localize produtos numa loja.
+> Ler a lista
+We need some milk and bread. || Precisamos de um pouco de leite e pão.
+We need a kilo of rice. || Precisamos de um quilo de arroz. || We need a kilogram of rice.
+We need two bottles of water. || Precisamos de duas garrafas de água.
+> Procurar os produtos
+Where can I find the milk? || Onde posso encontrar o leite?
+Where can I find the eggs? || Onde posso encontrar os ovos?
+Where can I find the rice and beans? || Onde posso encontrar o arroz e o feijão?
+> Conferir antes de pagar
+Do you have any apples? || Vocês têm maçãs?
+How much is a kilo of bananas? || Quanto custa um quilo de bananas? || How much is a kilogram of bananas?
+I'd like a kilo of apples and two bottles of water. || Eu gostaria de um quilo de maçãs e duas garrafas de água. || I would like a kilo of apples and two bottles of water.
+
+# Tamanhos e escolhas | Use too para dizer que uma peça não serve e peça uma alternativa.
+> Escolher um tamanho
+Do you have this shirt in a small size? || Vocês têm esta camisa no tamanho pequeno?
+Do you have this jacket in a large size? || Vocês têm esta jaqueta no tamanho grande?
+Do you have this dress in a medium size? || Vocês têm este vestido no tamanho médio?
+> Explicar o problema
+This shirt is too small. || Esta camisa é pequena demais.
+This jacket is too big. || Esta jaqueta é grande demais.
+These shoes are too small. || Estes sapatos são pequenos demais.
+> Pedir outra opção
+Can I try a larger size? || Posso experimentar um tamanho maior?
+Can I try a smaller size? || Posso experimentar um tamanho menor?
+This shirt is too big. Do you have a smaller size? || Esta camisa é grande demais. Vocês têm um tamanho menor?
+
+# Clima e roupas | Relacione o clima a uma escolha cotidiana sem fazer previsões reais.
+> Descrever o dia
+It's sunny today. || Está ensolarado hoje. || It is sunny today.
+It's raining today. || Está chovendo hoje. || It is raining today.
+It's cold and windy today. || Está frio e ventando hoje. || It is cold and windy today.
+> Escolher o que levar
+I need a jacket. || Eu preciso de uma jaqueta.
+I need an umbrella. || Eu preciso de um guarda-chuva.
+It's cold. I need a warm coat. || Está frio. Preciso de um casaco quente. || It is cold. I need a warm coat.
+> Fazer um plano simples
+It's sunny. Let's go to the park. || Está ensolarado. Vamos ao parque. || It is sunny. Let's go to the park.
+It's raining. Let's stay at home. || Está chovendo. Vamos ficar em casa. || It is raining. Let's stay at home.
+It's cold. Let's have a hot tea. || Está frio. Vamos tomar um chá quente. || It is cold. Let's have a hot tea.
+
+# Convites e respostas | Aceite, recuse com educação ou proponha outro horário.
+> Convidar alguém
+Would you like to go to the park? || Você gostaria de ir ao parque?
+Would you like to have a coffee? || Você gostaria de tomar um café?
+Would you like to visit the museum? || Você gostaria de visitar o museu?
+> Aceitar e recusar
+Yes, I'd love to. || Sim, eu adoraria. || Yes, I would love to.
+Sorry, I can't on Saturday. || Desculpe, não posso no sábado. || Sorry, I cannot on Saturday.
+Thank you, but I can't this evening. || Obrigado, mas não posso hoje à noite. || Thank you, but I cannot this evening.
+> Propor uma alternativa
+How about Sunday morning? || Que tal domingo de manhã?
+How about a coffee at three? || Que tal um café às três?
+I can't on Friday. How about Saturday afternoon? || Não posso na sexta. Que tal sábado à tarde? || I cannot on Friday. How about Saturday afternoon?
+
+# Habilidades cotidianas | Use can e can't para dizer o que uma personagem consegue fazer.
+> Falar do que consegue
+I can swim. || Eu sei nadar.
+I can cook. || Eu sei cozinhar.
+I can ride a bike. || Eu sei andar de bicicleta.
+> Falar de limites
+I can't drive. || Eu não sei dirigir. || I cannot drive.
+She can't swim. || Ela não sabe nadar. || She cannot swim.
+He can cook, but he can't drive. || Ele sabe cozinhar, mas não sabe dirigir. || He can cook, but he cannot drive.
+> Perguntar e oferecer
+Can you help me? || Você pode me ajudar?
+Can you speak a little English? || Você consegue falar um pouco de inglês?
+I can help you. Can you read this message? || Posso ajudar você. Você consegue ler esta mensagem?
+
+# Pedir esclarecimento | Peça repetição ou uma explicação; essas frases são escritas nesta versão.
+> Pedir repetição
+Could you repeat that, please? || Poderia repetir isso, por favor?
+Could you say that again, please? || Poderia dizer isso de novo, por favor?
+Could you write that down, please? || Poderia escrever isso, por favor?
+> Explicar a dificuldade
+I don't understand this word. || Eu não entendo esta palavra. || I do not understand this word.
+I don't understand the message. || Eu não entendo a mensagem. || I do not understand the message.
+I speak a little English. Could you help me? || Falo um pouco de inglês. Poderia me ajudar?
+> Conferir o significado
+What does this word mean? || O que esta palavra significa?
+How do you spell your name? || Como se soletra seu nome?
+What does this message mean? Could you explain it, please? || O que esta mensagem significa? Poderia explicá-la, por favor?
+
+# Chegar a uma cidade | Integre transporte, direções, preço e esclarecimento numa chegada fictícia.
+> Sair do aeroporto
+Where can I buy a bus ticket? || Onde posso comprar uma passagem de ônibus?
+The bus stop is next to the station. || O ponto de ônibus fica ao lado da estação.
+One ticket to the city centre, please. Can I pay by card? || Uma passagem para o centro, por favor. Posso pagar com cartão? || One ticket to the city center, please. Can I pay by card?
+> Confirmar a viagem
+The bus leaves at half past ten. || O ônibus parte às dez e meia.
+The ticket is five dollars. || A passagem custa cinco dólares.
+Does this bus go to the museum? What time does it leave? || Este ônibus vai para o museu? A que horas parte?
+> Pedir mais ajuda
+Could you show me on the map, please? || Poderia me mostrar no mapa, por favor?
+I don't understand. Could you write that down? || Não entendo. Poderia escrever isso? || I do not understand. Could you write that down?
+Where is the hotel? Could you show me on the map? || Onde fica o hotel? Poderia me mostrar no mapa? || Where's the hotel? Could you show me on the map?
+
+# Na hospedagem | Use uma reserva fictícia e pergunte por serviços básicos.
+> Informar a reserva
+I have a reservation. || Tenho uma reserva.
+The reservation is under the name Mia. || A reserva está no nome Mia.
+I have a reservation for two nights. || Tenho uma reserva para duas noites.
+> Pedir informação
+What time is breakfast? || A que horas é o café da manhã?
+Is breakfast included? || O café da manhã está incluído?
+What time is check-out? || A que horas é a saída do hotel?
+> Pedir algo no quarto
+Can I have another towel, please? || Posso pedir outra toalha, por favor?
+Can I have the Wi-Fi password, please? || Posso pedir a senha do Wi-Fi, por favor?
+I have a reservation. Is breakfast included? || Tenho uma reserva. O café da manhã está incluído?
+
+# Visitar um museu | Leia serviços, horários e regras simples de uma visita.
+> Planejar a visita
+The museum opens at ten. || O museu abre às dez.
+The museum is closed on Mondays. || O museu fica fechado às segundas-feiras.
+The museum closes at five on Sundays. || O museu fecha às cinco aos domingos.
+> Comprar entradas
+Two adult tickets, please. || Duas entradas de adulto, por favor.
+Is there a student discount? || Há desconto para estudante?
+How much are two adult tickets? || Quanto custam duas entradas de adulto?
+> Entender regras e serviços
+You can take photos here. || Você pode tirar fotos aqui.
+You can't eat in this room. || Você não pode comer nesta sala. || You cannot eat in this room.
+Where is the café? Can I eat there? || Onde fica o café? Posso comer lá? || Where's the café? Can I eat there?
+
+# Comunicar uma necessidade | Pratique mensagens de necessidade e pedido de ajuda; não são orientações médicas.
+> Dizer como está
+I'm tired. || Estou cansado. || I am tired.
+I don't feel well. || Não estou me sentindo bem. || I do not feel well.
+I need to sit down. || Preciso me sentar.
+> Pedir ajuda
+I need some water. || Preciso de um pouco de água.
+I need a doctor. || Preciso de um médico.
+Could you help me, please? I don't feel well. || Poderia me ajudar, por favor? Não estou me sentindo bem. || Could you help me, please? I do not feel well.
+> Informar uma limitação
+I can't eat peanuts. || Não posso comer amendoim. || I cannot eat peanuts.
+I need a quiet place. || Preciso de um lugar silencioso.
+I need help. Could you call someone, please? || Preciso de ajuda. Poderia chamar alguém, por favor?
+
+# Mensagens e recados | Escreva recados curtos usando nomes e contatos fictícios.
+> Deixar um recado
+Please call Mia. || Por favor, ligue para Mia.
+Please send me a message. || Por favor, me envie uma mensagem.
+Please call Leo tomorrow morning. || Por favor, ligue para Leo amanhã de manhã.
+> Informar disponibilidade
+I'm at work now. || Estou no trabalho agora. || I am at work now.
+I'm free after six. || Estou livre depois das seis. || I am free after six.
+I can't talk now. Please send me a message. || Não posso conversar agora. Por favor, me envie uma mensagem. || I cannot talk now. Please send me a message.
+> Confirmar o contato
+Is this your email address? || Este é seu endereço de e-mail?
+Can you send me the address? || Você pode me enviar o endereço?
+I'm free after five. Can you call me then? || Estou livre depois das cinco. Você pode me ligar então? || I am free after five. Can you call me then?
+
+# Organizar um passeio | Combine clima, horários, necessidades e confirmação em uma saída curta.
+> Escolher o programa
+It's sunny. Would you like to go to the park? || Está ensolarado. Você gostaria de ir ao parque? || It is sunny. Would you like to go to the park?
+It's raining. Let's visit the museum. || Está chovendo. Vamos visitar o museu. || It is raining. Let's visit the museum.
+It's cold. How about a coffee near the museum? || Está frio. Que tal um café perto do museu? || It is cold. How about a coffee near the museum?
+> Conferir os detalhes
+The museum opens at ten on Saturday. || O museu abre às dez no sábado.
+The café is next to the museum. || O café fica ao lado do museu.
+Let's meet at the museum at ten thirty on Saturday. || Vamos nos encontrar no museu às dez e meia no sábado.
+> Avisar uma necessidade
+I need to leave at three. || Preciso sair às três.
+I can't walk far today. || Não posso caminhar muito hoje. || I cannot walk far today.
+I need to leave at two. Can we meet at ten? || Preciso sair às duas. Podemos nos encontrar às dez?
+
+# Onde você estava | Referência editorial A2: use was e were para situações passadas simples.
+> Localizar no passado
+I was at home yesterday. || Eu estava em casa ontem.
+She was at work yesterday morning. || Ela estava no trabalho ontem de manhã.
+We were at the museum on Sunday. || Estávamos no museu no domingo.
+> Contrastar antes e agora
+The café was closed yesterday. || O café estava fechado ontem.
+The tickets were cheap last week. || As entradas estavam baratas na semana passada.
+The shop was open yesterday, but it is closed today. || A loja estava aberta ontem, mas está fechada hoje. || The shop was open yesterday, but it's closed today.
+> Perguntar sobre o passado
+Were you at the park yesterday? || Você estava no parque ontem?
+Was the museum open on Monday? || O museu estava aberto na segunda-feira?
+I was at the station at nine. Where were you? || Eu estava na estação às nove. Onde você estava?
+
+# Atividades de ontem | Observe o passado regular em relatos curtos; não é preciso decorar uma lista de regras.
+> Contar uma ação
+I worked yesterday. || Eu trabalhei ontem.
+I visited my sister last weekend. || Eu visitei minha irmã no fim de semana passado.
+I cooked dinner yesterday evening. || Eu preparei o jantar ontem à noite.
+> Acrescentar detalhes
+We walked to the museum. || Fomos a pé até o museu.
+She studied English after work. || Ela estudou inglês depois do trabalho.
+I visited the park and walked home. || Eu visitei o parque e fui a pé para casa.
+> Perguntar e negar
+Did you work yesterday? || Você trabalhou ontem?
+I didn't work on Sunday. || Eu não trabalhei no domingo. || I did not work on Sunday.
+I didn't study in the morning. I studied after lunch. || Não estudei de manhã. Estudei depois do almoço. || I did not study in the morning. I studied after lunch.
+
+# Uma saída no passado | Use went, had e bought em uma pequena sequência de acontecimentos.
+> Descrever a saída
+I went to the market yesterday. || Eu fui ao mercado ontem.
+I bought some bread and milk. || Eu comprei um pouco de pão e leite.
+I had lunch at the café. || Eu almocei no café.
+> Falar de outra pessoa
+She went to the museum on Saturday. || Ela foi ao museu no sábado.
+He bought two train tickets. || Ele comprou duas passagens de trem.
+We went to the park and had a coffee. || Fomos ao parque e tomamos um café.
+> Fazer uma pergunta
+Where did you go yesterday? || Onde você foi ontem?
+What did you buy at the market? || O que você comprou no mercado?
+I went to the shop, but I didn't buy anything. || Fui à loja, mas não comprei nada. || I went to the shop, but I did not buy anything.
+
+# Contar em sequência | Use first, then e after that para organizar um relato curto.
+> Começar o relato
+First, I had breakfast. || Primeiro, tomei café da manhã.
+Then I went to the station. || Depois fui à estação.
+First, I bought a ticket. Then I took the train. || Primeiro, comprei uma passagem. Depois peguei o trem.
+> Conectar acontecimentos
+After that, we visited the museum. || Depois disso, visitamos o museu.
+In the evening, we cooked dinner. || À noite, preparamos o jantar.
+We visited the park. After that, we had lunch. || Visitamos o parque. Depois disso, almoçamos.
+> Escrever um recado sobre o dia
+I had a busy day, but it was good. || Tive um dia cheio, mas foi bom.
+I worked in the morning and studied in the evening. || Trabalhei de manhã e estudei à noite.
+First, I went to the market. Then I cooked lunch. || Primeiro, fui ao mercado. Depois preparei o almoço.
+
+# Planos com going to | Use going to para planos; o exemplo não é uma previsão garantida.
+> Falar de um plano
+I'm going to study tonight. || Vou estudar hoje à noite. || I am going to study tonight.
+I'm going to visit Mia tomorrow. || Vou visitar Mia amanhã. || I am going to visit Mia tomorrow.
+I'm going to cook dinner on Saturday. || Vou preparar o jantar no sábado. || I am going to cook dinner on Saturday.
+> Planejar em grupo
+We're going to take the train. || Vamos pegar o trem. || We are going to take the train.
+She's going to buy the tickets. || Ela vai comprar as passagens. || She is going to buy the tickets.
+We're going to visit the museum and have lunch. || Vamos visitar o museu e almoçar. || We are going to visit the museum and have lunch.
+> Perguntar e ajustar
+What are you going to do tomorrow? || O que você vai fazer amanhã?
+Are you going to work on Sunday? || Você vai trabalhar no domingo?
+I'm not going to work tomorrow. I'm going to study. || Não vou trabalhar amanhã. Vou estudar. || I am not going to work tomorrow. I am going to study.
+
+# Comparar alternativas | Compare duas opções por tamanho, preço ou facilidade no contexto da tarefa.
+> Comparar o tamanho
+This room is bigger than that room. || Este quarto é maior que aquele quarto.
+This bag is smaller than my bag. || Esta bolsa é menor que minha bolsa.
+This jacket is larger than the blue jacket. || Esta jaqueta é maior que a jaqueta azul.
+> Comparar preço e tempo
+The bus is cheaper than the train. || O ônibus é mais barato que o trem.
+The train is faster than the bus. || O trem é mais rápido que o ônibus.
+This hotel is cheaper than that hotel. || Este hotel é mais barato que aquele hotel.
+> Justificar uma escolha
+Walking is easier for me. || Ir a pé é mais fácil para mim.
+This café is quieter than that café. || Este café é mais silencioso que aquele café.
+Let's take the bus. It's cheaper than the train. || Vamos pegar o ônibus. É mais barato que o trem. || Let's take the bus. It is cheaper than the train.
+
+# Necessidades e obrigações | Distinga need to, have to e don't have to em mensagens simples.
+> Informar uma necessidade
+I need to buy a ticket. || Preciso comprar uma passagem.
+I need to charge my phone. || Preciso carregar meu telefone.
+I need to send a message before lunch. || Preciso enviar uma mensagem antes do almoço.
+> Explicar uma obrigação
+I have to work tomorrow. || Tenho que trabalhar amanhã.
+She has to leave at four. || Ela tem que sair às quatro.
+We have to be at the station at eight. || Temos que estar na estação às oito.
+> Dizer o que é opcional
+You don't have to come early. || Você não precisa chegar cedo. || You do not have to come early.
+We don't have to buy tickets today. || Não precisamos comprar as passagens hoje. || We do not have to buy tickets today.
+I have to work today, but I don't have to work tomorrow. || Tenho que trabalhar hoje, mas não preciso trabalhar amanhã. || I have to work today, but I do not have to work tomorrow.
+
+# Resolver um problema de compra | Descreva o problema e peça uma solução sem supor políticas comerciais reais.
+> Descrever o problema
+I bought this shirt yesterday. || Comprei esta camisa ontem.
+This phone doesn't work. || Este telefone não funciona. || This phone does not work.
+I bought these shoes, but they are too small. || Comprei estes sapatos, mas são pequenos demais. || I bought these shoes, but they're too small.
+> Pedir uma solução
+Can I change this for a larger size? || Posso trocar isto por um tamanho maior?
+Can I return this jacket? || Posso devolver esta jaqueta?
+This bag is broken. Can I return it? || Esta bolsa está quebrada. Posso devolvê-la?
+> Dar informações úteis
+I have the receipt. || Tenho o recibo.
+I paid by card yesterday. || Paguei com cartão ontem.
+I bought this yesterday. It doesn't work. I have the receipt. || Comprei isto ontem. Não funciona. Tenho o recibo. || I bought this yesterday. It does not work. I have the receipt.
+
+# Explicar com because | Acrescente uma razão curta e diferencie because de but.
+> Explicar uma escolha
+I take the bus because it's cheap. || Pego o ônibus porque é barato. || I take the bus because it is cheap.
+I like this café because it's quiet. || Gosto deste café porque é silencioso. || I like this café because it is quiet.
+I walk to work because it's near my house. || Vou a pé ao trabalho porque fica perto da minha casa. || I walk to work because it is near my house.
+> Explicar uma mudança
+I stayed at home because it was raining. || Fiquei em casa porque estava chovendo.
+I took the train because I was late. || Peguei o trem porque estava atrasado.
+We went to the museum because the park was closed. || Fomos ao museu porque o parque estava fechado.
+> Dar uma razão num recado
+I can't come because I have to work. || Não posso ir porque tenho que trabalhar. || I cannot come because I have to work.
+I'd like to come, but I have to leave early. || Eu gostaria de ir, mas tenho que sair cedo. || I would like to come, but I have to leave early.
+I can't meet you today because I have to study. How about tomorrow? || Não posso encontrar você hoje porque tenho que estudar. Que tal amanhã? || I cannot meet you today because I have to study. How about tomorrow?
+
+# Remarcar um plano | Combine um problema, uma alternativa e uma confirmação por escrito.
+> Avisar a mudança
+I'm sorry, but I can't come on Friday. || Desculpe, mas não posso ir na sexta. || I am sorry, but I cannot come on Friday.
+The train is late, so I'm going to take the bus. || O trem está atrasado, então vou pegar o ônibus. || The train is late, so I am going to take the bus.
+The café is closed, so let's meet at the library. || O café está fechado, então vamos nos encontrar na biblioteca.
+> Propor outro plano
+Can we meet on Saturday instead? || Podemos nos encontrar no sábado em vez disso?
+How about meeting at three? || Que tal nos encontrarmos às três?
+I have to work in the morning. Can we meet in the afternoon? || Tenho que trabalhar de manhã. Podemos nos encontrar à tarde?
+> Confirmar o combinado
+Saturday at three is fine for me. || Sábado às três está bom para mim.
+Let's meet outside the library. || Vamos nos encontrar do lado de fora da biblioteca.
+Saturday afternoon is fine. I'll meet you outside the café. || Sábado à tarde está bom. Vou encontrar você do lado de fora do café. || Saturday afternoon is fine. I will meet you outside the café.
+
+# Ler e responder a um convite | Localize os detalhes de um convite e escreva uma resposta com duas informações.
+> Entender o convite
+The party is at Mia's house on Saturday. || A festa é na casa da Mia no sábado.
+Please arrive at six and bring some juice. || Por favor, chegue às seis e traga um pouco de suco.
+The party starts at seven. Please bring some food. || A festa começa às sete. Por favor, traga um pouco de comida.
+> Responder ao convite
+Thanks for inviting me. I'd love to come. || Obrigado por me convidar. Eu adoraria ir. || Thank you for inviting me. I would love to come.
+I can come, but I have to leave at nine. || Posso ir, mas tenho que sair às nove.
+Thanks for inviting me. I can come and bring some juice. || Obrigado por me convidar. Posso ir e levar um pouco de suco. || Thank you for inviting me. I can come and bring some juice.
+> Pedir um detalhe que falta
+Could you send me the address, please? || Poderia me enviar o endereço, por favor?
+Can I bring a friend? || Posso levar um amigo?
+I'd love to come. What time does the party start? Can I bring a friend? || Eu adoraria ir. A que horas a festa começa? Posso levar um amigo? || I would love to come. What time does the party start? Can I bring a friend?
+
+# Preferência com uma razão | Escreva opiniões breves sobre situações familiares, sem exigir argumentação avançada.
+> Expressar a preferência
+I prefer the park because it's quiet. || Prefiro o parque porque é silencioso. || I prefer the park because it is quiet.
+I prefer the train because it's faster. || Prefiro o trem porque é mais rápido. || I prefer the train because it is faster.
+I prefer this hotel because it's near the station. || Prefiro este hotel porque fica perto da estação. || I prefer this hotel because it is near the station.
+> Contrastar dois aspectos
+The café is small, but the food is good. || O café é pequeno, mas a comida é boa.
+The bus is slow, but it's cheap. || O ônibus é lento, mas é barato. || The bus is slow, but it is cheap.
+The hotel is expensive, but it's near the museum. || O hotel é caro, mas fica perto do museu. || The hotel is expensive, but it is near the museum.
+> Recomendar uma opção
+Let's go to this café. It's quieter. || Vamos a este café. É mais silencioso. || Let's go to this café. It is quieter.
+I think the train is better for this trip. || Acho que o trem é melhor para esta viagem.
+Let's take the train because it's faster. We can have lunch near the station. || Vamos pegar o trem porque é mais rápido. Podemos almoçar perto da estação. || Let's take the train because it is faster. We can have lunch near the station.
+
+# Uma viagem em mensagens | Integre chegada, relato e mudança de plano; o encerramento indica percurso, não proficiência.
+> Avisar que chegou
+I arrived yesterday and went to the hotel. || Cheguei ontem e fui para o hotel.
+The hotel is near the station, so I can walk there. || O hotel fica perto da estação, então posso ir a pé até lá.
+I arrived yesterday. The hotel is small, but the room is quiet. || Cheguei ontem. O hotel é pequeno, mas o quarto é silencioso.
+> Relatar o passeio
+Yesterday I visited the museum and had lunch at a café. || Ontem visitei o museu e almocei em um café.
+The museum was interesting, but the café was closed. || O museu foi interessante, mas o café estava fechado.
+First, I took the bus to the museum. Then I had lunch near the park. || Primeiro, peguei o ônibus para o museu. Depois almocei perto do parque.
+> Combinar o próximo encontro
+I'm going to visit the park tomorrow. Would you like to come? || Vou visitar o parque amanhã. Você gostaria de ir? || I am going to visit the park tomorrow. Would you like to come?
+I have to leave at four. Can we meet at ten? || Tenho que sair às quatro. Podemos nos encontrar às dez?
+I'd like to meet tomorrow, but I have to leave at three. How about a coffee at ten near the station? || Eu gostaria de encontrar você amanhã, mas tenho que sair às três. Que tal um café às dez perto da estação? || I would like to meet tomorrow, but I have to leave at three. How about a coffee at ten near the station?

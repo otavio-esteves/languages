@@ -53,6 +53,9 @@ fun LearningTrail(phases: List<TrailPhase>, day: Int, completed: Set<String>, bu
             Text("$count de ${lessons.size} lições concluídas",style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
         }
         SessionProgress(count,lessons.size)
+        phase.estimatedMinutes?.let { minutes ->
+            Text("Cerca de ${minutes.first}–${minutes.last} min · no seu ritmo",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+        }
         for((index,lesson) in lessons.withIndex()) {
             val done=phase.lessonKey(index) in completed
             val available=!busy && (index==0 || phase.lessonKey(index-1) in completed || done)

@@ -1,15 +1,18 @@
 package br.com.idiomas.data
 
+import kotlinx.serialization.json.*
+
 /** Phase metadata belongs to the versioned content; it does not represent mastery. */
 data class TrailStep(val index: Int, val label: String)
-data class TrailPhase(val id: String, val title: String, val description: String, val steps: List<TrailStep>, val level: String? = null)
+data class TrailPhase(val id: String, val title: String, val description: String, val steps: List<TrailStep>, val level: String? = null, val estimatedMinutes: IntRange? = null)
 
 fun MissionActivity.phaseId(): String = content.text("phase_id") ?: "practice"
 fun MissionActivity.stepLabel(): String = content.text("label") ?: "Atividade"
 fun MissionDocument.isTextOnly(): Boolean = assets.isEmpty() && activities.all { it.modality in setOf("reading", "writing") }
 fun MissionDocument.phases(): List<TrailPhase> = activities.withIndex().groupBy { it.value.phaseId() }.map { (id, steps) ->
     val metadata = steps.first().value.content
-    TrailPhase(id, metadata.text("phase_title") ?: "Praticar", metadata.text("phase_description") ?: "", steps.map { TrailStep(it.index, it.value.stepLabel()) }, metadata.text("phase_level"))
+    val estimate = metadata["day_estimated_minutes"]?.jsonObject?.let { it["min"]!!.jsonPrimitive.int..it["max"]!!.jsonPrimitive.int }
+    TrailPhase(id, metadata.text("phase_title") ?: "Praticar", metadata.text("phase_description") ?: "", steps.map { TrailStep(it.index, it.value.stepLabel()) }, metadata.text("phase_level"), estimate)
 }
 
 fun TrailPhase.lessons(): List<List<TrailStep>> {

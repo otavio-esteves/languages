@@ -30,3 +30,25 @@ test('day progress counts completed lessons without treating navigation as compl
   assert.deepEqual(legacyLessons(days, 3), ['words:0', 'words:1', 'words:2']);
   assert.deepEqual(days.map(day => completedInDay(day, [...done, 'words:2'])), [3, 0, 1]);
 });
+
+test('expanded curriculum retains all 53 days, duration estimates and explicit lesson boundaries', async () => {
+  const { phases, dayLessons, completedInDay } = await import('../../resources/js/lib/textTrail.ts');
+  const mission = JSON.parse(readFileSync(new URL('../../../../content/pt-BR_en/missions/order-a-drink.v5.json', import.meta.url), 'utf8'));
+  const days = phases(mission);
+  assert.equal(days.length, 53);
+  assert.deepEqual(days.map(day => day.id), Array.from({ length: 53 }, (_, index) => `day-${String(index + 1).padStart(2, '0')}`));
+  for (const day of days) {
+    assert.deepEqual(day.estimatedMinutes, { min: 10, max: 15 });
+    assert.deepEqual(dayLessons(day).map(lesson => lesson.steps.length), [8, 8, 8]);
+    for (const lesson of dayLessons(day)) {
+      assert.equal(mission.activities[lesson.steps.at(-1).index].type, 'summary');
+    }
+  }
+  assert.deepEqual(days.slice(40).map(day => day.level), Array(13).fill('A2'));
+  assert.deepEqual(days.map(day => completedInDay(day, ['day-53:2'])), [...Array(52).fill(0), 1]);
+  for (const activity of mission.activities.filter(activity => activity.expected.comparison)) {
+    for (const answer of activity.expected.comparison.accepted) assert.equal(compareAnswer(activity, answer).outcome, 'correct', activity.id);
+    for (const item of activity.expected.comparison.corrections) assert.equal(compareAnswer(activity, item.response).outcome, 'incorrect', activity.id);
+    assert.equal(compareAnswer(activity, 'An alternative outside the authored variants.').outcome, 'unverified');
+  }
+});

@@ -23,7 +23,7 @@ function start(cursor: number) {
     <TrailMap v-if="selected" :key="selected.package_hash || `${selected.id}:${selected.version}`" :phases="phases(selected)" :day="day" :cursor="selected.progress.cursor || 0" :completed-lessons="selected.progress.completed_lessons ?? legacyLessons(phases(selected), selected.progress.cursor || 0, selected.progress.completed)" @day="day = $event" @start="start" />
     <div v-if="alternatives.length" class="saved-practices">
       <p class="muted">Você pode continuar uma prática salva ou abrir a trilha atual. Cada percurso mantém suas respostas.</p>
-      <button v-for="pkg in alternatives" :key="pkg.package_hash" class="secondary" @click="selectPackage(pkg)">{{ isCurrent(pkg) ? 'Abrir trilha atual' : 'Retomar prática salva' }}</button>
+      <button v-for="pkg in alternatives" :key="pkg.package_hash" class="secondary" @click="selectPackage(pkg)">{{ isCurrent(pkg) ? 'Abrir trilha atual' : 'Retomar prática salva' }} · {{ phases(pkg).length }} dias</button>
     </div>
   </main>
 </template>

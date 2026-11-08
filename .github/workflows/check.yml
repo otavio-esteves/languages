@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      - name: Check versioned text curriculum
+        run: python3 scripts/build-text-curriculum.py --check
       - name: Bootstrap local stack
         run: scripts/bootstrap.sh
       - name: PHP style and contracts/auth tests

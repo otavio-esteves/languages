@@ -71,4 +71,31 @@ class TextTrailTest {
         assertEquals(setOf("words:0","words:1","words:2"),days.legacyLessons(3,false))
         assertEquals(listOf(3,0,1),days.map {it.completedCount(done+"words:2")})
     }
+
+    @Test fun expanded_curriculum_fits_the_reader_and_keeps_53_days_of_three_complete_lessons() {
+        val document = mission(5)
+        document.validate()
+        assertTrue(document.isTextOnly())
+        val root = File(checkNotNull(System.getProperty("contracts.dir"))).parentFile
+        assertTrue(File(root, "content/pt-BR_en/missions/order-a-drink.v5.json").length() <= 2 * 1024 * 1024)
+        val days = document.phases()
+        assertEquals(53, days.size)
+        assertEquals("day-53", days.last().id)
+        assertEquals((1..53).map { "day-${it.toString().padStart(2, '0')}" }, days.map { it.id })
+        for (day in days) {
+            assertEquals(10..15, day.estimatedMinutes)
+            assertEquals(listOf(8, 8, 8), day.lessons().map { it.size })
+            assertEquals(780, day.steps.sumOf { document.activities[it.index].content["estimated_seconds"]!!.jsonPrimitive.int })
+            for (lesson in day.lessons()) assertEquals("summary", document.activities[lesson.last().index].type)
+        }
+        assertEquals(List(13) { "A2" }, days.drop(40).map { it.level })
+        assertEquals(List(52) { 0 } + 1, days.map { it.completedCount(setOf("day-53:2")) })
+        for (activity in document.activities) {
+            val rule = activity.expected["comparison"]?.jsonObject ?: continue
+            for (variant in rule.strings("accepted")) assertEquals(activity.id, "correct", compareAnswer(activity, variant).outcome)
+            for (item in rule["corrections"]!!.jsonArray) assertEquals(activity.id, "incorrect", compareAnswer(activity, item.jsonObject.text("response")).outcome)
+            assertEquals("unverified", compareAnswer(activity, "An alternative outside the authored variants.").outcome)
+        }
+        assertNull(mission(4).phases().first().estimatedMinutes)
+    }
 }

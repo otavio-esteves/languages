@@ -10,10 +10,10 @@ const count = computed(() => completedInDay(current.value, props.completedLesson
 const done = (index: number) => props.completedLessons.includes(lessonKey(current.value, index));
 const enabled = (index: number) => !props.busy && (index === 0 || done(index - 1) || done(index));
 const picker = ref<HTMLDialogElement | null>(null), wheel = ref<HTMLElement | null>(null), candidate = ref(0);
-function center(day: number, smooth = false) {
+function center(day: number) {
   candidate.value = Math.max(0, Math.min(props.phases.length - 1, day));
   const option = wheel.value?.children[candidate.value] as HTMLElement | undefined;
-  wheel.value?.scrollTo({ top: option ? option.offsetTop - 72 : 0, behavior: smooth && !matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'instant' });
+  wheel.value?.scrollTo({ top: option ? option.offsetTop + option.offsetHeight / 2 - wheel.value.clientHeight / 2 : 0, behavior: 'instant' });
 }
 async function openPicker() { candidate.value = props.day; picker.value?.showModal(); await nextTick(); center(props.day); wheel.value?.focus(); }
 function onScroll() {
@@ -25,10 +25,10 @@ function onScroll() {
 function selectDay() { emit('day', candidate.value); picker.value?.close(); }
 function keydown(event: KeyboardEvent) {
   if (['ArrowDown', 'ArrowUp', 'Home', 'End', 'Enter'].includes(event.key)) event.preventDefault();
-  if (event.key === 'ArrowDown') center(candidate.value + 1, true);
-  if (event.key === 'ArrowUp') center(candidate.value - 1, true);
-  if (event.key === 'Home') center(0, true);
-  if (event.key === 'End') center(props.phases.length - 1, true);
+  if (event.key === 'ArrowDown') center(candidate.value + 1);
+  if (event.key === 'ArrowUp') center(candidate.value - 1);
+  if (event.key === 'Home') center(0);
+  if (event.key === 'End') center(props.phases.length - 1);
   if (event.key === 'Enter') selectDay();
 }
 function start(index: number) {
@@ -45,6 +45,7 @@ function start(index: number) {
       <button class="icon-button day-arrow" aria-label="Próximo dia" :disabled="busy || day === phases.length - 1" @click="emit('day', day + 1)">›</button>
     </nav>
     <div class="daily-meta"><span class="level-badge" title="Referência do conteúdo; não certifica o nível do aluno">{{ current.level || 'Inicial' }}</span><span>{{ count }} de {{ lessons.length }} lições concluídas</span></div>
+    <p v-if="current.estimatedMinutes" class="muted">Cerca de {{ current.estimatedMinutes.min }}–{{ current.estimatedMinutes.max }} min · no seu ritmo</p>
     <progress class="daily-progress" :value="count" :max="lessons.length" :aria-label="`Progresso do Dia ${day + 1}`" :aria-valuetext="`${count} de ${lessons.length} lições concluídas`" />
     <div class="daily-lessons">
       <button v-for="(lesson, index) in lessons" :key="lessonKey(current, index)" class="lesson-card" :class="{ complete: done(index), active: enabled(index) && !done(index) }" :disabled="!enabled(index)" :aria-label="`Lição ${index + 1}${done(index) ? ', concluída, praticar novamente' : ''}`" @click="start(index)">
@@ -57,7 +58,7 @@ function start(index: number) {
       <div class="picker-top"><h2 id="day-picker-title">Escolha um dia</h2><button class="icon-button" aria-label="Fechar seleção de dias" @click="picker?.close()">×</button></div>
       <p class="muted">{{ phases[candidate]?.title }} · conteúdo {{ phases[candidate]?.level || 'inicial' }}</p>
       <div ref="wheel" class="day-wheel" role="listbox" aria-label="Dias disponíveis" tabindex="0" :aria-activedescendant="`day-option-${candidate}`" @scroll="onScroll" @keydown="keydown">
-        <div v-for="(phase, index) in phases" :id="`day-option-${index}`" :key="phase.id" role="option" class="day-option" :class="{ selected: candidate === index }" :aria-selected="candidate === index" @click="center(index, true)"><span>Dia {{ index + 1 }}</span><span class="level-badge">{{ phase.level || 'Inicial' }}</span></div>
+        <div v-for="(phase, index) in phases" :id="`day-option-${index}`" :key="phase.id" role="option" class="day-option" :class="{ selected: candidate === index }" :aria-selected="candidate === index" @click="center(index)"><span>Dia {{ index + 1 }}</span><span class="level-badge">{{ phase.level || 'Inicial' }}</span></div>
       </div>
       <button class="picker-confirm" @click="selectDay">Ir para o Dia {{ candidate + 1 }}</button>
     </dialog>

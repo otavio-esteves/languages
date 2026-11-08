@@ -144,9 +144,9 @@ fun PracticeScreen(vm: PracticeViewModel, state: PracticeScreenState, pending: I
             }
             if (activity.type in listOf("purpose", "dialogue", "explanation")) item { JourneyButton("Continuar", vm::passive, !state.busy, Modifier.fillMaxWidth()) }
             if (activity.type == "summary") {
-                item { Text("Você praticou palavras, pedidos curtos e frases com contrações. As respostas previstas receberam correção automática de treino. Formas não reconhecidas continuam sem confirmação independente.") }
+                item { Text("Você praticou leitura e escrita nesta lição. As respostas previstas receberam correção automática de treino. Formas não reconhecidas continuam sem confirmação independente.") }
                 item { Text("Esta sessão não verifica escuta, fala ou retenção posterior.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-                item { JourneyButton("Concluir prática", { vm.next() }, !state.busy, Modifier.fillMaxWidth()) }
+                item { JourneyButton("Concluir lição", { vm.next() }, !state.busy, Modifier.fillMaxWidth()) }
             }
         }
         if (!state.trail) item {

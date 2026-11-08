@@ -1,0 +1,20 @@
+{
+  "I would like a tea, please.": [{"response": "I would a tea, please.", "message": "Neste pedido, use would like antes da bebida: I would like a tea."}],
+  "A small tea, please.": [{"response": "A tea small, please.", "message": "Neste padrão, o tamanho vem antes da bebida: a small tea."}],
+  "I'm from Brazil.": [{"response": "I from Brazil.", "message": "Inclua am depois de I: I am from Brazil, ou I'm from Brazil."}],
+  "I'm a teacher.": [{"response": "I am teacher.", "message": "Use a antes desta profissão no singular: I am a teacher."}],
+  "I'm an engineer.": [{"response": "I am a engineer.", "message": "Antes do som vocálico inicial de engineer, use an: I am an engineer."}],
+  "This is my book.": [{"response": "This my book.", "message": "Inclua is neste padrão: This is my book."}],
+  "I work in a school.": [{"response": "I works in a school.", "message": "Com I, use work. O padrão works aparece com he, she e it."}],
+  "She starts work at eight.": [{"response": "She start work at eight.", "message": "Para este hábito com she, use starts: She starts work at eight."}],
+  "I don't like cold coffee.": [{"response": "I no like cold coffee.", "message": "Para negar este hábito com I, use don't like ou do not like."}],
+  "She doesn't like tea.": [{"response": "She don't like tea.", "message": "Com she, use doesn't like ou does not like."}, {"response": "She doesn't likes tea.", "message": "Depois de doesn't, use like sem s: She doesn't like tea."}],
+  "I can swim.": [{"response": "I can to swim.", "message": "Depois de can, use swim diretamente: I can swim."}],
+  "I was at home yesterday.": [{"response": "I were at home yesterday.", "message": "Neste relato com I, use was: I was at home yesterday."}],
+  "We were at the museum on Sunday.": [{"response": "We was at the museum on Sunday.", "message": "Neste relato com we, use were: We were at the museum on Sunday."}],
+  "I didn't work on Sunday.": [{"response": "I didn't worked on Sunday.", "message": "Depois de didn't, use work na forma base: I didn't work on Sunday."}],
+  "I went to the market yesterday.": [{"response": "I goed to the market yesterday.", "message": "Neste relato, o passado de go é went: I went to the market yesterday."}],
+  "I'm going to study tonight.": [{"response": "I going to study tonight.", "message": "Inclua am: I am going to study tonight, ou I'm going to study tonight."}],
+  "The bus is cheaper than the train.": [{"response": "The bus is more cheaper than the train.", "message": "Use cheaper sem more neste comparativo: The bus is cheaper than the train."}],
+  "She has to leave at four.": [{"response": "She have to leave at four.", "message": "Com she, o padrão é has to: She has to leave at four."}]
+}

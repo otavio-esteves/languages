@@ -70,7 +70,7 @@ class PracticeFlowTest extends TestCase
     public function test_text_trail_has_no_media_and_keeps_reading_and_writing_evidence_separate(): void
     {
         $this->editor();
-        $this->getJson('/api/v1/editorial/catalog')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.version', 4);
+        $this->getJson('/api/v1/editorial/catalog')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.version', 5);
         $manifest = $this->getJson('/api/v1/content-packages/order-a-drink/manifest?version=2&preview=1')->assertOk()->assertJsonCount(0, 'assets')->json();
         $this->package = json_decode(file_get_contents($this->directory.'/order-a-drink.v2.json'), true);
         $this->assertEquals(['reading', 'writing'], array_values(array_unique(array_column($this->package['activities'], 'modality'))));
@@ -195,7 +195,7 @@ class PracticeFlowTest extends TestCase
         $page = $this->actingAs($user)->get('/editorial')->assertOk()->viewData('page');
         $this->assertSame(3, $page['props']['packages'][0]['version']);
         $this->assertSame(['words:0'], $page['props']['packages'][0]['progress']['completed_lessons']);
-        $this->assertSame(4, $page['props']['currentPackages'][0]['version']);
+        $this->assertSame(5, $page['props']['currentPackages'][0]['version']);
         $this->assertSame([], $page['props']['currentPackages'][0]['progress']['completed_lessons']);
         $this->assertSame($old['package_hash'], $page['props']['savedPackages'][0]['package_hash']);
         File::delete($this->directory.'/order-a-drink.v3.json');
@@ -207,7 +207,7 @@ class PracticeFlowTest extends TestCase
         $this->assertSame(0, DB::table('learning_events')->where('user_id', $user->id)->count());
         $other = $this->editor();
         $otherPage = $this->actingAs($other)->get('/editorial')->assertOk()->viewData('page');
-        $this->assertSame(4, $otherPage['props']['packages'][0]['version']);
+        $this->assertSame(5, $otherPage['props']['packages'][0]['version']);
         $this->assertSame([], $otherPage['props']['savedPackages']);
         $this->assertSame([], app(DayProgress::class)->get($other, $new['package_hash'])['completed_lessons']);
     }
@@ -227,6 +227,23 @@ class PracticeFlowTest extends TestCase
         $this->assertSame(4, $page['props']['packages'][0]['version']);
         $this->assertCount(2, $page['props']['savedPackages']);
         $this->assertCount(9, $progress->get($user, $old['package_hash'])['completed_lessons']);
+    }
+
+    public function test_expanded_trail_reaches_day_53_without_completing_skipped_days_or_publishing(): void
+    {
+        $user = $this->editor();
+        $manifest = $this->getJson('/api/v1/content-packages/order-a-drink/manifest?version=5&preview=1')->assertOk()->json();
+        $this->assertLessThanOrEqual(2 * 1024 * 1024, $manifest['package_bytes']);
+        $hash = $manifest['package_hash'];
+        $page = $this->actingAs($user)->get('/editorial/practice/order-a-drink/5?snapshot='.$hash)->assertOk()->viewData('page');
+        $activities = $page['props']['mission']->activities;
+        $this->assertCount(1272, $activities);
+        $this->assertSame('day-53', end($activities)->content->phase_id);
+        $this->postJson('/editorial/day-progress', ['package_hash' => $hash, 'day' => 52, 'cursor' => 1271, 'completed' => false, 'lesson' => 'day-53:2'])
+            ->assertOk()->assertJsonPath('completed_lessons', ['day-53:2'])->assertJsonPath('completed', false);
+        $this->assertSame(['day-53:2'], app(DayProgress::class)->get($user, $hash)['completed_lessons']);
+        $this->assertSame(0, DB::table('learning_events')->where('user_id', $user->id)->count());
+        $this->getJson('/api/v1/catalog')->assertJsonCount(0, 'data');
     }
 
     public function test_replays_have_one_effect_and_changed_payload_conflicts(): void
