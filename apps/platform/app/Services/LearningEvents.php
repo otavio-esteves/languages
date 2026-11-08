@@ -85,44 +85,65 @@ class LearningEvents
         }, $items);
     }
 
+    private function indexContext(array &$index, array $event, array $modalities): void
+    {
+        foreach ($modalities as $modality) {
+            foreach ($event['target_ids'] as $target) {
+                $first = $index[$modality][$target][$event['device_id']] ?? PHP_INT_MAX;
+                $index[$modality][$target][$event['device_id']] = min($first, $event['local_sequence']);
+            }
+        }
+    }
+
+    private function hasContext(array $index, array $attempt): bool
+    {
+        foreach ($attempt['target_ids'] as $target) {
+            foreach ($index[$attempt['modality']][$target] ?? [] as $device => $sequence) {
+                // Only a sequence on the same device proves that context came later.
+                if ($device !== $attempt['device_id'] || $sequence <= $attempt['local_sequence']) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     public function session(User $user, string $id): array
     {
         $events = DB::table('learning_events')->where('user_id', $user->id)->where('session_id', $id)->orderBy('local_sequence')->get();
+        $inputs = [];
+        $known = [];
+        $supports = [];
+        $technical = [];
+        foreach ($events as $row) {
+            $input = $inputs[$row->event_id] = json_decode($row->payload, true);
+            if ($row->kind === 'exposure') {
+                $known[$row->event_id] = true;
+                if ($input['kind'] !== 'training_use') {
+                    $this->indexContext($supports, $input, $input['affected_modalities']);
+                }
+            } elseif ($input['technical_status'] !== 'valid') {
+                $this->indexContext($technical, $input, [$input['modality']]);
+            }
+        }
+        $activities = [];
+        $hashes = $events->where('kind', 'attempt')->pluck('package_hash')->unique()->all();
+        if ($hashes !== []) {
+            foreach (DB::table('content_snapshots')->whereIn('hash', $hashes)->get(['hash', 'document']) as $snapshot) {
+                $activities[$snapshot->hash] = array_column(json_decode($snapshot->document, true)['activities'], null, 'id');
+            }
+        }
 
-        return ['session_id' => $id, 'events' => $events->map(function ($row) use ($events) {
-            $input = json_decode($row->payload, true);
+        return ['session_id' => $id, 'events' => $events->map(function ($row) use ($inputs, $known, $supports, $technical, $activities) {
+            $input = $inputs[$row->event_id];
             $assessment = null;
             if ($row->kind === 'attempt') {
-                $snapshot = DB::table('content_snapshots')->where('hash', $row->package_hash)->first();
-                $package = json_decode($snapshot->document, true);
-                $activity = collect($package['activities'])->firstWhere('id', $input['activity_id']);
-                $supported = $events->contains(function ($e) use ($input) {
-                    if ($e->kind !== 'exposure') {
-                        return false;
-                    }
-                    $p = json_decode($e->payload, true);
-                    if ($e->device_id === $input['device_id'] && $p['local_sequence'] > $input['local_sequence']) {
-                        return false;
-                    }
-
-                    return $p['kind'] !== 'training_use' && in_array($input['modality'], $p['affected_modalities'], true) && count(array_intersect($input['target_ids'], $p['target_ids'])) > 0;
-                });
-                $known = $events->where('kind', 'exposure')->pluck('event_id')->all();
-                $supportPending = count(array_diff($input['support_event_ids'], $known)) > 0;
-                $supported = $supported || $supportPending;
-                $technicalContext = $events->contains(function ($e) use ($input) {
-                    if ($e->kind !== 'attempt') {
-                        return false;
-                    }
-                    $p = json_decode($e->payload, true);
-                    if ($e->device_id === $input['device_id'] && $p['local_sequence'] > $input['local_sequence']) {
-                        return false;
-                    }
-
-                    return $p['technical_status'] !== 'valid' && $p['modality'] === $input['modality'] && count(array_intersect($p['target_ids'], $input['target_ids'])) > 0;
-                });
+                $activity = $activities[$row->package_hash][$input['activity_id']];
+                $supportPending = count(array_diff_key(array_fill_keys($input['support_event_ids'], true), $known)) > 0;
+                $supported = $this->hasContext($supports, $input) || $supportPending;
                 $comparison = TextAnswers::compare($activity, $input['response']);
-                if ($input['technical_status'] !== 'valid' || $technicalContext) {
+                if ($input['technical_status'] !== 'valid' || $this->hasContext($technical, $input)) {
                     $comparison = ['outcome' => 'technical_issue', 'message' => 'Falha técnica registrada; nenhuma conclusão linguística.', 'example' => null, 'rule_version' => null];
                 }
                 $assessment = array_merge($comparison, ['supported' => $supported, 'support_pending' => $supportPending, 'is_preview' => (bool) $row->is_preview, 'retention_confirmed' => false, 'source' => $comparison['outcome'] === 'unverified' ? 'not_assessed' : 'automatic_rule']);
