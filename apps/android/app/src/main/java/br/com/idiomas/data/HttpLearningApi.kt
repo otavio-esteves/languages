@@ -52,7 +52,7 @@ class HttpLearningApi(private val baseUrl: String) : LearningApi, PracticeApi {
     override suspend fun asset(token: String, hash: String, id: String) = bytes("content-snapshots/${segment(hash)}/assets/${segment(id)}",token,16*1024*1024)
     override suspend fun send(token: String, kind: String, events: List<kotlinx.serialization.json.JsonObject>): BatchResult {
         require(kind == "attempt" || kind == "exposure")
-        val body = kotlinx.serialization.json.buildJsonObject { put("events", kotlinx.serialization.json.JsonArray(events)) }.toString()
+        val body = encodeEventBatch(events)
         return json.decodeFromString(execute("${kind}s/batch", token, body))
     }
     override suspend fun results(token: String, sessionId: String): RemoteSession = json.decodeFromString(execute("learning-sessions/${segment(sessionId)}", token))

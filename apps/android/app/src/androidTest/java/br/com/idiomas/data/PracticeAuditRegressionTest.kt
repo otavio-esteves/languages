@@ -40,6 +40,8 @@ class PracticeAuditRegressionTest {
         private fun hash(raw: ByteArray) = MessageDigest.getInstance("SHA-256").digest(raw).joinToString("") {"%02x".format(it)}
         private val documents=(1..2).map(::raw).associateBy(::hash)
         val received=linkedMapOf<String,JsonObject>()
+        val sentBatches=mutableListOf<List<JsonObject>>()
+        var loseConfirmationAt:Int?=null
         var failResults=false
         var resultsCalls=0
         var beforeResults:(suspend () -> Unit)?=null
@@ -53,12 +55,18 @@ class PracticeAuditRegressionTest {
         }
         override suspend fun document(token:String,hash:String)=documents.getValue(hash)
         override suspend fun asset(token:String,hash:String,id:String)=error("No media in synthetic fixture")
-        override suspend fun send(token:String,kind:String,events:List<JsonObject>)=BatchResult(events.map {event ->
-            val id=event.text("id")!!
-            val previous=received.putIfAbsent(id,event)
-            check(previous==null || previous==event)
-            EventReceipt(id,if(previous==null) "accepted" else "duplicate")
-        })
+        override suspend fun send(token:String,kind:String,events:List<JsonObject>):BatchResult {
+            check(events.size <= 50 && encodeEventBatch(events).toByteArray(Charsets.UTF_8).size <= 524288)
+            sentBatches += events
+            val result=BatchResult(events.map {event ->
+                val id=event.text("id")!!
+                val previous=received.putIfAbsent(id,event)
+                check(previous==null || previous==event)
+                EventReceipt(id,if(previous==null) "accepted" else "duplicate")
+            })
+            if (sentBatches.size == loseConfirmationAt) throw IOException("Synthetic lost chunk confirmation")
+            return result
+        }
         override suspend fun results(token:String,sessionId:String):RemoteSession {
             resultsCalls++
             if(failResults) {failResults=false;throw IOException("Synthetic results interruption")}
@@ -191,6 +199,67 @@ class PracticeAuditRegressionTest {
             assertEquals(1,f.api.received.size)
             assertTrue(f.db.practiceDao().resultRequests(1).isEmpty())
             assertNotNull(f.db.practiceDao().events(1,practice.session.id).single().remoteResult)
+        } finally {f.close()}
+    }
+
+    @Test fun long_responses_split_and_only_the_unconfirmed_chunk_is_retried_after_reopen()=runBlocking {
+        val f=Fixture()
+        try {
+            f.catalog.login("first","synthetic")
+            val installed=f.install()
+            var practice=f.repo.open(installed.hash)
+            repeat(50) { index ->
+                practice=f.repo.answer(practice,"a".repeat(10000))
+                if(index<49) practice=f.repo.advance(practice,retry=true)
+            }
+            val original=practice.events
+            f.api.loseConfirmationAt=2
+            try {f.repo.sync();fail("The second chunk confirmation should be lost")} catch(_:IOException) {}
+            assertEquals(2,f.api.sentBatches.size)
+            val unconfirmed=f.api.sentBatches.last()
+            assertEquals(unconfirmed.map {it.text("id")},f.db.practiceDao().pending(1).map {it.id})
+            assertTrue(f.repo.blocked.first().isEmpty())
+            f.reopen()
+            assertTrue(f.repo.sync())
+            assertEquals(3,f.api.sentBatches.size)
+            assertEquals(unconfirmed,f.api.sentBatches.last())
+            assertEquals(50,f.api.received.size)
+            assertTrue(f.db.practiceDao().pending(1).isEmpty())
+            val saved=f.db.practiceDao().events(1,practice.session.id)
+            assertEquals(original.map {it.payload},saved.map {it.payload})
+            assertTrue(saved.all {it.syncState=="received" && it.remoteResult!=null})
+        } finally {f.close()}
+    }
+
+    @Test fun one_oversized_event_stays_visible_without_blocking_other_events_or_accounts()=runBlocking {
+        val f=Fixture()
+        try {
+            f.catalog.login("first","synthetic")
+            val installed=f.install()
+            val practice=f.repo.answer(f.repo.open(installed.hash),"A valid response")
+            val good=practice.events.single()
+            val id=UUID.randomUUID().toString()
+            val payload=JsonObject(Json.parseToJsonElement(good.payload).jsonObject.toMutableMap().apply {
+                put("id",JsonPrimitive(id));put("local_sequence",JsonPrimitive(2))
+                put("support_event_ids",JsonArray((1..15000).map {JsonPrimitive(UUID.randomUUID().toString())}))
+            }).toString()
+            f.db.practiceDao().addEvent(good.copy(id=id,sequence=2,payload=payload))
+            f.catalog.logout();f.catalog.login("second","synthetic")
+            assertTrue(f.repo.sync())
+            assertTrue(f.api.sentBatches.isEmpty())
+            assertTrue(f.repo.blocked.first().isEmpty())
+            f.catalog.logout();f.catalog.login("first","synthetic")
+            assertTrue(f.repo.sync())
+            assertEquals(setOf(good.id),f.api.received.keys)
+            val blocked=f.repo.blocked.first().single()
+            assertEquals(id,blocked.id)
+            assertEquals(payload,blocked.payload)
+            assertTrue(blocked.issue!!.contains("limite de envio"))
+            assertTrue(f.db.practiceDao().pending(1).isEmpty())
+            f.repo.retryBlocked()
+            assertTrue(f.repo.sync())
+            assertEquals(payload,f.repo.blocked.first().single().payload)
+            assertEquals(1,f.api.sentBatches.size)
         } finally {f.close()}
     }
 

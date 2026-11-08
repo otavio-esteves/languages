@@ -238,20 +238,25 @@ class PracticeRepository(private val context: Context, private val database: Cat
             if(catalog.session.value != user) return false
             val batch = dao.pending(user.account.id)
             for(kind in listOf("exposure","attempt")) {
-                val events = batch.filter { it.kind == kind }
-                if(events.isEmpty()) continue
-                if(catalog.session.value != user) return false
-                val receipts = api.send(user.token,kind,events.map { json.parseToJsonElement(it.payload).jsonObject })
-                database.withTransaction { for(receipt in receipts.results) {
-                    if(events.none { it.id == receipt.id }) continue
-                    val state = when(receipt.status) { "accepted","duplicate" -> "received"; "rejected","conflict" -> "blocked"; else -> continue }
-                    val issue = receipt.message ?: if (receipt.status == "conflict") "Este registro diverge do que foi recebido anteriormente. Ele foi preservado neste aparelho para revisão." else null
-                    dao.receipt(user.account.id,receipt.id!!,state,issue)
-                    if (state == "received") {
-                        val sessionId = events.single { it.id == receipt.id }.sessionId
-                        dao.requestResults(PracticeResultRequest(user.account.id, sessionId, UUID.randomUUID().toString()))
-                    }
-                } }
+                val plan = planEventBatches(batch.filter { it.kind == kind })
+                for (event in plan.oversized) {
+                    dao.receipt(user.account.id, event.id, "blocked", "Este registro excede o limite de envio. Ele foi preservado neste aparelho para revisão, sem impedir o envio dos demais.")
+                }
+                for (chunk in plan.batches) {
+                    val events = chunk.events
+                    if(catalog.session.value != user) return false
+                    val receipts = api.send(user.token,kind,chunk.payloads)
+                    database.withTransaction { for(receipt in receipts.results) {
+                        if(events.none { it.id == receipt.id }) continue
+                        val state = when(receipt.status) { "accepted","duplicate" -> "received"; "rejected","conflict" -> "blocked"; else -> continue }
+                        val issue = receipt.message ?: if (receipt.status == "conflict") "Este registro diverge do que foi recebido anteriormente. Ele foi preservado neste aparelho para revisão." else null
+                        dao.receipt(user.account.id,receipt.id!!,state,issue)
+                        if (state == "received") {
+                            val sessionId = events.single { it.id == receipt.id }.sessionId
+                            dao.requestResults(PracticeResultRequest(user.account.id, sessionId, UUID.randomUUID().toString()))
+                        }
+                    } }
+                }
             }
             val requests = dao.resultRequests(user.account.id)
             if (batch.isEmpty() && requests.isEmpty()) return true
