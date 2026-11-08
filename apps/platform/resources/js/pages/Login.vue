@@ -2,12 +2,13 @@
 import { useForm } from '@inertiajs/vue3';
 import ThemeToggle from '../components/ThemeToggle.vue';
 import BrandMark from '../components/BrandMark.vue';
+import SoundToggle from '../components/SoundToggle.vue';
 const form = useForm({ email: '', password: '' });
 function login() { form.post('/login', { onFinish: () => form.reset('password') }); }
 </script>
 <template>
   <main class="login-layout">
-    <div class="login-top"><BrandMark /><ThemeToggle /></div>
+    <div class="login-top"><BrandMark /><div class="session-actions"><ThemeToggle /><SoundToggle /></div></div>
     <div class="page-heading"><p class="eyebrow">LEITURA E ESCRITA</p><h1>Um passo de cada vez.</h1><p class="muted">Entre para revisar a trilha de inglês.</p></div>
     <form @submit.prevent="login">
       <label>E-mail<input v-model="form.email" type="email" autocomplete="username" required></label>

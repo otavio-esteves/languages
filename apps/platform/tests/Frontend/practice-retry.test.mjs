@@ -5,6 +5,7 @@ import { compileScript, parse } from 'vue/compiler-sfc';
 import ts from 'typescript';
 import * as vue from 'vue';
 import * as trail from '../../resources/js/lib/textTrail.ts';
+import { feedbackCue } from '../../resources/js/lib/uiSounds.ts';
 
 const filename = new URL('../../resources/js/pages/PracticePreview.vue', import.meta.url);
 const { descriptor } = parse(readFileSync(filename, 'utf8'), { filename: filename.pathname });
@@ -14,11 +15,12 @@ const compiled = ts.transpileModule(script.content, {
 }).outputText;
 const mission = JSON.parse(readFileSync(new URL('../../../../content/pt-BR_en/missions/order-a-drink.v3.json', import.meta.url), 'utf8'));
 
-function player(fetch) {
+function player(fetch, cues = []) {
   const module = { exports: {} };
   const require = (name) => {
     if (name === 'vue') return { ...vue, onMounted() {} };
     if (name === '../lib/textTrail') return trail;
+    if (name === '../lib/uiSounds') return { feedbackCue, playUiSound: async cue => { cues.push(cue); } };
     if (name === '@inertiajs/vue3' || name.endsWith('.vue')) return {};
     throw new Error(`Unexpected dependency: ${name}`);
   };
@@ -58,6 +60,7 @@ test('lost attempt acknowledgement restores feedback without creating another at
 });
 
 test('lost correction acknowledgement records one example and supports only the later retry', async () => {
+  const cues = [];
   const saved = new Map();
   let loseExample = true;
   const page = player(async (url, request) => {
@@ -66,12 +69,14 @@ test('lost correction acknowledgement records one example and supports only the 
     saved.set(event.id, event);
     if (url.includes('exposures') && loseExample) { loseExample = false; throw new Error('Lost example acknowledgement'); }
     return { ok: true, json: async () => ({ results: [{ id: event.id, status: duplicate ? 'duplicate' : 'accepted' }] }) };
-  });
+  }, cues);
   assert.equal(await page.submit('coffee'), false);
   assert.equal(page.feedback.value, '');
+  assert.deepEqual(cues, []);
   assert.equal(await page.retryPending(), true);
   assert.equal(page.assessment.value.outcome, 'incorrect');
   assert.equal(page.assessment.value.example, 'water');
+  assert.deepEqual(cues, ['adjust']);
   assert.equal(page.hasPending.value, false);
   assert.equal(saved.size, 2);
   const [first, example] = [...saved.values()];
@@ -80,6 +85,17 @@ test('lost correction acknowledgement records one example and supports only the 
   await page.submit('water');
   assert.equal(saved.size, 3);
   assert.deepEqual([...saved.values()][2].support_event_ids, [example.id]);
+});
+
+test('unknown answers use neutral audio and failed saves never celebrate completion', async () => {
+  const cues = [];
+  const page = player(async url => url.includes('day-progress') ? { ok: false } : { ok: true, json: async () => ({ results: [{ status: 'accepted' }] }) }, cues);
+  await page.submit('A possible alternative outside the rules');
+  assert.equal(page.assessment.value.outcome, 'unverified');
+  assert.deepEqual(cues, ['recorded']);
+  assert.equal(await page.finishDay(), false);
+  assert.deepEqual(cues, ['recorded']);
+  assert.equal(feedbackCue('technical_issue'), 'recorded');
 });
 
 test('switching lessons keeps each unsent draft and explicit retry clears only that activity', async () => {

@@ -11,3 +11,5 @@ Backend e web: `scripts/bootstrap.sh`; `scripts/compose run --rm app php artisan
 Android (SDK local e JDK 21): `cd apps/android && ./gradlew testDebugUnitTest assembleDebug lintDebug`. `scripts/check` reúne os checks. Sem SDK ou Docker, informe a limitação e não declare verificação passada.
 
 Não versionar `.env`, tokens, senhas, chaves, gravações, dados pessoais ou instrumentos reservados. Contas só são criadas explicitamente pelo operador. Fixtures são sintéticas. Produção/deploy e coleta humana não fazem parte do bootstrap.
+
+O usuário autorizou efeitos sonoros de interface em 8 de novembro de 2026: seleção, feedback limitado da resposta e conclusão de lição. São opcionais, com preferência de silêncio persistida, e não reintroduzem áudio curricular, escuta ou voz. Respostas não previstas usam retorno neutro; falha de áudio não bloqueia a prática nem produz evidência pedagógica. A direção visual passa a ser um caderno de pequenas missões, com paleta de papel/tinta/lavanda e detalhes em terracota, sem copiar o visual do Duolingo ou acrescentar vidas, ranking ou certificação.

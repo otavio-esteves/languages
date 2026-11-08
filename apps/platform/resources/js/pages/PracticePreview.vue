@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { feedbackCue, playUiSound } from '../lib/uiSounds';
 import { Link } from '@inertiajs/vue3';
 import BrandMark from '../components/BrandMark.vue';
 import TrailMap from '../components/TrailMap.vue';
@@ -34,6 +35,7 @@ const dayPosition = computed(() => currentPhase.value.steps.findIndex(step => st
 const hasPending = computed(() => events.value.some(event => !event.received));
 const correct = ref(false);
 const assessment = ref<ComparisonResult | null>(null), submittedResponse = ref('');
+watch(selected, (value, previous) => { if (value !== null && value !== previous) void playUiSound('tap'); });
 const manualSupports = computed(() => activity.value.supports.filter(support => !support.id.startsWith('gloss-') && support.kind !== 'solution'));
 let actionQueue: Promise<unknown> = Promise.resolve();
 let pendingActions = 0;
@@ -94,7 +96,7 @@ function enterActivity(cursor: number) {
   if (draft) { answer.value = draft.answer; selected.value = draft.selected; }
 }
 function backToTrail() { stashDraft(); showTrail.value = true; syncLocation(false); focusCurrentStep(); }
-function begin(cursor = index.value) { return action(async () => { cursor = lessonPositions.get(positionKey(cursor)) ?? cursor; if (cursor !== index.value) enterActivity(cursor); if (['dialogue', 'explanation'].includes(activity.value.type)) await expose(); showTrail.value = false; syncLocation(true); await focusPrompt(); }); }
+function begin(cursor = index.value, interactive = true) { return action(async () => { cursor = lessonPositions.get(positionKey(cursor)) ?? cursor; if (cursor !== index.value) enterActivity(cursor); if (['dialogue', 'explanation'].includes(activity.value.type)) await expose(); showTrail.value = false; syncLocation(true); if (interactive) void playUiSound('tap'); await focusPrompt(); }); }
 function support(value: Support) { return action(async () => { if (!revealed.value.includes(value.id)) { await expose(activity.value, value); revealed.value.push(value.id); } }); }
 async function lookup(entry: Gloss): Promise<boolean> {
   const target = activity.value;
@@ -111,9 +113,11 @@ async function presentFeedback() {
     const solution = activity.value.supports.find(item => item.id === 'comparison-example' && item.kind === 'solution');
     if (solution && !revealed.value.includes(solution.id)) { await expose(activity.value, solution); revealed.value.push(solution.id); }
   }
+  const firstPresentation = assessment.value === null;
   assessment.value = result;
   correct.value = result.outcome === 'correct';
   feedback.value = result.message;
+  if (firstPresentation) void playUiSound(feedbackCue(result.outcome));
 }
 function chooseOption(event: MouseEvent, option: string) {
   if (!busy.value && !(event.target as Element).closest('button, [role="tooltip"]')) selected.value = option;
@@ -130,7 +134,7 @@ function submit(value: string) { return action(async () => {
   await restoreAttempt(payload);
 }); }
 function clearActivity() { answer.value = ''; selected.value = null; revealed.value = []; recorded.value = false; feedback.value = ''; correct.value = false; assessment.value = null; submittedResponse.value = ''; }
-function reset() { drafts.delete(draftKey()); lessonPositions.delete(positionKey(index.value)); clearActivity(); }
+function reset() { drafts.delete(draftKey()); lessonPositions.delete(positionKey(index.value)); clearActivity(); void playUiSound('tap'); }
 async function saveDay(day: number, cursor: number, lesson: string) {
   const cookie = document.cookie.split('; ').find(value => value.startsWith('XSRF-TOKEN='));
   const response = await fetch('/editorial/day-progress', { method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-XSRF-TOKEN': cookie ? decodeURIComponent(cookie.split('=').slice(1).join('=')) : '' }, body: JSON.stringify({ package_hash: props.manifest.package_hash, day, completed: false, cursor, lesson }) });
@@ -138,6 +142,7 @@ async function saveDay(day: number, cursor: number, lesson: string) {
   const saved = await response.json();
   completedLessons.value = saved.completed_lessons;
   completed.value = saved.completed;
+  void playUiSound('complete');
 }
 function selectDay(day: number) { if (!busy.value && !hasPending.value && trail.value[day]) { selectedDay.value = day; syncLocation(false); } }
 function finishDay() { return action(async () => {
@@ -153,6 +158,7 @@ async function move() {
   if (changedLesson) await saveDay(trail.value.findIndex(day => day.id === phaseId(next)), index.value + 1, lessonKey(oldPhase, lessonIndex(oldPhase, index.value)));
   if (!changedLesson && ['dialogue', 'explanation'].includes(next.type)) await expose(next);
   enterActivity(index.value + 1); showTrail.value = changedLesson;
+  if (!changedLesson) void playUiSound('tap');
   syncLocation(!changedLesson);
   if (changedLesson) await focusCurrentStep(); else await focusPrompt();
 }
@@ -171,7 +177,7 @@ function retryPending() {
     message.value = 'Registro confirmado.';
   });
 }
-onMounted(() => { if (textOnly.value && new URLSearchParams(window.location.search).get('start') === '1') begin(); });
+onMounted(() => { if (textOnly.value && new URLSearchParams(window.location.search).get('start') === '1') begin(index.value, false); });
 </script>
 <template>
   <header v-if="!showTrail || finished" class="site-header"><BrandMark /><SessionActions /><span class="header-context">Leitura e escrita</span><button v-if="!showTrail && !finished" class="quiet" :disabled="busy" @click="backToTrail">Voltar à trilha</button><Link v-else href="/editorial" class="quiet exit-link">Voltar à revisão</Link></header>
@@ -185,6 +191,7 @@ onMounted(() => { if (textOnly.value && new URLSearchParams(window.location.sear
     <template v-if="!finished">
       <div class="lesson-progress"><progress :value="completedInDay(currentPhase, completedLessons)" :max="dayLessons(currentPhase).length" aria-label="Atividades percorridas" /><span>{{ dayPosition + 1 }} / {{ currentPhase.steps.length }}</span></div>
       <p class="eyebrow">DIA {{ trail.indexOf(currentPhase) + 1 }} · {{ currentPhase.title }}</p>
+      <span class="exercise-mode">{{ ['written_recall', 'communicative_task'].includes(activity.type) ? 'Sua vez de escrever' : activity.type === 'information_question' ? 'Encontre o sentido' : activity.type === 'summary' ? 'Hora de guardar' : 'Leia e descubra' }}</span>
       <h1 :key="activity.id" ref="promptHeading" class="exercise-prompt" tabindex="-1">{{ activity.prompt }}</h1>
       <div v-if="activity.content.messages" class="text-dialogue" aria-label="Conversa escrita"><div v-for="(turn, position) in activity.content.messages" :key="position" class="dialogue-turn" :class="{ customer: position % 2 === 0 }"><span>{{ turn.speaker }}</span><p><GlossaryText :text="turn.text" :glossary="activity.content.glossary" :lookup="lookup" /></p></div></div>
       <div v-if="activity.content.vocabulary" class="vocabulary-list"><div v-for="item in activity.content.vocabulary" :key="item.word"><GlossaryText :text="item.word" :glossary="activity.content.glossary" :lookup="lookup" /><span>{{ item.meaning }}</span></div></div>
@@ -192,12 +199,12 @@ onMounted(() => { if (textOnly.value && new URLSearchParams(window.location.sear
       <p v-if="activity.content.pt_BR_note" class="explanation-note">{{ activity.content.pt_BR_note }}</p>
       <p v-for="example in activity.content.examples" :key="example" class="example-phrase"><GlossaryText :text="example" :glossary="activity.content.glossary" :lookup="lookup" /></p>
       <div v-if="manualSupports.length" class="supports"><div v-for="item in manualSupports" :key="item.id"><p v-if="revealed.includes(item.id)" class="revealed-support">{{ item.content }}</p><button v-else class="support-button" :disabled="busy" @click="support(item)">Consultar apoio</button></div></div>
-      <form v-if="activity.type === 'information_question' && !recorded" class="choice-form" @submit.prevent="selected !== null && submit(selected)"><fieldset><legend class="sr-only">Escolha uma resposta</legend><div v-for="option in activity.content.options" :key="option" class="choice" :class="{ selected: selected === option }" @click="chooseOption($event, option)"><input v-model="selected" type="radio" :aria-label="option" :disabled="busy" name="response" :value="option" required><span><GlossaryText v-if="activity.content.options_language === 'en'" :text="option" :glossary="activity.content.glossary" :lookup="lookup" /><template v-else>{{ option }}</template></span></div></fieldset><button :disabled="busy || selected === null">Conferir</button></form>
+      <form v-if="activity.type === 'information_question' && !recorded" class="choice-form" @submit.prevent="selected !== null && submit(selected)"><fieldset><legend class="sr-only">Escolha uma resposta</legend><div v-for="(option, optionIndex) in activity.content.options" :key="option" class="choice" :class="{ selected: selected === option }" @click="chooseOption($event, option)"><input v-model="selected" type="radio" :aria-label="option" :disabled="busy" name="response" :value="option" required><span class="choice-index" aria-hidden="true">{{ String.fromCharCode(65 + optionIndex) }}</span><span><GlossaryText v-if="activity.content.options_language === 'en'" :text="option" :glossary="activity.content.glossary" :lookup="lookup" /><template v-else>{{ option }}</template></span></div></fieldset><button :disabled="busy || selected === null">Conferir</button></form>
       <form v-if="['written_recall', 'communicative_task'].includes(activity.type) && !recorded" @submit.prevent="submit(answer)"><label for="response">Sua mensagem</label><textarea id="response" v-model="answer" rows="5" maxlength="10000" placeholder="Escreva em inglês…" lang="en" required /><button :disabled="busy || !answer.trim()">Registrar resposta</button></form>
-      <div v-if="recorded" class="feedback-panel" role="status"><strong>{{ correct ? 'Resposta aceita' : assessment?.outcome === 'incorrect' ? 'Vamos ajustar' : 'Vamos conferir' }}</strong><p>{{ feedback }}</p><p v-if="submittedResponse" class="submitted-response">Você escreveu: <GlossaryText :text="submittedResponse" :glossary="activity.content.glossary" :lookup="lookup" /></p><div v-if="assessment?.example" class="comparison-example"><span>Um exemplo possível</span><GlossaryText :text="assessment.example" :glossary="activity.content.glossary" :lookup="lookup" /></div><p v-if="revealed.length" class="muted">O apoio consultado ficou registrado.</p></div>
+      <div v-if="recorded" class="feedback-panel" :class="`feedback-${assessment?.outcome || 'pending'}`" role="status"><div class="feedback-heading"><span class="feedback-glyph" aria-hidden="true">{{ correct ? '✓' : assessment?.outcome === 'incorrect' ? '↺' : '…' }}</span><strong>{{ correct ? 'Resposta aceita' : assessment?.outcome === 'incorrect' ? 'Vamos ajustar' : 'Vamos conferir' }}</strong></div><p>{{ feedback }}</p><p v-if="submittedResponse" class="submitted-response">Você escreveu: <GlossaryText :text="submittedResponse" :glossary="activity.content.glossary" :lookup="lookup" /></p><div v-if="assessment?.example" class="comparison-example"><span>Um exemplo possível</span><GlossaryText :text="assessment.example" :glossary="activity.content.glossary" :lookup="lookup" /></div><p v-if="revealed.length" class="muted">O apoio consultado ficou registrado.</p></div>
       <div v-if="recorded && feedback" class="exercise-actions"><button class="quiet" :disabled="busy" @click="reset">Tentar de novo</button><button :disabled="busy" @click="next">Continuar</button></div>
       <div v-if="['purpose', 'dialogue', 'explanation'].includes(activity.type)" class="exercise-actions"><button :disabled="busy" @click="passive">Continuar</button></div>
-      <div v-if="activity.type === 'summary'" class="summary-panel"><p>Você praticou leitura e escrita nesta lição. As respostas previstas receberam correção automática de treino; formas não reconhecidas continuam sem confirmação independente.</p><p class="muted">Esta sessão não verifica escuta, fala ou retenção posterior.</p><button :disabled="busy || hasPending" @click="finishDay">Concluir lição</button></div>
+      <div v-if="activity.type === 'summary'" class="summary-panel"><div class="summary-stamp" aria-hidden="true">✦</div><p>Você praticou leitura e escrita nesta lição. As respostas previstas receberam correção automática de treino; formas não reconhecidas continuam sem confirmação independente.</p><p class="muted">Esta sessão não verifica escuta, fala ou retenção posterior.</p><button :disabled="busy || hasPending" @click="finishDay">Concluir lição</button></div>
       <p v-if="message" class="notice" role="alert">{{ message }}</p><button v-if="hasPending" class="secondary" :disabled="busy" @click="retryPending">Reenviar registro pendente</button>
       <p v-if="busy" class="muted" role="status">Salvando…</p>
     </template>

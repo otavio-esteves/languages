@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref } from 'vue';
 import SessionActions from './SessionActions.vue';
+import BrandMark from './BrandMark.vue';
 import { completedInDay, dayLessons, lessonKey, type TrailPhase } from '../lib/textTrail';
 const props = defineProps<{ phases: TrailPhase[]; day: number; cursor: number; completedLessons: string[]; busy?: boolean }>();
 const emit = defineEmits<{ start: [cursor: number]; day: [day: number] }>();
@@ -38,22 +39,23 @@ function start(index: number) {
 </script>
 <template>
   <div class="daily-cards">
-    <div class="trail-brand"><span class="brand">idiomas<span class="brand-dot">.</span></span><SessionActions /></div>
+    <div class="trail-brand"><BrandMark /><SessionActions /></div>
+    <p class="trail-caption">Seu caderno de pequenas missões</p>
     <nav class="day-navigation" aria-label="Navegar entre dias">
       <button class="icon-button day-arrow" aria-label="Dia anterior" :disabled="busy || day === 0" @click="emit('day', day - 1)">‹</button>
       <button class="day-heading" aria-haspopup="dialog" :disabled="busy" @click="openPicker"><span>Dia {{ day + 1 }} <span class="chevron">⌄</span></span><small>{{ current.title }}</small></button>
       <button class="icon-button day-arrow" aria-label="Próximo dia" :disabled="busy || day === phases.length - 1" @click="emit('day', day + 1)">›</button>
     </nav>
     <div class="daily-meta"><span class="level-badge" title="Referência do conteúdo; não certifica o nível do aluno">{{ current.level || 'Inicial' }}</span><span>{{ count }} de {{ lessons.length }} lições concluídas</span></div>
-    <p v-if="current.estimatedMinutes" class="muted">Cerca de {{ current.estimatedMinutes.min }}–{{ current.estimatedMinutes.max }} min · no seu ritmo</p>
     <progress class="daily-progress" :value="count" :max="lessons.length" :aria-label="`Progresso do Dia ${day + 1}`" :aria-valuetext="`${count} de ${lessons.length} lições concluídas`" />
+    <p v-if="current.estimatedMinutes" class="daily-duration">Cerca de {{ current.estimatedMinutes.min }}–{{ current.estimatedMinutes.max }} min · no seu ritmo</p>
     <div class="daily-lessons">
       <button v-for="(lesson, index) in lessons" :key="lessonKey(current, index)" class="lesson-card" :class="{ complete: done(index), active: enabled(index) && !done(index) }" :disabled="!enabled(index)" :aria-label="`Lição ${index + 1}${done(index) ? ', concluída, praticar novamente' : ''}`" @click="start(index)">
-        <span class="lesson-symbol" aria-hidden="true">{{ done(index) ? '✓' : enabled(index) ? '★' : '•' }}</span>
-        <span class="lesson-copy"><strong>Lição {{ index + 1 }}</strong><small>{{ done(index) ? 'Praticar novamente' : lesson.steps[0].label }}</small></span><span class="card-chevron" aria-hidden="true">›</span>
+        <span class="lesson-symbol" aria-hidden="true">{{ done(index) ? '✓' : String(index + 1).padStart(2, '0') }}</span>
+        <span class="lesson-copy"><span class="lesson-state">{{ done(index) ? 'Lição guardada' : enabled(index) ? 'Vamos nessa?' : 'Na sequência' }}</span><strong>Lição {{ index + 1 }}</strong><small>{{ done(index) ? 'Praticar novamente' : lesson.steps[0].label }}</small></span><span class="card-chevron" aria-hidden="true">›</span>
       </button>
     </div>
-    <p v-if="count === lessons.length" class="day-celebration" role="status">Dia concluído. Continue no seu ritmo!</p>
+    <p v-if="count === lessons.length" class="day-celebration" role="status">✦ Dia concluído. Uma página a mais no seu percurso!</p>
     <dialog ref="picker" class="day-dialog" aria-labelledby="day-picker-title" @click="($event.target === picker) && picker?.close()">
       <div class="picker-top"><h2 id="day-picker-title">Escolha um dia</h2><button class="icon-button" aria-label="Fechar seleção de dias" @click="picker?.close()">×</button></div>
       <p class="muted">{{ phases[candidate]?.title }} · conteúdo {{ phases[candidate]?.level || 'inicial' }}</p>
