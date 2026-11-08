@@ -51,6 +51,7 @@ class TrailAppearanceTest {
 
     @Test fun arrows_picker_progress_and_dark_theme_work_with_synthetic_content() {
         val context=instrumentation.targetContext
+        assertNotNull(context.getDrawable(R.drawable.ic_launcher))
         val prefs=context.getSharedPreferences("appearance",0)
         prefs.edit().putBoolean("dark",false).putBoolean("sound-effects",false).commit()
         val day=mutableStateOf(0)
@@ -139,6 +140,11 @@ class TrailAppearanceTest {
                 waitFor("Ativar efeitos sonoros")
                 screenshot("notebook-feedback-$name")
             }
+            instrumentation.runOnMainSync {state.value=PracticeScreenState(open=preview("A coffee, please."),trail=false)}
+            waitFor("Vamos ajustar")
+            click("Ativar tema claro")
+            waitFor("Ativar tema escuro")
+            screenshot("notebook-feedback-adjust-light")
         } finally {
             instrumentation.runOnMainSync {vm.viewModelScope.cancel();activity.finish()}
             prefs.edit().clear().commit()
