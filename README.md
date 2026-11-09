@@ -40,11 +40,13 @@ scripts/compose logs --tail=50 app
 scripts/compose stop
 ```
 
+Após a primeira inclusão no grupo `docker`, entre novamente na sessão para usar Docker sem `sudo`. Enquanto a sessão antiga estiver aberta, `sg docker -c 'scripts/compose ps'` permite acessar o serviço com o grupo atualizado.
+
 `stop` preserva o banco. O bootstrap garante o banco e o usuário exclusivos `idiomas_test`, com senha própria. Antes de qualquer limpeza, os testes conferem o ambiente, o banco e o usuário da conexão real; o usuário de testes não pode apagar as tabelas de desenvolvimento. Nunca usar dados reais nos testes. As filas usam PostgreSQL e o agendador remove tokens expirados. E-mail, upload de voz e produção permanecem sem configuração.
 
 ## Android
 
-Abra `apps/android` no Android Studio ou use um JDK 21 completo e SDK com plataforma 36 e build-tools 35.0.0. Configure `sdk.dir` em `apps/android/local.properties` ou `ANDROID_HOME`; esse caminho não entra no Git. Neste ambiente, o JDK completo está em `/opt/android-studio/jbr`.
+Abra `apps/android` no Android Studio ou use um JDK 21 completo e SDK com plataforma 36 e build-tools 35.0.0. Configure `sdk.dir` em `apps/android/local.properties` ou `ANDROID_HOME`; esse caminho não entra no Git. Neste ambiente, o JDK 21 está em `/usr/lib/jvm/java-21-openjdk-amd64` e o SDK em `~/Android/Sdk`. Os caminhos de Java e Android são carregados por `~/.config/idiomas/dev-env.sh`; para aplicá-los no terminal atual, execute `source ~/.config/idiomas/dev-env.sh`. No Android Studio, a configuração local usa `GRADLE_LOCAL_JAVA_HOME` com o mesmo JDK 21, conforme a [documentação do Android](https://developer.android.com/build/jdks); esses caminhos locais não entram no Git.
 
 ```bash
 cd apps/android
@@ -73,7 +75,7 @@ scripts/compose run --rm --no-deps node npm run typecheck
 scripts/compose run --rm --no-deps node npm run build
 ```
 
-`scripts/check` reúne as verificações PHP/web e Android, exigindo ambos os ambientes. A CI executa os dois projetos em toda alteração nesta primeira entrega, inclusive as fixtures de consumo em Kotlin. Os testes PHP verificam contratos, autenticação, expiração/revogação, isolamento entre contas, permissões editoriais e exclusão de rascunhos do catálogo. Os testes Kotlin verificam consumo do contrato, cache, indisponibilidade, sessão inválida e resposta tardia após troca de conta. Os testes instrumentados verificam persistência, migração Room 1→2, transação da resposta/fila, repetição após perda de confirmação, pacote corrompido, isolamento e proteção da sessão em um emulador/dispositivo de teste: `cd apps/android && ./gradlew connectedDebugAndroidTest`. Não é executado pelo job de CI sem emulador. Nenhum desses testes demonstra eficácia pedagógica.
+`scripts/check` reúne as verificações PHP/web e Android, exigindo ambos os ambientes. Nesta máquina, `~/.local/bin/idiomas-check` carrega o ambiente Java/SDK e executa essa checagem com acesso ao grupo Docker. O dispositivo virtual local `idiomas_api35` pode ser aberto com `emulator -avd idiomas_api35`. A CI executa os dois projetos em toda alteração nesta primeira entrega, inclusive as fixtures de consumo em Kotlin. Os testes PHP verificam contratos, autenticação, expiração/revogação, isolamento entre contas, permissões editoriais e exclusão de rascunhos do catálogo. Os testes Kotlin verificam consumo do contrato, cache, indisponibilidade, sessão inválida e resposta tardia após troca de conta. Os testes instrumentados verificam persistência, migração Room 1→2, transação da resposta/fila, repetição após perda de confirmação, pacote corrompido, isolamento e proteção da sessão em um emulador/dispositivo de teste: `cd apps/android && ./gradlew connectedDebugAndroidTest`. Não é executado pelo job de CI sem emulador. Nenhum desses testes demonstra eficácia pedagógica.
 
 ## Documentação e conteúdo
 
