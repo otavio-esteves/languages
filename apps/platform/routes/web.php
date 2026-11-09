@@ -5,6 +5,7 @@ use App\Http\Controllers\LearningController;
 use App\Http\Middleware\RequireEditor;
 use App\Services\DayProgress;
 use App\Services\LearningContent;
+use App\Services\LearningEvents;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -44,7 +45,7 @@ Route::prefix('editorial')->middleware(['auth', RequireEditor::class])->group(fu
             $mission = json_decode($content->snapshot($request->user(), $manifest['package_hash'])->document);
         }
 
-        return Inertia::render('PracticePreview', ['mission' => $mission, 'manifest' => $manifest, 'progress' => app(DayProgress::class)->get($request->user(), $manifest['package_hash'])]);
+        return Inertia::render('PracticePreview', ['mission' => $mission, 'manifest' => $manifest, 'progress' => app(DayProgress::class)->get($request->user(), $manifest['package_hash']), 'answeredActivityIds' => app(LearningEvents::class)->answeredActivities($request->user(), [$manifest['package_hash']])[$manifest['package_hash']] ?? []]);
     })->whereNumber('version');
     Route::post('day-progress', function (Request $request, DayProgress $progress) {
         $data = $request->validate(['package_hash' => 'required|string|size:64', 'day' => 'required|integer|min:0', 'completed' => 'required|boolean', 'cursor' => 'sometimes|integer|min:0', 'lesson' => 'sometimes|string|max:150']);

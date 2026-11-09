@@ -94,6 +94,7 @@ class FoundationTest extends TestCase
         File::copy(dirname(base_path(), 2).'/content/pt-BR_en/missions/order-a-drink.v3.json', $this->contentDirectory.'/draft.json');
         $manifest = app(LearningContent::class)->manifest($user, 'order-a-drink', 3, true);
         $progress = app(DayProgress::class);
+        $this->recordLessonActivities($user, $manifest['package_hash'], 'words:0');
         $progress->save($user, $manifest['package_hash'], 0, false, 1, 'words:0');
         $bearer = $this->bearer($user);
         $this->actingAs($user)->get('/editorial')->assertOk();

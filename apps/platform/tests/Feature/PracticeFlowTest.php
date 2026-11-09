@@ -130,6 +130,87 @@ class PracticeFlowTest extends TestCase
             ->assertJsonPath('events.5.assessment.outcome', 'technical_issue');
     }
 
+    public function test_editor_without_available_packages_receives_the_empty_trail_state(): void
+    {
+        $this->editor();
+        File::delete(File::glob($this->directory.'/*.json'));
+        $page = $this->get('/editorial')->assertOk()->viewData('page');
+        $this->assertSame('Editorial', $page['component']);
+        $this->assertSame([], $page['props']['packages']);
+        $this->assertSame([], $page['props']['currentPackages']);
+    }
+
+    public function test_question_progress_is_restored_only_from_the_current_account_and_snapshot(): void
+    {
+        $user = $this->editor();
+        $hash = $this->getJson('/api/v1/content-packages/order-a-drink/manifest?version=5&preview=1')->assertOk()->json('package_hash');
+        $this->package = json_decode(file_get_contents($this->directory.'/order-a-drink.v5.json'), true);
+        $answer = $this->attempt($this->package['activities'][3]['id'], $hash);
+        $this->postJson('/api/v1/attempts/batch', ['events' => [$answer]])->assertJsonPath('results.0.status', 'accepted');
+        $updated = $this->package;
+        $updated['title'] = 'Outra revisão sintética';
+        File::put($this->directory.'/order-a-drink.v5.json', json_encode($updated));
+        $newHash = $this->getJson('/api/v1/content-packages/order-a-drink/manifest?version=5&preview=1')->assertOk()->json('package_hash');
+        $otherSnapshot = $this->attempt($this->package['activities'][4]['id'], $newHash, 2);
+        $this->postJson('/api/v1/attempts/batch', ['events' => [$otherSnapshot]])->assertJsonPath('results.0.status', 'accepted');
+        $failed = $this->attempt($this->package['activities'][6]['id'], $hash, 3);
+        $failed['technical_status'] = 'failed';
+        $failed['response'] = null;
+        $this->postJson('/api/v1/attempts/batch', ['events' => [$failed]])->assertJsonPath('results.0.status', 'accepted');
+        $this->editor();
+        $otherAccount = $this->attempt($this->package['activities'][5]['id'], $hash, 3);
+        $this->postJson('/api/v1/attempts/batch', ['events' => [$otherAccount]])->assertJsonPath('results.0.status', 'accepted');
+        $page = $this->actingAs($user)->get('/editorial/practice/order-a-drink/5?snapshot='.$hash)->assertOk()->viewData('page');
+        $this->assertSame([$answer['activity_id']], $page['props']['answeredActivityIds']);
+        $this->assertSame([], $page['props']['progress']['completed_lessons']);
+        $editorial = $this->get('/editorial')->assertOk()->viewData('page');
+        $this->assertSame([$otherSnapshot['activity_id']], $editorial['props']['currentPackages'][0]['answeredActivityIds']);
+        $overview = $editorial['props']['currentPackages'][0];
+        $this->assertCount(1272, $overview['activities']);
+        $this->assertArrayNotHasKey('expected', $overview['activities'][3]);
+        $this->assertArrayNotHasKey('glossary', $overview['activities'][0]['content']);
+        $this->assertArrayNotHasKey('study_text', $overview['activities'][0]['content']);
+        $this->assertLessThan(1024 * 1024, strlen(json_encode($editorial['props'])));
+        $this->assertSame($newHash, $overview['package_hash']);
+    }
+
+    public function test_lesson_completion_uses_received_activities_without_requiring_correct_answers(): void
+    {
+        $this->editor();
+        $hash = $this->getJson('/api/v1/content-packages/order-a-drink/manifest?version=5&preview=1')->assertOk()->json('package_hash');
+        $this->package = json_decode(file_get_contents($this->directory.'/order-a-drink.v5.json'), true);
+        foreach (array_slice($this->package['activities'], 0, 7) as $index => $activity) {
+            if ($activity['type'] === 'explanation') {
+                $event = [...$this->event($activity['id'], $hash, $index + 1), 'support_id' => 'activity-'.$activity['id'], 'kind' => 'training_use', 'affected_modalities' => [$activity['modality']], 'reveals_answer' => false];
+                $this->postJson('/editorial/exposures/batch', ['events' => [$event]])->assertJsonPath('results.0.status', 'accepted');
+            } else {
+                $event = $this->attempt($activity['id'], $hash, $index + 1);
+                $event['response'] = $activity['content']['options'][0] ?? 'An unlisted answer';
+                $this->postJson('/editorial/attempts/batch', ['events' => [$event]])->assertJsonPath('results.0.status', 'accepted');
+            }
+        }
+        $this->postJson('/editorial/day-progress', ['package_hash' => $hash, 'day' => 0, 'cursor' => 7, 'completed' => false, 'lesson' => 'day-01:0'])
+            ->assertOk()->assertJsonPath('completed_lessons', ['day-01:0'])->assertJsonPath('completed', false);
+    }
+
+    public function test_navigation_and_incomplete_activity_records_cannot_complete_a_lesson(): void
+    {
+        $user = $this->editor();
+        $hash = $this->getJson('/api/v1/content-packages/order-a-drink/manifest?version=5&preview=1')->assertOk()->json('package_hash');
+        $this->actingAs($user);
+        $save = fn ($data) => $this->postJson('/editorial/day-progress', array_merge(['package_hash' => $hash, 'day' => 52, 'cursor' => 1271, 'completed' => false], $data));
+        $save([])->assertOk()->assertJsonPath('completed_lessons', []);
+        $save(['completed' => true])->assertOk()->assertJsonPath('completed', false)->assertJsonPath('completed_lessons', []);
+        $save(['lesson' => 'day-53:2'])->assertUnprocessable();
+        $this->recordLessonActivities($user, $hash, 'day-53:2');
+        $missing = DB::table('learning_events')->where('user_id', $user->id)->where('kind', 'attempt')->first();
+        DB::table('learning_events')->where('id', $missing->id)->delete();
+        $save(['lesson' => 'day-53:2'])->assertUnprocessable();
+        $this->recordLessonActivities($user, $hash, 'day-53:2');
+        $save(['lesson' => 'day-53:2'])->assertOk()->assertJsonPath('completed_lessons', ['day-53:2']);
+        $save(['lesson' => 'day-53:2'])->assertOk()->assertJsonCount(1, 'completed_lessons');
+    }
+
     public function test_current_day_is_saved_per_account_and_cannot_be_rewound(): void
     {
         $first = $this->editor();
@@ -142,7 +223,7 @@ class PracticeFlowTest extends TestCase
         $this->postJson('/editorial/day-progress', ['package_hash' => $manifest['package_hash'], 'day' => 1, 'completed' => true])->assertUnprocessable();
         $second = $this->editor();
         $this->assertSame(['cursor' => 0, 'day' => 0, 'completed' => false, 'completed_lessons' => []], $progress->get($second, $manifest['package_hash']));
-        $this->assertSame(['cursor' => 3, 'day' => 1, 'completed' => false, 'completed_lessons' => ['words:0', 'words:1', 'words:2']], $progress->get($first, $manifest['package_hash']));
+        $this->assertSame(['cursor' => 3, 'day' => 1, 'completed' => false, 'completed_lessons' => []], $progress->get($first, $manifest['package_hash']));
         $this->actingAs($first)->postJson('/editorial/day-progress', ['package_hash' => $manifest['package_hash'], 'day' => 1, 'cursor' => 5, 'completed' => false])->assertOk()->assertJsonPath('cursor', 5);
         $this->assertSame(5, $progress->get($first, $manifest['package_hash'])['cursor']);
     }
@@ -152,7 +233,11 @@ class PracticeFlowTest extends TestCase
         $first = $this->editor();
         $manifest = $this->getJson('/api/v1/content-packages/order-a-drink/manifest?version=4&preview=1')->assertOk()->json();
         $hash = $manifest['package_hash'];
-        $save = fn ($day, $cursor, $lesson) => $this->postJson('/editorial/day-progress', ['package_hash' => $hash, 'day' => $day, 'cursor' => $cursor, 'completed' => false, 'lesson' => $lesson]);
+        $save = function ($day, $cursor, $lesson) use ($first, $hash) {
+            $this->recordLessonActivities($first, $hash, $lesson);
+
+            return $this->postJson('/editorial/day-progress', ['package_hash' => $hash, 'day' => $day, 'cursor' => $cursor, 'completed' => false, 'lesson' => $lesson]);
+        };
         $this->actingAs($first);
         $save(2, 9, 'sentences:0')->assertOk()->assertJsonPath('completed_lessons', ['sentences:0'])->assertJsonPath('completed', false);
         $save(0, 1, 'words:0')->assertOk()->assertJsonPath('completed_lessons', ['sentences:0', 'words:0']);
@@ -166,7 +251,7 @@ class PracticeFlowTest extends TestCase
         }
         $save(2, 11, 'sentences:2')->assertOk()->assertJsonCount(9, 'completed_lessons')->assertJsonPath('completed', true);
         $this->assertCount(9, app(DayProgress::class)->get($first, $hash)['completed_lessons']);
-        $this->assertSame(0, DB::table('learning_events')->where('user_id', $first->id)->count());
+        $this->assertGreaterThan(0, DB::table('learning_events')->where('user_id', $first->id)->count());
     }
 
     public function test_drafts_require_editor_and_manifest_pins_raw_document_and_audio(): void
@@ -191,6 +276,7 @@ class PracticeFlowTest extends TestCase
         $user = $this->editor();
         $old = $this->getJson('/api/v1/content-packages/order-a-drink/manifest?version=3&preview=1')->assertOk()->json();
         $new = $this->getJson('/api/v1/content-packages/order-a-drink/manifest?version=4&preview=1')->assertOk()->json();
+        $this->recordLessonActivities($user, $old['package_hash'], 'words:0');
         app(DayProgress::class)->save($user, $old['package_hash'], 0, false, 1, 'words:0');
         $page = $this->actingAs($user)->get('/editorial')->assertOk()->viewData('page');
         $this->assertSame(3, $page['props']['packages'][0]['version']);
@@ -204,7 +290,7 @@ class PracticeFlowTest extends TestCase
         $this->assertSame($old['package_hash'], $resumed['props']['manifest']['package_hash']);
         $this->assertSame(['words:0'], $resumed['props']['progress']['completed_lessons']);
         $this->get('/editorial/practice/order-a-drink/4?snapshot='.$old['package_hash'])->assertNotFound();
-        $this->assertSame(0, DB::table('learning_events')->where('user_id', $user->id)->count());
+        $this->assertGreaterThan(0, DB::table('learning_events')->where('user_id', $user->id)->count());
         $other = $this->editor();
         $otherPage = $this->actingAs($other)->get('/editorial')->assertOk()->viewData('page');
         $this->assertSame(5, $otherPage['props']['packages'][0]['version']);
@@ -218,10 +304,16 @@ class PracticeFlowTest extends TestCase
         $old = $this->getJson('/api/v1/content-packages/order-a-drink/manifest?version=3&preview=1')->assertOk()->json();
         $new = $this->getJson('/api/v1/content-packages/order-a-drink/manifest?version=4&preview=1')->assertOk()->json();
         $progress = app(DayProgress::class);
-        $progress->save($user, $old['package_hash'], 2, true, 11);
+        $this->recordLessonActivities($user, $old['package_hash']);
+        foreach (['words', 'requests', 'sentences'] as $day => $phase) {
+            foreach (range(0, 2) as $lesson) {
+                $progress->save($user, $old['package_hash'], $day, false, null, $phase.':'.$lesson);
+            }
+        }
         $page = $this->actingAs($user)->get('/editorial')->assertOk()->viewData('page');
         $this->assertSame(3, $page['props']['packages'][0]['version']);
         $this->assertTrue($page['props']['packages'][0]['progress']['completed']);
+        $this->recordLessonActivities($user, $new['package_hash'], 'words:0');
         $progress->save($user, $new['package_hash'], 0, false, 1, 'words:0');
         $page = $this->get('/editorial')->assertOk()->viewData('page');
         $this->assertSame(4, $page['props']['packages'][0]['version']);
@@ -239,10 +331,11 @@ class PracticeFlowTest extends TestCase
         $activities = $page['props']['mission']->activities;
         $this->assertCount(1272, $activities);
         $this->assertSame('day-53', end($activities)->content->phase_id);
+        $this->recordLessonActivities($user, $hash, 'day-53:2');
         $this->postJson('/editorial/day-progress', ['package_hash' => $hash, 'day' => 52, 'cursor' => 1271, 'completed' => false, 'lesson' => 'day-53:2'])
             ->assertOk()->assertJsonPath('completed_lessons', ['day-53:2'])->assertJsonPath('completed', false);
         $this->assertSame(['day-53:2'], app(DayProgress::class)->get($user, $hash)['completed_lessons']);
-        $this->assertSame(0, DB::table('learning_events')->where('user_id', $user->id)->count());
+        $this->assertGreaterThan(0, DB::table('learning_events')->where('user_id', $user->id)->count());
         $this->getJson('/api/v1/catalog')->assertJsonCount(0, 'data');
     }
 
@@ -277,7 +370,7 @@ class PracticeFlowTest extends TestCase
         $future = $this->exposure($hash, 4);
         $future['session_id'] = $new['session_id'];
         $this->postJson('/api/v1/exposures/batch', ['events' => [$future]])->assertJsonPath('results.0.status', 'accepted');
-        $this->getJson('/api/v1/learning-sessions/'.$new['session_id'])->assertJsonPath('events.0.assessment.supported', false);
+        $this->getJson('/api/v1/learning-sessions/'.$new['session_id'])->assertJsonPath('events.0.assessment.supported', true);
     }
 
     public function test_open_alternatives_and_technical_failures_are_not_graded_as_language_errors(): void

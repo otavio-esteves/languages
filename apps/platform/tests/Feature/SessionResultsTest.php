@@ -46,6 +46,37 @@ class SessionResultsTest extends TestCase
         return ['user_id' => $this->user->id, 'event_id' => $payload['id'], 'session_id' => $payload['session_id'], 'device_id' => $payload['device_id'], 'local_sequence' => $payload['local_sequence'], 'kind' => $kind, 'package_hash' => $payload['package_hash'], 'payload_hash' => hash('sha256', json_encode($payload)), 'is_preview' => true, 'payload' => json_encode($payload), 'created_at' => now(), 'updated_at' => now()];
     }
 
+    public function test_reloaded_session_keeps_prior_support_without_crossing_account_package_or_modality(): void
+    {
+        $write = $this->package['activities'][3];
+        $support = array_intersect_key($this->attempt($write, 1), array_flip(['schema_version', 'id', 'session_id', 'device_id', 'local_sequence', 'occurred_at', 'time_quality', 'activity_id', 'package_id', 'package_version', 'package_hash', 'target_ids']));
+        $support += ['support_id' => 'comparison-example', 'kind' => 'solution', 'affected_modalities' => ['writing'], 'reveals_answer' => true];
+        $this->postJson('/api/v1/exposures/batch', ['events' => [$support]])->assertJsonPath('results.0.status', 'accepted');
+        $newSession = (string) Str::uuid();
+        $attempt = $this->attempt($write, 1, ['session_id' => $newSession, 'device_id' => (string) Str::uuid()]);
+        $this->postJson('/api/v1/attempts/batch', ['events' => [$attempt]])->assertJsonPath('results.0.status', 'accepted');
+        $this->getJson('/api/v1/learning-sessions/'.$newSession)->assertJsonPath('events.0.assessment.supported', true)
+            ->assertJsonPath('events.0.assessment.retention_confirmed', false);
+        $reading = $this->attempt($this->package['activities'][1], 2, ['session_id' => $newSession]);
+        $this->postJson('/api/v1/attempts/batch', ['events' => [$reading]])->assertJsonPath('results.0.status', 'accepted');
+        $this->getJson('/api/v1/learning-sessions/'.$newSession)->assertJsonPath('events.1.assessment.supported', false);
+        DB::table('learning_events')->where('event_id', $support['id'])->update(['user_id' => User::factory()->create()->id]);
+        $this->getJson('/api/v1/learning-sessions/'.$newSession)->assertJsonPath('events.0.assessment.supported', false);
+        DB::table('learning_events')->where('event_id', $support['id'])->update(['user_id' => $this->user->id, 'package_hash' => str_repeat('b', 64)]);
+        $this->getJson('/api/v1/learning-sessions/'.$newSession)->assertJsonPath('events.0.assessment.supported', false);
+    }
+
+    public function test_support_in_a_later_session_does_not_rewrite_an_earlier_attempt(): void
+    {
+        $write = $this->package['activities'][3];
+        $first = $this->attempt($write, 1);
+        $support = array_intersect_key($this->attempt($write, 2, ['session_id' => (string) Str::uuid()]), array_flip(['schema_version', 'id', 'session_id', 'device_id', 'local_sequence', 'occurred_at', 'time_quality', 'activity_id', 'package_id', 'package_version', 'package_hash', 'target_ids']));
+        $support += ['support_id' => 'comparison-example', 'kind' => 'solution', 'affected_modalities' => ['writing'], 'reveals_answer' => true];
+        $this->postJson('/api/v1/attempts/batch', ['events' => [$first]])->assertJsonPath('results.0.status', 'accepted');
+        $this->postJson('/api/v1/exposures/batch', ['events' => [$support]])->assertJsonPath('results.0.status', 'accepted');
+        $this->getJson('/api/v1/learning-sessions/'.$this->session)->assertJsonPath('events.0.assessment.supported', false);
+    }
+
     public function test_long_session_loads_snapshots_in_one_query_and_keeps_every_result(): void
     {
         $activities = array_values(array_filter($this->package['activities'], fn ($a) => $a['modality'] === 'writing'));
@@ -62,7 +93,7 @@ class SessionResultsTest extends TestCase
             DB::disableQueryLog();
             DB::flushQueryLog();
         }
-        $this->assertCount(2, $queries, 'One events query and one snapshot query, regardless of attempt count.');
+        $this->assertCount(3, $queries, 'Session events, prior supports and snapshots, regardless of attempt count.');
         $this->assertSame(array_column($rows, 'event_id'), array_column($response->json('events'), 'id'));
         foreach ($response->json('events') as $event) {
             $this->assertSame('correct', $event['assessment']['outcome']);
@@ -120,10 +151,16 @@ class SessionResultsTest extends TestCase
         $hash = hash('sha256', $raw);
         DB::table('content_snapshots')->insert(['hash' => $hash, 'package_id' => 'order-a-drink', 'version' => 5, 'is_preview' => true, 'document' => $raw, 'created_at' => now(), 'updated_at' => now()]);
         $before = $this->attempt($activity, 1, ['response' => $response]);
-        $after = $this->attempt($activity, 2, ['response' => $response, 'package_hash' => $hash]);
-        DB::table('learning_events')->insert([$this->row($before), $this->row($after)]);
+        $after = $this->attempt($activity, 3, ['response' => $response, 'package_hash' => $hash]);
+        $support = array_intersect_key($this->attempt($activity, 2), array_flip(['schema_version', 'id', 'session_id', 'device_id', 'local_sequence', 'occurred_at', 'time_quality', 'activity_id', 'package_id', 'package_version', 'package_hash', 'target_ids']));
+        $support += ['support_id' => 'comparison-example', 'kind' => 'solution', 'affected_modalities' => ['writing'], 'reveals_answer' => true];
+        $sameSnapshot = $this->attempt($activity, 4);
+        DB::table('learning_events')->insert([$this->row($before), $this->row($support, 'exposure'), $this->row($after), $this->row($sameSnapshot)]);
         $this->getJson('/api/v1/learning-sessions/'.$this->session)->assertOk()
             ->assertJsonPath('events.0.assessment.outcome', 'unverified')
-            ->assertJsonPath('events.1.assessment.outcome', 'correct');
+            ->assertJsonPath('events.0.assessment.supported', false)
+            ->assertJsonPath('events.2.assessment.outcome', 'correct')
+            ->assertJsonPath('events.2.assessment.supported', false)
+            ->assertJsonPath('events.3.assessment.supported', true);
     }
 }

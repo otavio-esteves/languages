@@ -10,6 +10,19 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 class LearningEvents
 {
+    public function answeredActivities(User $user, array $hashes): array
+    {
+        if ($hashes === []) {
+            return [];
+        }
+
+        return DB::table('learning_events')->where('user_id', $user->id)
+            ->whereIn('package_hash', $hashes)->where('kind', 'attempt')
+            ->where('payload->technical_status', 'valid')
+            ->selectRaw("package_hash, payload->>'activity_id' as activity_id")->distinct()->get()
+            ->groupBy('package_hash')->map(fn ($rows) => $rows->pluck('activity_id')->all())->all();
+    }
+
     private function canonical(mixed $value): mixed
     {
         if (! is_array($value)) {
@@ -89,8 +102,8 @@ class LearningEvents
     {
         foreach ($modalities as $modality) {
             foreach ($event['target_ids'] as $target) {
-                $first = $index[$modality][$target][$event['device_id']] ?? PHP_INT_MAX;
-                $index[$modality][$target][$event['device_id']] = min($first, $event['local_sequence']);
+                $first = $index[$event['package_hash']][$modality][$target][$event['device_id']] ?? PHP_INT_MAX;
+                $index[$event['package_hash']][$modality][$target][$event['device_id']] = min($first, $event['local_sequence']);
             }
         }
     }
@@ -98,7 +111,7 @@ class LearningEvents
     private function hasContext(array $index, array $attempt): bool
     {
         foreach ($attempt['target_ids'] as $target) {
-            foreach ($index[$attempt['modality']][$target] ?? [] as $device => $sequence) {
+            foreach ($index[$attempt['package_hash']][$attempt['modality']][$target] ?? [] as $device => $sequence) {
                 // Only a sequence on the same device proves that context came later.
                 if ($device !== $attempt['device_id'] || $sequence <= $attempt['local_sequence']) {
                     return true;
@@ -127,6 +140,25 @@ class LearningEvents
                 $this->indexContext($technical, $input, [$input['modality']]);
             }
         }
+        // A page reload starts a new client session, but does not erase prior support.
+        // Keep package/account boundaries and server order; later unrelated exposures
+        // must not rewrite an earlier attempt as supported.
+        $priorSupports = [];
+        $externalSupports = DB::table('learning_events')->where('user_id', $user->id)
+            ->where('kind', 'exposure')->where('session_id', '!=', $id)
+            ->whereIn('package_hash', $events->pluck('package_hash')->unique()->all())
+            ->orderBy('id')->get(['id', 'payload']);
+        foreach ($externalSupports as $support) {
+            $payload = json_decode($support->payload, true);
+            if ($payload['kind'] === 'training_use') {
+                continue;
+            }
+            foreach ($payload['affected_modalities'] as $modality) {
+                foreach ($payload['target_ids'] as $target) {
+                    $priorSupports[$payload['package_hash']][$modality][$target] ??= $support->id;
+                }
+            }
+        }
         $activities = [];
         $hashes = $events->where('kind', 'attempt')->pluck('package_hash')->unique()->all();
         if ($hashes !== []) {
@@ -135,13 +167,18 @@ class LearningEvents
             }
         }
 
-        return ['session_id' => $id, 'events' => $events->map(function ($row) use ($inputs, $known, $supports, $technical, $activities) {
+        return ['session_id' => $id, 'events' => $events->map(function ($row) use ($inputs, $known, $supports, $technical, $activities, $priorSupports) {
             $input = $inputs[$row->event_id];
             $assessment = null;
             if ($row->kind === 'attempt') {
                 $activity = $activities[$row->package_hash][$input['activity_id']];
                 $supportPending = count(array_diff_key(array_fill_keys($input['support_event_ids'], true), $known)) > 0;
                 $supported = $this->hasContext($supports, $input) || $supportPending;
+                foreach ($input['target_ids'] as $target) {
+                    if (($priorSupports[$input['package_hash']][$input['modality']][$target] ?? PHP_INT_MAX) < $row->id) {
+                        $supported = true;
+                    }
+                }
                 $comparison = TextAnswers::compare($activity, $input['response']);
                 if ($input['technical_status'] !== 'valid' || $this->hasContext($technical, $input)) {
                     $comparison = ['outcome' => 'technical_issue', 'message' => 'Falha técnica registrada; nenhuma conclusão linguística.', 'example' => null, 'rule_version' => null];

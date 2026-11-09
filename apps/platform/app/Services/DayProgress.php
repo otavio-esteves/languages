@@ -70,15 +70,28 @@ class DayProgress
         $cursor ??= $indices[0];
         $lessons = $this->lessons($package);
         abort_unless(in_array($cursor, $indices, true) && ($lesson === null || isset($lessons[$lesson])), 422);
-        DB::transaction(function () use ($user, $hash, $day, $completed, $cursor, $lesson, $lessons) {
+        DB::transaction(function () use ($user, $hash, $day, $cursor, $lesson, $lessons, $package) {
             DB::table('learning_day_progress')->insertOrIgnore(['user_id' => $user->id, 'package_hash' => $hash, 'day' => 0, 'completed' => false, 'created_at' => now(), 'updated_at' => now()]);
             $row = DB::table('learning_day_progress')->where('user_id', $user->id)->where('package_hash', $hash)->lockForUpdate()->first();
             $done = $this->completedLessons($row, $lessons);
-            if ($lesson !== null) {
+            if ($lesson !== null && ! in_array($lesson, $done, true)) {
+                $events = DB::table('learning_events')->where('user_id', $user->id)->where('package_hash', $hash)->get(['kind', 'payload']);
+                $recorded = [];
+                foreach ($events as $event) {
+                    $payload = json_decode($event->payload, true);
+                    if ($event->kind === 'attempt' || ($event->kind === 'exposure' && $payload['kind'] === 'training_use')) {
+                        $recorded[$event->kind][$payload['activity_id']] = true;
+                    }
+                }
+                foreach ($lessons[$lesson] as $index) {
+                    $activity = $package['activities'][$index];
+                    if ($activity['type'] === 'summary') {
+                        continue;
+                    }
+                    $passive = in_array($activity['type'], ['purpose', 'dialogue', 'explanation'], true);
+                    abort_unless(isset($recorded[$passive ? 'exposure' : 'attempt'][$activity['id']]), 422, 'Realize as atividades da lição antes de concluí-la.');
+                }
                 $done[] = $lesson;
-            } else {
-                // Compatibility with readers that still send only a sequential cursor.
-                $done = array_merge($done, array_keys(array_filter($lessons, fn ($indices) => $completed || max($indices) < $cursor)));
             }
             $done = array_values(array_unique($done));
             DB::table('learning_day_progress')->where('id', $row->id)->update(['cursor' => max($cursor, $row->cursor), 'day' => max($day, $row->day), 'completed' => count($done) === count($lessons), 'completed_lessons' => json_encode($done), 'updated_at' => now()]);
