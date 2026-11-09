@@ -15,10 +15,10 @@ const compiled = ts.transpileModule(script.content, {
 }).outputText;
 const mission = JSON.parse(readFileSync(new URL('../../../../content/pt-BR_en/missions/order-a-drink.v3.json', import.meta.url), 'utf8'));
 
-function player(fetch, cues = []) {
+function player(fetch, cues = [], initial = {}) {
   const module = { exports: {} };
   const require = (name) => {
-    if (name === 'vue') return { ...vue, onMounted() {} };
+    if (name === 'vue') return { ...vue, onMounted() {}, onBeforeUnmount() {} };
     if (name === '../lib/textTrail') return trail;
     if (name === '../lib/uiSounds') return { feedbackCue, playUiSound: async cue => { cues.push(cue); } };
     if (name === '@inertiajs/vue3' || name.endsWith('.vue')) return {};
@@ -27,7 +27,7 @@ function player(fetch, cues = []) {
   Function('require', 'module', 'exports', 'fetch', 'document', compiled)(require, module, module.exports, fetch, { cookie: '', querySelector: () => null });
   return module.exports.default.setup({
     mission, manifest: { package_hash: 'a'.repeat(64), is_preview: true },
-    progress: { day: 0, cursor: 2, completed: false },
+    progress: { day: 0, cursor: 2, completed: false }, ...initial,
   }, { expose() {} });
 }
 
@@ -134,4 +134,100 @@ test('opening a multi-activity lesson resumes its unsent response without repeat
   assert.equal(page.index.value, 4);
   assert.equal(page.answer.value, 'A tea draft');
   assert.equal(page.events.value.length, 0);
+});
+
+test('lesson progress follows confirmed unique answers and survives returning to the trail', async () => {
+  const expanded = JSON.parse(readFileSync(new URL('../../../../content/pt-BR_en/missions/order-a-drink.v5.json', import.meta.url), 'utf8'));
+  let fail = true;
+  const page = player(async () => {
+    if (fail) { fail = false; throw new Error('Lost acknowledgement'); }
+    return { ok: true, json: async () => ({ results: [{ status: 'accepted' }] }) };
+  }, [], { mission: expanded, progress: { day: 0, cursor: 1, completed: false }, answeredActivityIds: [expanded.activities[2].id] });
+  assert.equal(page.lessonQuestions.value.length, 6);
+  assert.equal(page.answeredQuestions.value, 1);
+  await page.submit(expanded.activities[1].content.options[0]);
+  assert.equal(page.answeredQuestions.value, 1);
+  await page.retryPending();
+  assert.equal(page.answeredQuestions.value, 2);
+  page.reset();
+  await page.submit(expanded.activities[1].content.options[0]);
+  assert.equal(page.answeredQuestions.value, 2);
+  page.backToTrail();
+  assert.equal(page.answeredQuestions.value, 2);
+  assert.deepEqual(page.completedLessons.value, []);
+  await page.begin(9);
+  assert.equal(page.answeredQuestions.value, 0);
+  await page.begin(1);
+  assert.equal(page.answeredQuestions.value, 2);
+});
+
+test('day celebration requires the last lesson save to be confirmed and does not repeat on replay', async () => {
+  const expanded = JSON.parse(readFileSync(new URL('../../../../content/pt-BR_en/missions/order-a-drink.v5.json', import.meta.url), 'utf8'));
+  let fail = true;
+  const cues = [];
+  const page = player(async () => ({ ok: !fail, json: async () => ({ completed_lessons: ['day-01:0', 'day-01:1', 'day-01:2'], completed: false }) }), cues,
+    { mission: expanded, progress: { day: 0, cursor: 23, completed: false, completed_lessons: ['day-01:0', 'day-01:1'] } });
+  assert.equal(await page.finishDay(), false);
+  assert.equal(page.celebrationDay.value, null);
+  assert.deepEqual(cues, []);
+  fail = false;
+  assert.equal(await page.finishDay(), true);
+  assert.equal(page.celebrationDay.value, 'day-01');
+  assert.equal(page.completedLessons.value.length, 3);
+  assert.deepEqual(cues, ['complete']);
+  await page.begin(17);
+  assert.equal(page.celebrationDay.value, null);
+  assert.equal(page.answeredQuestions.value, 0);
+  page.backToTrail();
+  assert.equal(page.completedLessons.value.length, 3);
+});
+
+test('confirmed questions resume after reload without repeating the initial model', async () => {
+  const expanded = JSON.parse(readFileSync(new URL('../../../../content/pt-BR_en/missions/order-a-drink.v5.json', import.meta.url), 'utf8'));
+  const page = player(async () => { throw new Error('No model exposure is needed for this resume'); }, [],
+    { mission: expanded, progress: { day: 0, cursor: 0, completed: false, completed_lessons: [] }, answeredActivityIds: expanded.activities.slice(1, 4).map(activity => activity.id) });
+  assert.equal(await page.begin(0), true);
+  assert.equal(page.index.value, 4);
+  assert.equal(page.answeredQuestions.value, 3);
+  assert.equal(page.events.value.length, 0);
+});
+
+test('unsent work is guarded and only a confirmed response releases its draft', async () => {
+  let fail = true;
+  const page = player(async () => { if (fail) throw new Error('Offline'); return { ok: true, json: async () => ({ results: [{ status: 'accepted' }] }) }; });
+  assert.equal(page.hasUnsavedWork.value, false);
+  page.answer.value = 'water';
+  assert.equal(page.hasUnsavedWork.value, true);
+  page.backToTrail();
+  await page.begin(6);
+  assert.equal(page.hasUnsavedWork.value, true);
+  await page.begin(2);
+  await page.submit('water');
+  assert.equal(page.hasPending.value, true);
+  assert.equal(page.hasUnsavedWork.value, true);
+  fail = false;
+  await page.retryPending();
+  assert.equal(page.hasUnsavedWork.value, false);
+});
+
+test('returning to a replay keeps its new question count while preserving the completed lesson', async () => {
+  const expanded = JSON.parse(readFileSync(new URL('../../../../content/pt-BR_en/missions/order-a-drink.v5.json', import.meta.url), 'utf8'));
+  const page = player(async () => ({ ok: true, json: async () => ({ results: [{ status: 'accepted' }] }) }), [],
+    { mission: expanded, progress: { day: 0, cursor: 1, completed: false, completed_lessons: ['day-01:0'] }, answeredActivityIds: expanded.activities.slice(1, 7).map(activity => activity.id) });
+  await page.begin(1);
+  assert.equal(page.answeredQuestions.value, 0);
+  await page.submit(expanded.activities[1].expected.accepted[0]);
+  assert.equal(page.answeredQuestions.value, 1);
+  page.backToTrail();
+  await page.begin(1);
+  assert.equal(page.answeredQuestions.value, 1);
+  assert.deepEqual(page.completedLessons.value, ['day-01:0']);
+});
+
+test('queued duplicate submits do not create a second confirmed response', async () => {
+  let requests = 0;
+  const page = player(async () => { requests++; return { ok: true, json: async () => ({ results: [{ status: 'accepted' }] }) }; });
+  await Promise.all([page.submit('water'), page.submit('water')]);
+  assert.equal(requests, 1);
+  assert.equal(page.events.value.length, 1);
 });

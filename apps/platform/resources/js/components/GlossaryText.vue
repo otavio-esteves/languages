@@ -18,9 +18,11 @@ async function show(index: number) {
   loading.value = true;
   let request = pending.get(meaning.support_id);
   if (!request) {
-    request = props.lookup(meaning).finally(() => pending.delete(meaning.support_id));
+    request = props.lookup(meaning).catch(() => false).finally(() => pending.delete(meaning.support_id));
     pending.set(meaning.support_id, request);
   }
+  await nextTick();
+  positionTooltip();
   const allowed = await request;
   if (!disposed && active.value === index) { opened.value = allowed ? index : null; loading.value = false;
     await nextTick();
@@ -52,7 +54,7 @@ onBeforeUnmount(() => { disposed = true; clearTimeout(timer); document.removeEve
     <template v-for="(piece, position) in pieces" :key="position">
       <span v-if="entry(piece)" class="gloss-token" @pointerenter="hover(position, $event)" @pointerleave="leave">
         <button type="button" class="gloss-word" :data-word-index="position" :aria-busy="active === position && loading" :aria-describedby="opened === position ? `${id}-${position}` : undefined" :aria-label="`${piece}: consultar significado`" @focus="focusWord(position)" @blur="blurWord" @click="show(position)">{{ piece }}</button>
-        <span v-if="active === position && opened === position" :id="`${id}-${position}`" class="word-meaning" :style="tooltipStyle" role="tooltip" lang="pt-BR" @pointerenter="keepOpen" @pointerleave="leave">{{ opened === position ? entry(piece)?.meaning : 'Consultando…' }}</span>
+        <span v-if="active === position && (loading || opened === position)" :id="`${id}-${position}`" class="word-meaning" :style="tooltipStyle" role="tooltip" lang="pt-BR" @pointerenter="keepOpen" @pointerleave="leave">{{ opened === position ? entry(piece)?.meaning : 'Consultando…' }}</span>
       </span><template v-else>{{ piece }}</template>
     </template>
   </span>

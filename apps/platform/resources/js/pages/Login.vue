@@ -1,21 +1,26 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
-import ThemeToggle from '../components/ThemeToggle.vue';
 import BrandMark from '../components/BrandMark.vue';
-import SoundToggle from '../components/SoundToggle.vue';
+import SessionActions from '../components/SessionActions.vue';
 const form = useForm({ email: '', password: '' });
-function login() { form.post('/login', { onFinish: () => form.reset('password') }); }
+const showPassword = ref(false), passwordInput = ref<HTMLInputElement | null>(null);
+function login() {
+  form.post('/login', { onSuccess: () => form.reset('password'), onError: () => passwordInput.value?.focus() });
+}
 </script>
 <template>
   <main class="login-layout">
-    <div class="login-top"><BrandMark /><div class="session-actions"><ThemeToggle /><SoundToggle /></div></div>
-    <div class="page-heading"><p class="eyebrow">LEITURA E ESCRITA</p><h1>Um passo de cada vez.</h1><p class="muted">Entre para revisar a trilha de inglês.</p></div>
-    <form @submit.prevent="login">
-      <label>E-mail<input v-model="form.email" type="email" autocomplete="username" required></label>
-      <label>Senha<input v-model="form.password" type="password" autocomplete="current-password" required></label>
-      <p v-if="form.errors.email" class="notice" role="alert">{{ form.errors.email }}</p>
-      <button :disabled="form.processing">{{ form.processing ? 'Entrando…' : 'Entrar' }}</button>
+    <div class="login-top"><BrandMark /><SessionActions :allow-logout="false" /></div>
+    <div class="page-heading"><p class="eyebrow">INGLÊS · LEITURA E ESCRITA</p><h1>Vamos continuar?</h1><p class="muted">Entre para abrir sua trilha.</p></div>
+    <form @submit.prevent="login" :aria-busy="form.processing">
+      <label for="login-email">E-mail</label>
+      <input id="login-email" v-model="form.email" type="email" inputmode="email" autocomplete="username" autocapitalize="none" :spellcheck="false" :aria-invalid="!!form.errors.email" :aria-describedby="form.errors.email ? 'login-error' : undefined" required @input="form.clearErrors('email')">
+      <label for="login-password">Senha</label>
+      <div class="password-field"><input id="login-password" ref="passwordInput" v-model="form.password" :type="showPassword ? 'text' : 'password'" autocomplete="current-password" :aria-invalid="!!form.errors.email" :aria-describedby="form.errors.email ? 'login-error' : undefined" required @input="form.clearErrors('email')"><button type="button" class="password-toggle icon-button" :aria-label="showPassword ? 'Ocultar senha' : 'Mostrar senha'" :aria-pressed="showPassword" @click="showPassword = !showPassword"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path v-if="showPassword" d="m3 3 18 18"/></svg></button></div>
+      <p v-if="form.errors.email" id="login-error" class="notice" role="alert">{{ form.errors.email }}</p>
+      <button class="primary-action" :disabled="form.processing"><span v-if="form.processing" class="spinner" aria-hidden="true" />{{ form.processing ? 'Entrando…' : 'Entrar' }}<span v-if="!form.processing" aria-hidden="true">→</span></button>
     </form>
-    <p class="page-note">Espaço editorial · materiais em revisão.</p>
+    <p class="page-note"><span class="status-dot" aria-hidden="true" />Prévia editorial · conteúdo em revisão</p>
   </main>
 </template>

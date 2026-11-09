@@ -8,13 +8,14 @@ import struct
 import wave
 
 ROOT = Path(__file__).resolve().parent.parent
-RATE = 22050
+RATE = 44100
+# Soft, rounded mallet notes: a light touch, a bright reply and a small cadence.
 NOTES = {
-    "tap": [(660, 0, .065)],
-    "correct": [(523.25, 0, .14), (783.99, .095, .20)],
-    "adjust": [(392, 0, .12), (349.23, .10, .15)],
-    "recorded": [(440, 0, .14), (554.37, .025, .16)],
-    "complete": [(523.25, 0, .18), (659.25, .09, .20), (880, .19, .28)],
+    "tap": [(698.46, 0, .085)],
+    "correct": [(659.25, 0, .19), (987.77, .085, .26)],
+    "adjust": [(440, 0, .19), (392, .12, .22)],
+    "recorded": [(523.25, 0, .18), (523.25, .075, .18)],
+    "complete": [(523.25, 0, .24), (659.25, .11, .26), (783.99, .22, .28), (1046.50, .36, .40)],
 }
 
 
@@ -26,8 +27,13 @@ def render(notes):
         for frequency, start, length in notes:
             age = t - start
             if 0 <= age < length:
-                envelope = min(1, age / .008) * (1 - age / length) ** 2
-                sample += .22 * envelope * (math.sin(2 * math.pi * frequency * age) + .15 * math.sin(4 * math.pi * frequency * age))
+                attack = 1 - math.exp(-age / .006)
+                release = min(1, (length - age) / .035) ** 2
+                envelope = attack * math.exp(-age * 5 / length) * release
+                body = math.sin(2 * math.pi * frequency * age)
+                warmth = .28 * math.sin(2 * math.pi * frequency * 2 * age) * math.exp(-age * 18)
+                sparkle = .09 * math.sin(2 * math.pi * frequency * 4 * age) * math.exp(-age * 32)
+                sample += .32 * envelope * (body + warmth + sparkle)
         frames.append(struct.pack('<h', round(max(-.8, min(.8, sample)) * 32767)))
     output = io.BytesIO()
     with wave.open(output, 'wb') as audio:

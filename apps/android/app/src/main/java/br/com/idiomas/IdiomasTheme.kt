@@ -90,7 +90,7 @@ fun BrandMark() {
             drawRoundRect(ink,topLeft=Offset(4.dp.toPx(),3.dp.toPx()),size=Size(19.dp.toPx(),25.dp.toPx()),cornerRadius=CornerRadius(4.dp.toPx()))
             for((index,width) in listOf(9,9,5).withIndex()) drawLine(page,Offset(9.dp.toPx(),(10+index*5).dp.toPx()),Offset((9+width).dp.toPx(),(10+index*5).dp.toPx()),strokeWidth=1.5.dp.toPx())
         }
-        Row { Text("idiomas",color=MaterialTheme.colorScheme.onSurface,style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold);Text(".",color=MaterialTheme.colorScheme.secondary,style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold) }
+        Text("languages",color=MaterialTheme.colorScheme.onSurface,style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold)
     }
 }
 

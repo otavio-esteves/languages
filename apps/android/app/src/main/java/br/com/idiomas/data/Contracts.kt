@@ -11,7 +11,7 @@ data class CatalogResponse(val schema_version: String, val data: List<CatalogIte
     init { require(schema_version == "1.0.0") { "Versão do catálogo incompatível" } }
 }
 @Serializable data class Account(val id: Long, val name: String, val email: String, val is_editor: Boolean = false)
-@Serializable data class LoginRequest(val email: String, val password: String, val device_name: String = "Idiomas Android")
+@Serializable data class LoginRequest(val email: String, val password: String, val device_name: String = "languages Android")
 @Serializable data class LoginResponse(val token: String, val expires_at: String, val user: Account)
 @Serializable data class Session(val account: Account, val token: String, val expiresAt: String = "")
 class ApiFailure(val status: Int) : Exception(when(status) {

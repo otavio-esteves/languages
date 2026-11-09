@@ -4,10 +4,11 @@ export type Activity = {
   content: { phase_id?: string; phase_title?: string; phase_description?: string; phase_level?: string; day_estimated_minutes?: { min: number; max: number }; estimated_seconds?: number; label?: string; messages?: { speaker: string; text: string }[]; examples?: string[]; options?: string[]; pt_BR_note?: string; options_language?: string; study_text?: string; vocabulary?: { word: string; meaning: string }[]; glossary?: Record<string, Gloss> };
   expected: { accepted?: string[]; comparison?: Comparison }; feedback: string;
 };
+export type TrailActivity = Pick<Activity, 'id' | 'type' | 'content'>;
 export type Mission = { id: string; version: number; title: string; assets?: unknown[]; activities: Activity[] };
-export type TrailPhase = { id: string; title: string; description: string; level?: string; estimatedMinutes?: { min: number; max: number }; steps: { index: number; label: string }[] };
-export function phaseId(activity: Activity): string { return activity.content.phase_id || 'practice'; }
-export function phases(mission: Mission): TrailPhase[] {
+export type TrailPhase = { id: string; title: string; description: string; level?: string; estimatedMinutes?: { min: number; max: number }; steps: { index: number; label: string; activityId?: string; question?: boolean }[] };
+export function phaseId(activity: Pick<Activity, 'content'>): string { return activity.content.phase_id || 'practice'; }
+export function phases(mission: { activities: TrailActivity[] }): TrailPhase[] {
   const result: TrailPhase[] = [];
   mission.activities.forEach((activity, index) => {
     const id = phaseId(activity);
@@ -16,7 +17,7 @@ export function phases(mission: Mission): TrailPhase[] {
       phase = { id, title: activity.content.phase_title || 'Praticar', description: activity.content.phase_description || '', level: activity.content.phase_level, estimatedMinutes: activity.content.day_estimated_minutes, steps: [] };
       result.push(phase);
     }
-    phase.steps.push({ index, label: activity.content.label || 'Atividade' });
+    phase.steps.push({ index, label: activity.content.label || 'Atividade', activityId: activity.id, question: ['information_question', 'written_recall', 'communicative_task'].includes(activity.type) });
   });
   return result;
 }
