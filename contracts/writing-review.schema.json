@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://idiomas.local/contracts/writing-review.schema.json",
+  "description": "Revisão humana de uma tentativa escrita, separada da comparação automática. Não confirma domínio, outras modalidades ou retenção.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "attempt_id", "status", "revision", "is_preview", "requested_at", "reviewed_at", "feedback", "rubric_id", "rubric_version", "scope_version", "dimensions", "source", "retention_confirmed"],
+  "properties": {
+    "id": {"type": "string", "format": "uuid"},
+    "attempt_id": {"type": "string", "format": "uuid"},
+    "status": {"enum": ["pending", "reviewed"]},
+    "revision": {"type": "integer", "minimum": 0},
+    "is_preview": {"type": "boolean"},
+    "requested_at": {"type": "string", "format": "date-time"},
+    "reviewed_at": {"type": ["string", "null"], "format": "date-time"},
+    "feedback": {"type": ["string", "null"], "minLength": 1, "maxLength": 2000},
+    "rubric_id": {"type": "string", "minLength": 1},
+    "rubric_version": {"type": "integer", "minimum": 1},
+    "scope_version": {"const": "writing-review-v1"},
+    "source": {"enum": ["not_assessed", "human_review"]},
+    "retention_confirmed": {"const": false},
+    "dimensions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "result", "reason"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "result": {"enum": ["met", "not_met", "not_observed", "abstained"]},
+          "reason": {"type": "string", "minLength": 1, "maxLength": 2000}
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "pending"}}},
+      "then": {"properties": {"revision": {"const": 0}, "source": {"const": "not_assessed"}, "reviewed_at": {"type": "null"}, "feedback": {"type": "null"}, "dimensions": {"maxItems": 0}}},
+      "else": {"properties": {"revision": {"minimum": 1}, "source": {"const": "human_review"}, "reviewed_at": {"type": "string"}, "feedback": {"type": "string"}, "dimensions": {"minItems": 1}}}
+    }
+  ]
+}

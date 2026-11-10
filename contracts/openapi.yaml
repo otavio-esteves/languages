@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Idiomas — API de aprendizagem
   version: 1.0.0
-  description: Autenticação, catálogo e prática F2. Prévias editoriais não publicam rascunhos nem confirmam capacidades.
+  description: Autenticação, catálogo, prática e revisão escrita F2. Prévias editoriais e julgamentos de respostas não publicam rascunhos nem confirmam domínio ou retenção.
 servers:
   - url: http://localhost:8080/api/v1
 paths:
@@ -171,10 +171,66 @@ paths:
         '413': {description: "Lote acima de 512 KiB"}
         '422': {description: "Envelope inválido"}
         '429': {description: "Limite de envio atingido"}
+  /writing-reviews:
+    post:
+      operationId: requestWritingReview
+      description: Pedido explícito da conta para uma tentativa escrita válida já recebida. Requer practice:write; repetições do mesmo attempt_id retornam o mesmo pedido. Prévia exige permissão editorial. Nenhum pedido cria avaliação ou evidência automaticamente.
+      security: [{deviceToken: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [attempt_id]
+              properties:
+                attempt_id: {type: string, format: uuid}
+      responses:
+        '200':
+          description: Estado atual do pedido, inclusive em reenvio após confirmação perdida
+          content:
+            application/json:
+              schema: {$ref: './writing-review.schema.json'}
+        '401': {description: Sessão inválida}
+        '403': {description: Habilidade insuficiente}
+        '404': {description: Tentativa ou snapshot indisponível para esta conta}
+        '422': {description: Tentativa, modalidade ou rubrica não elegível}
+        '429': {description: Limite de pedidos atingido}
+    get:
+      operationId: ownWritingReviews
+      description: Somente pedidos da conta, com contexto do snapshot original. Pode atualizar decisões posteriores sem enviar novos eventos ou iniciar outra tentativa.
+      security: [{deviceToken: []}]
+      parameters:
+        - {name: page, in: query, schema: {type: integer, minimum: 1}}
+        - {name: limit, in: query, schema: {type: integer, minimum: 1, maximum: 50, default: 20}}
+        - {name: status, in: query, schema: {type: string, enum: [pending, reviewed, all], default: all}}
+      responses:
+        '200':
+          description: Página dos pedidos próprios, sem identificação pessoal do revisor
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, pagination]
+                properties:
+                  data:
+                    type: array
+                    maxItems: 50
+                    items: {$ref: '#/components/schemas/WritingReviewListItem'}
+                  pagination:
+                    type: object
+                    required: [current_page, last_page]
+                    properties:
+                      current_page: {type: integer, minimum: 1}
+                      last_page: {type: integer, minimum: 1}
+        '401': {description: Sessão inválida}
+        '403': {description: Habilidade insuficiente}
+        '422': {description: Parâmetros inválidos}
   /learning-sessions/{id}:
     get:
       operationId: sessionFeedback
-      description: Somente eventos da conta autenticada. Respostas abertas ficam não verificadas; nenhuma resposta desta fase confirma retenção posterior.
+      description: Somente eventos da conta autenticada. O assessment automático permanece preservado; human_review é uma extensão opcional separada. Respostas sem julgamento continuam não verificadas. Nenhum resultado F2 confirma retenção posterior.
       security: [{deviceToken: []}]
       parameters:
         - {name: id, in: path, required: true, schema: {type: string, format: uuid}}
@@ -196,6 +252,10 @@ paths:
                       properties:
                         id: {type: string, format: uuid}
                         kind: {type: string, enum: [attempt, exposure]}
+                        human_review:
+                          oneOf:
+                            - {type: 'null'}
+                            - {$ref: './writing-review.schema.json'}
                         assessment:
                           oneOf:
                             - {type: 'null'}
@@ -207,6 +267,7 @@ paths:
                                 outcome: {type: string, enum: [correct, incorrect, technical_issue, unverified]}
                                 supported: {type: boolean}
                                 support_pending: {type: boolean}
+                                human_feedback_available: {type: boolean, description: Retorno humano entregue anteriormente para este alvo escrito e pacote; contexto conservador de apoio, sem afirmar que foi lido ou confirmar ordem temporal entre aparelhos}
                                 is_preview: {type: boolean}
                                 retention_confirmed: {const: false}
                                 source: {type: string, enum: [not_assessed, automatic_rule]}
@@ -235,6 +296,32 @@ components:
   securitySchemes:
     deviceToken: {type: http, scheme: bearer}
   schemas:
+    WritingReviewListItem:
+      description: Resumo de revisão com contexto próprio; extensão de apresentação, sem dados pessoais do revisor.
+      type: object
+      required: [id, attempt_id, status, revision, is_preview, requested_at, reviewed_at, feedback, rubric_id, rubric_version, scope_version, dimensions, source, retention_confirmed, prompt, response, activity_id, activity_label, package_id, package_version, package_hash]
+      properties:
+        id: {type: string, format: uuid}
+        attempt_id: {type: string, format: uuid}
+        status: {type: string, enum: [pending, reviewed]}
+        revision: {type: integer, minimum: 0}
+        is_preview: {type: boolean}
+        requested_at: {type: string, format: date-time}
+        reviewed_at: {type: [string, 'null'], format: date-time}
+        feedback: {type: [string, 'null'], maxLength: 2000}
+        rubric_id: {type: string}
+        rubric_version: {type: integer, minimum: 1}
+        scope_version: {const: writing-review-v1}
+        dimensions: {type: array, items: {type: object, required: [id, result, reason], properties: {id: {type: string}, result: {enum: [met, not_met, not_observed, abstained]}, reason: {type: string, maxLength: 2000}}}}
+        source: {enum: [not_assessed, human_review]}
+        retention_confirmed: {const: false}
+        prompt: {type: string}
+        response: {type: string}
+        activity_id: {type: string}
+        activity_label: {type: string}
+        package_id: {type: string}
+        package_version: {type: integer, minimum: 1}
+        package_hash: {type: string, pattern: '^[a-f0-9]{64}$'}
     User:
       type: object
       additionalProperties: false

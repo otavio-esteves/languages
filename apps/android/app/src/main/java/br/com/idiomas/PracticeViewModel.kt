@@ -29,7 +29,7 @@ class PracticeViewModel(private val practice: PracticeRepository, private val ca
             publish(identity) { it.copy(busy=true,message=null,playPath=null) }
             try { block(identity) }
             catch(cancelled: CancellationException) { throw cancelled }
-            catch(error: Exception) { publish(identity) { it.copy(message=when(error) { is ApiFailure -> error.message;is IllegalArgumentException -> "Conteúdo incompleto ou incompatível. Atualize ou baixe novamente.";else -> "Não foi possível concluir. Sua prática já salva permanece no aparelho." }) } }
+            catch(error: Exception) { publish(identity) { it.copy(message=when(error) { is ApiFailure -> error.message;is java.io.IOException -> "A rede não confirmou a ação. Sua prática está salva; a revisão precisa de conexão. Tente novamente quando estiver online.";is IllegalArgumentException -> "Conteúdo incompleto ou incompatível. Atualize ou baixe novamente.";is IllegalStateException -> error.message;else -> "Não foi possível concluir. Sua prática já salva permanece no aparelho." }) } }
             finally { publish(identity) { it.copy(busy=false) } }
         }
     }
@@ -113,15 +113,23 @@ class PracticeViewModel(private val practice: PracticeRepository, private val ca
         publish(identity) { it.copy(message="Os registros serão reenviados quando houver conexão. Sua prática permanece salva.") }
     }
     fun sync() = action { identity ->
-        val sent = practice.sync()
+        val current=mutable.value.open
+        val updated=if(current!=null) practice.refreshResults(current) else null
+        val sent = if(current==null) practice.sync(identity) else practice.pending.first()==0
         val issues = practice.blocked.first()
         val message = when {
             issues.isNotEmpty() -> "Há registros que não foram aceitos. Consulte os detalhes abaixo."
             !sent -> "A sincronização ainda está pendente. Sua prática permanece salva."
-            else -> "Registros sincronizados. Respostas abertas continuam sem avaliação independente."
+            else -> "Registros e revisões disponíveis foram atualizados. Concluir lições não confirma domínio ou retenção."
         }
-        val updated = mutable.value.open?.let { practice.reload(it) }
         publish(identity) { it.copy(open=updated,message=message) }
+    }
+    fun requestWritingReview(attemptId:String) = action { identity ->
+        val value=mutable.value.open ?: return@action
+        val stored=practice.requestWritingReview(value,attemptId)
+        publish(identity) {it.copy(open=stored,message="Pedido de revisão registrado. Você pode continuar praticando.")}
+        val updated=practice.refreshResults(stored)
+        publish(identity) {it.copy(open=updated)}
     }
     companion object {
         fun factory(practice:PracticeRepository,catalog:CatalogRepository):ViewModelProvider.Factory=object:ViewModelProvider.Factory {

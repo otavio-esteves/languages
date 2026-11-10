@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { darkTheme, toggleTheme } from '../lib/theme';
 import { soundsEnabled, toggleSounds } from '../lib/uiSounds';
 const props = withDefaults(defineProps<{ allowLogout?: boolean }>(), { allowLogout: true });
+const page = usePage<{ permissions?: { review_writing?: boolean } }>();
 const menu = ref<HTMLDetailsElement | null>(null);
 function close(event: Event) { if (!menu.value?.contains(event.target as Node)) menu.value?.removeAttribute('open'); }
 function escape(event: KeyboardEvent) {
@@ -30,6 +31,8 @@ onBeforeUnmount(() => { document.removeEventListener('pointerdown', close); docu
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4Z"/><path v-if="soundsEnabled" d="M15 8a6 6 0 0 1 0 8"/><path v-else d="m16 9 5 6m0-6-5 6"/></svg>
           <span>Efeitos sonoros</span><span class="switch" :class="{ on: soundsEnabled }" aria-hidden="true" />
         </button>
+        <Link v-if="props.allowLogout" href="/writing-feedback" class="preference-row review-link">Minhas revisões de escrita</Link>
+        <Link v-if="props.allowLogout && page.props.permissions?.review_writing" href="/reviews" class="preference-row review-link">Fila de revisão de escrita</Link>
         <Link v-if="props.allowLogout" href="/logout" method="post" as="button" class="preference-row logout-row" aria-label="Sair da conta"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H5v16h5m4-12 4 4-4 4m-5-4h9" /></svg><span>Sair da conta</span></Link>
       </div>
     </details>

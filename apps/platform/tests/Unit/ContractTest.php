@@ -16,6 +16,7 @@ class ContractTest extends TestCase
             'exposure-event' => [$root.'/contracts/fixtures/exposure.json'],
             'evidence' => [$root.'/contracts/fixtures/evidence.json'],
             'catalog' => [$root.'/contracts/fixtures/catalog.json'],
+            'writing-review' => [$root.'/contracts/fixtures/writing-review.json'],
             'content-package' => glob($root.'/content/pt-BR_en/missions/*.json'),
         ];
         foreach ($cases as $name => $files) {
@@ -34,5 +35,12 @@ class ContractTest extends TestCase
         $catalog->data[0]->version = 0;
         $schema = json_decode(file_get_contents($root.'/contracts/catalog.schema.json'));
         $this->assertFalse((new Validator)->validate($catalog, $schema)->isValid());
+        $review = json_decode(file_get_contents($root.'/contracts/fixtures/writing-review.json'));
+        $reviewSchema = json_decode(file_get_contents($root.'/contracts/writing-review.schema.json'));
+        $review->status = 'pending';
+        $this->assertFalse((new Validator)->validate($review, $reviewSchema)->isValid(), 'Pendência não pode carregar um julgamento humano já concluído');
+        $review->status = 'reviewed';
+        $review->retention_confirmed = true;
+        $this->assertFalse((new Validator)->validate($review, $reviewSchema)->isValid(), 'Revisão F2 não confirma retenção');
     }
 }

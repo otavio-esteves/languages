@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -63,6 +64,8 @@ fun CatalogScreen(vm: CatalogViewModel, practice: PracticeViewModel) {
     var confirmClear by remember(session?.account?.id) { mutableStateOf(false) }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var showPassword by remember { mutableStateOf(false) }
+    LaunchedEffect(session?.account?.id) { if(session != null) { password=""; showPassword=false } }
 
     if (confirmClear && session != null) {
         AlertDialog(
@@ -92,20 +95,20 @@ fun CatalogScreen(vm: CatalogViewModel, practice: PracticeViewModel) {
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                             Text("LEITURA E ESCRITA", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("Uma página de cada vez.", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold)
-                            Text("Aprenda inglês com uma trilha de leitura e escrita.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("Seu inglês, página por página.", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold)
+                            Text("Leia. Escreva. Descubra o que você consegue dizer.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                     item {
                         OutlinedCard(border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)) {
                             Column(Modifier.padding(22.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
-                                Text("Vamos começar?", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                Text("Seu caderno espera.", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                                 Text("Entre para acessar suas missões.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 OutlinedTextField(email, { email = it }, label = { Text("E-mail") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), singleLine = true, modifier = Modifier.fillMaxWidth())
-                                OutlinedTextField(password, { password = it }, label = { Text("Senha") }, visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), singleLine = true, modifier = Modifier.fillMaxWidth())
+                                OutlinedTextField(password, { password = it }, label = { Text("Senha") }, visualTransformation = if(showPassword) VisualTransformation.None else PasswordVisualTransformation(), trailingIcon={TextButton(onClick={showPassword=!showPassword}) {Text(if(showPassword) "Ocultar" else "Mostrar")}}, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), singleLine = true, modifier = Modifier.fillMaxWidth())
                                 JourneyButton(
                                     if (screen.busy) "Entrando…" else "Entrar",
-                                    onClick = { val secret = password; password = ""; vm.login(email, secret) },
+                                    onClick = { vm.login(email, password) },
                                     enabled = !screen.busy && email.isNotBlank() && password.isNotBlank(),
                                     modifier = Modifier.fillMaxWidth(),
                                 )

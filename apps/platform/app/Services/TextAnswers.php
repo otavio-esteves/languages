@@ -6,7 +6,7 @@ class TextAnswers
 {
     public static function normalize(string $value): string
     {
-        $value = strtr(strtolower($value), ['’' => "'", '‘' => "'", 'ʼ' => "'"]);
+        $value = strtr(mb_strtolower($value, 'UTF-8'), ['’' => "'", '‘' => "'", 'ʼ' => "'"]);
         $value = preg_replace('/[.,!?]/u', '', $value);
 
         return trim(preg_replace('/[\p{Z}\s]+/u', ' ', $value));

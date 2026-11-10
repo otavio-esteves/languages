@@ -6,6 +6,8 @@ import BrandMark from '../components/BrandMark.vue';
 import TrailMap from '../components/TrailMap.vue';
 import GlossaryText from '../components/GlossaryText.vue';
 import SessionActions from '../components/SessionActions.vue';
+import ManualReviewPanel from '../components/ManualReviewPanel.vue';
+import type { WritingReviewSummary } from '../lib/writingReviews';
 import { compareAnswer, dayLessons, lessonIndex, lessonKey, legacyLessons, completedInDay, isTextOnly, phaseId, phases, type Activity, type Mission, type Support, type Gloss, type ComparisonResult } from '../lib/textTrail';
 const props = defineProps<{ mission: Mission; manifest: { package_hash: string; is_preview: boolean }; progress?: { day: number; cursor?: number; completed: boolean; completed_lessons?: string[] }; answeredActivityIds?: string[] }>();
 const initialDay = phases(props.mission)[props.progress?.day || 0];
@@ -25,6 +27,8 @@ const completed = ref(props.progress?.completed || false);
 const session = crypto.randomUUID(), device = crypto.randomUUID();
 let sequence = 0;
 const events = ref<{ id: string; kind: string; payload: Record<string, unknown>; received: boolean }[]>([]);
+const writingReviews = reactive(new Map<string, WritingReviewSummary>());
+const reviewContexts = reactive(new Map<string, { supported: boolean; support_pending: boolean }>());
 const drafts = reactive(new Map<string, { answer: string; selected: string | null }>());
 const lessonPositions = reactive(new Map<string, number>());
 const replayingLessons = reactive(new Set<string>());
@@ -35,6 +39,8 @@ const textOnly = computed(() => isTextOnly(props.mission));
 const answeredActivities = ref(new Set(props.answeredActivityIds || []));
 const celebrationDay = ref<string | null>(null);
 const currentLesson = computed(() => lessonIndex(currentPhase.value, index.value));
+const activityKind = computed(() => activity.value.type === 'information_question' ? 'Encontre o sentido' : ['written_recall', 'communicative_task'].includes(activity.value.type) ? 'Sua vez de escrever' : 'Leia e descubra');
+const lessonTitle = computed(() => dayLessons(currentPhase.value)[currentLesson.value].steps[0].label);
 const lessonQuestions = computed(() => dayLessons(currentPhase.value)[currentLesson.value].steps.filter(step => ['information_question', 'written_recall', 'communicative_task'].includes(props.mission.activities[step.index].type)));
 const answeredQuestions = computed(() => lessonQuestions.value.filter(step => answeredActivities.value.has(props.mission.activities[step.index].id)).length);
 const hasPending = computed(() => events.value.some(event => !event.received));
@@ -50,6 +56,11 @@ function confirmLeave() {
 let removeNavigationGuard: (() => void) | undefined;
 const correct = ref(false);
 const assessment = ref<ComparisonResult | null>(null), submittedResponse = ref('');
+const reviewableAttempt = computed(() => recorded.value && activity.value.modality === 'writing' && ['written_recall', 'communicative_task'].includes(activity.value.type)
+  ? [...events.value].reverse().find(event => event.kind === 'attempt' && event.received && event.payload.activity_id === activity.value.id && event.payload.technical_status === 'valid') : undefined);
+const currentWritingReview = computed(() => reviewableAttempt.value ? writingReviews.get(reviewableAttempt.value.id) : undefined);
+const currentReviewContext = computed(() => reviewableAttempt.value ? reviewContexts.get(reviewableAttempt.value.id) : undefined);
+const reviewIsSupported = computed(() => currentReviewContext.value?.supported ?? (Array.isArray(reviewableAttempt.value?.payload.support_event_ids) && (reviewableAttempt.value!.payload.support_event_ids as unknown[]).length > 0));
 watch(selected, (value, previous) => { if (value !== null && value !== previous) void playUiSound('tap'); });
 const manualSupports = computed(() => activity.value.supports.filter(support => !support.id.startsWith('gloss-') && support.kind !== 'solution'));
 let actionQueue: Promise<unknown> = Promise.resolve();
@@ -187,8 +198,42 @@ function submit(value: string) {
     } finally { sendingAnswer.value = false; }
   });
 }
+async function reviewRequest(path: string, body?: Record<string, unknown>) {
+  const cookie = document.cookie.split('; ').find(value => value.startsWith('XSRF-TOKEN='));
+  try {
+    const response = await fetch(path, { method: body ? 'POST' : 'GET', headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-XSRF-TOKEN': cookie ? decodeURIComponent(cookie.split('=').slice(1).join('=')) : '' }, ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(15000) });
+    const data = await response.json().catch(() => null);
+    if (!response.ok) throw new Error(data?.message || 'Não foi possível consultar a revisão. Sua resposta continua salva.');
+    return data;
+  } catch (error) {
+    if (error instanceof DOMException && ['TimeoutError', 'AbortError'].includes(error.name)) throw new Error('A revisão não respondeu a tempo. Você pode continuar praticando e tentar novamente.');
+    throw error;
+  }
+}
+function requestWritingReview() {
+  return action(async () => {
+    const attempt = reviewableAttempt.value;
+    if (!attempt || writingReviews.has(attempt.id)) return;
+    const review = await reviewRequest('/editorial/writing-reviews', { attempt_id: attempt.id }) as WritingReviewSummary;
+    if (review?.attempt_id !== attempt.id) throw new Error('Não foi possível confirmar a revisão desta resposta. Tente novamente.');
+    writingReviews.set(attempt.id, review);
+    await nextTick(); document.querySelector<HTMLElement>('.manual-review h2')?.focus();
+  });
+}
+function refreshWritingReview() {
+  return action(async () => {
+    const result = await reviewRequest(`/editorial/learning-sessions/${session}`) as { session_id: string; events: { id: string; human_review?: WritingReviewSummary | null; assessment?: { supported: boolean; support_pending: boolean } | null }[] };
+    if (result?.session_id !== session) throw new Error('Não foi possível confirmar os resultados desta prática.');
+    const known = new Set(events.value.filter(event => event.kind === 'attempt' && event.received).map(event => event.id));
+    for (const item of result.events) {
+      if (!known.has(item.id)) continue;
+      if (item.human_review && item.human_review.attempt_id === item.id) writingReviews.set(item.id, item.human_review);
+      if (item.assessment) reviewContexts.set(item.id, { supported: item.assessment.supported, support_pending: item.assessment.support_pending });
+    }
+  });
+}
 function clearActivity() { answer.value = ''; selected.value = null; revealed.value = []; recorded.value = false; feedback.value = ''; correct.value = false; assessment.value = null; submittedResponse.value = ''; }
-function reset() { drafts.delete(draftKey()); lessonPositions.delete(positionKey(index.value)); clearActivity(); void playUiSound('tap'); }
+function reset() { drafts.delete(draftKey()); lessonPositions.delete(positionKey(index.value)); clearActivity(); void playUiSound('tap'); void nextTick(() => document.querySelector<HTMLElement>('#response, .choice input')?.focus()); }
 async function saveDay(day: number, cursor: number, lesson: string) {
   const cookie = document.cookie.split('; ').find(value => value.startsWith('XSRF-TOKEN='));
   const response = await fetch('/editorial/day-progress', { method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-XSRF-TOKEN': cookie ? decodeURIComponent(cookie.split('=').slice(1).join('=')) : '' }, body: JSON.stringify({ package_hash: props.manifest.package_hash, day, completed: false, cursor, lesson }) });
@@ -261,8 +306,9 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', beforeUnload)
     <TrailMap :phases="trail" :day="selectedDay" :cursor="index" :completed-lessons="completedLessons" :answered-activity-ids="[...answeredActivities]" :draft-cursors="[...lessonPositions.values()]" :busy="busy || hasPending" :celebrate="celebrationDay === trail[selectedDay].id" @day="selectDay" @start="begin" />
     <div v-if="message" class="trail-notice notice" role="alert"><p>{{ message }}</p><button v-if="hasPending" class="secondary" :disabled="busy" @click="retryPending">Reenviar registro</button></div>
   </main>
-  <main v-else id="practice-content" class="lesson-main" :class="{ 'summary-main': activity.type === 'summary' }" :aria-busy="busy">
+  <main v-else id="practice-content" class="lesson-main" :class="{ 'summary-main': activity.type === 'summary', 'reading-main': ['purpose', 'dialogue', 'explanation'].includes(activity.type) }" :aria-busy="busy">
     <template v-if="!finished">
+      <div v-if="activity.type !== 'summary'" class="exercise-context"><span class="exercise-kind">{{ activityKind }}</span><span>{{ lessonTitle }}</span></div>
       <h1 v-if="activity.type !== 'summary'" :key="activity.id" ref="promptHeading" class="exercise-prompt" tabindex="-1">{{ activity.prompt }}</h1>
       <template v-if="!['information_question', 'summary'].includes(activity.type)">
         <div v-if="activity.content.messages" class="text-dialogue" aria-label="Conversa escrita"><div v-for="(turn, position) in activity.content.messages" :key="position" class="dialogue-turn" :class="{ customer: position % 2 === 0 }"><span>{{ turn.speaker }}</span><p><GlossaryText :text="turn.text" :glossary="activity.content.glossary" :lookup="lookup" /></p></div></div>
@@ -273,11 +319,13 @@ onBeforeUnmount(() => { window.removeEventListener('beforeunload', beforeUnload)
       </template>
       <div v-if="manualSupports.length" class="supports"><div v-for="item in manualSupports" :key="item.id"><p v-if="revealed.includes(item.id)" class="revealed-support">{{ item.content }}</p><button v-else class="support-button" :disabled="busy" @click="support(item)"><span aria-hidden="true">＋</span> Consultar apoio</button></div></div>
       <form v-if="activity.type === 'information_question' && !recorded" class="choice-form" @submit.prevent="selected !== null && submit(selected)"><fieldset><legend class="sr-only">Escolha uma resposta</legend><div v-for="(option, optionIndex) in activity.content.options" :key="option" class="choice" :class="{ selected: selected === option }" @click="chooseOption($event, option)"><input v-model="selected" type="radio" :aria-label="option" :disabled="busy" name="response" :value="option" required><span class="choice-index" aria-hidden="true">{{ String.fromCharCode(65 + optionIndex) }}</span><span><GlossaryText v-if="activity.content.options_language === 'en'" :text="option" :glossary="activity.content.glossary" :lookup="lookup" /><template v-else>{{ option }}</template></span></div></fieldset><button class="primary-action answer-submit" :disabled="busy || selected === null"><span v-if="sendingAnswer" class="spinner" aria-hidden="true" />{{ sendingAnswer ? 'Conferindo…' : 'Conferir resposta' }}<span v-if="!sendingAnswer" aria-hidden="true">→</span></button></form>
-      <form v-if="['written_recall', 'communicative_task'].includes(activity.type) && !recorded" class="writing-form" @submit.prevent="submit(answer)"><label for="response">Escreva em inglês</label><textarea id="response" v-model="answer" rows="4" maxlength="10000" placeholder="Sua resposta…" lang="en" required @keydown.ctrl.enter.prevent="!busy && answer.trim() && submit(answer)" @keydown.meta.enter.prevent="!busy && answer.trim() && submit(answer)" /><div class="writing-actions"><span class="keyboard-hint">Ctrl / ⌘ + Enter para conferir</span><button class="primary-action answer-submit" :disabled="busy || !answer.trim()"><span v-if="sendingAnswer" class="spinner" aria-hidden="true" />{{ sendingAnswer ? 'Conferindo…' : 'Conferir resposta' }}<span v-if="!sendingAnswer" aria-hidden="true">→</span></button></div></form>
+      <form v-if="['written_recall', 'communicative_task'].includes(activity.type) && !recorded" class="writing-form" @submit.prevent="submit(answer)"><div class="writing-label"><label for="response">Escreva em inglês</label><span v-if="answer.trim()" class="draft-state">Ainda não enviada</span><span v-else class="pen-hint" aria-hidden="true">↘</span></div><textarea id="response" v-model="answer" rows="4" maxlength="10000" placeholder="Sua resposta começa aqui…" lang="en" required @keydown.ctrl.enter.prevent="!busy && answer.trim() && submit(answer)" @keydown.meta.enter.prevent="!busy && answer.trim() && submit(answer)" /><div class="writing-actions"><span class="keyboard-hint"><kbd>Ctrl</kbd> + <kbd>Enter</kbd> para conferir</span><button class="primary-action answer-submit" :disabled="busy || !answer.trim()"><span v-if="sendingAnswer" class="spinner" aria-hidden="true" />{{ sendingAnswer ? 'Conferindo…' : 'Conferir resposta' }}<span v-if="!sendingAnswer" aria-hidden="true">→</span></button></div></form>
       <section v-if="recorded" class="feedback-panel" :class="`feedback-${assessment?.outcome || 'pending'}`" aria-labelledby="feedback-title"><div class="feedback-heading"><span class="feedback-glyph" aria-hidden="true">{{ correct ? '✓' : assessment?.outcome === 'incorrect' ? '↺' : '·' }}</span><h2 id="feedback-title" tabindex="-1" aria-describedby="feedback-message">{{ feedbackHeading }}</h2></div><p id="feedback-message">{{ feedback || 'Preparando o retorno da sua resposta…' }}</p><div v-if="submittedResponse" class="submitted-response"><span>Sua resposta</span><p v-if="activity.modality === 'writing' || activity.content.options_language === 'en'" lang="en"><GlossaryText :text="submittedResponse" :glossary="activity.content.glossary" :lookup="lookup" /></p><p v-else lang="pt-BR">{{ submittedResponse }}</p></div><div v-if="assessment?.example" class="comparison-example"><span>Um exemplo possível</span><p lang="en"><GlossaryText :text="assessment.example" :glossary="activity.content.glossary" :lookup="lookup" /></p></div></section>
+      <ManualReviewPanel v-if="currentWritingReview" :review="currentWritingReview" :supported="reviewIsSupported" :support-pending="currentReviewContext?.support_pending" :busy="busy" @refresh="refreshWritingReview" />
+      <section v-else-if="reviewableAttempt" class="writing-review-request" aria-labelledby="writing-review-title"><h2 id="writing-review-title">Quer uma revisão humana?</h2><p>Ao pedir, você compartilha esta resposta com um revisor autorizado. Pode continuar praticando enquanto aguarda; o prazo depende da disponibilidade de revisão.</p><button type="button" class="secondary" :disabled="busy || hasPending" @click="requestWritingReview">Pedir revisão humana</button></section>
       <div v-if="recorded && feedback" class="exercise-actions"><button class="quiet" :disabled="busy" @click="reset">Tentar de novo</button><button class="primary-action" :disabled="busy" @click="next">Continuar <span aria-hidden="true">→</span></button></div>
       <div v-if="['purpose', 'dialogue', 'explanation'].includes(activity.type)" class="exercise-actions"><button class="primary-action" :disabled="busy" @click="passive">Continuar <span aria-hidden="true">→</span></button></div>
-      <section v-if="activity.type === 'summary'" class="summary-panel"><div class="summary-stamp" aria-hidden="true">✓</div><h1 ref="promptHeading" tabindex="-1">{{ allQuestionsAnswered ? 'Lição praticada!' : 'Vamos retomar?' }}</h1><p>{{ activity.content.label }}</p><p v-if="lessonQuestions.length" class="muted">{{ answeredQuestions }} de {{ lessonQuestions.length }} questões respondidas</p><button v-if="allQuestionsAnswered" class="primary-action" :disabled="busy || hasPending" @click="finishDay"><span v-if="savingLesson" class="spinner" aria-hidden="true" />{{ savingLesson ? 'Concluindo…' : 'Concluir lição' }}<span v-if="!savingLesson" aria-hidden="true">✓</span></button><button v-else class="primary-action" :disabled="busy || hasPending" @click="begin(dayLessons(currentPhase)[currentLesson].steps[0].index)">Retomar lição <span aria-hidden="true">→</span></button></section>
+      <section v-if="activity.type === 'summary'" class="summary-panel"><div class="summary-stamp" aria-hidden="true">✓</div><span class="exercise-kind">UMA PÁGINA A MAIS</span><h1 ref="promptHeading" tabindex="-1">{{ allQuestionsAnswered ? 'Lição praticada!' : 'Vamos retomar?' }}</h1><p>{{ activity.content.label }}</p><div v-if="lessonQuestions.length" class="summary-receipt"><span class="receipt-check" aria-hidden="true">✓</span><span>{{ answeredQuestions }} de {{ lessonQuestions.length }} questões respondidas</span></div><p class="summary-note">{{ allQuestionsAnswered ? 'Conclua para guardar esta lição no seu percurso. Você pode praticá-la novamente quando quiser.' : 'Ainda há questões para responder. Retome de onde parou.' }}</p><button v-if="allQuestionsAnswered" class="primary-action" :disabled="busy || hasPending" @click="finishDay"><span v-if="savingLesson" class="spinner" aria-hidden="true" />{{ savingLesson ? 'Concluindo…' : 'Concluir lição' }}<span v-if="!savingLesson" aria-hidden="true">✓</span></button><button v-else class="primary-action" :disabled="busy || hasPending" @click="begin(dayLessons(currentPhase)[currentLesson].steps[0].index)">Retomar lição <span aria-hidden="true">→</span></button></section>
       <div v-if="message" class="notice" role="alert"><p>{{ message }}</p><button v-if="hasPending" class="secondary" :disabled="busy" @click="retryPending">{{ busy ? 'Reenviando…' : 'Reenviar registro' }}</button></div>
     </template>
     <div v-else class="finished-state"><h1>Prática encerrada.</h1><button class="secondary" @click="finished = false; showTrail = true">Ver trilha</button><Link href="/editorial" class="quiet exit-link">Voltar</Link></div>

@@ -44,6 +44,10 @@ class PracticeAuditRegressionTest {
         var loseConfirmationAt:Int?=null
         var failResults=false
         var resultsCalls=0
+        var reviewCalls=0
+        var loseReviewConfirmation=false
+        var beforeReview:(suspend () -> Unit)?=null
+        val reviews=linkedMapOf<String,WritingReview>()
         var beforeResults:(suspend () -> Unit)?=null
         override suspend fun login(email:String,password:String)=LoginResponse("synthetic-token-$email","2030-01-01T00:00:00Z",Account(if(email=="first") 1 else 2,"Synthetic",email,true))
         override suspend fun logout(token:String) {}
@@ -72,8 +76,15 @@ class PracticeAuditRegressionTest {
             if(failResults) {failResults=false;throw IOException("Synthetic results interruption")}
             beforeResults?.also { beforeResults=null }?.invoke()
             return RemoteSession(sessionId,received.values.filter {it.text("session_id")==sessionId && it.text("modality")!=null}.map {
-                RemoteEvent(it.text("id")!!,"attempt",RemoteAssessment("correct",it.strings("support_event_ids").isNotEmpty(),true,false,"automatic_rule","Synthetic result"))
+                RemoteEvent(it.text("id")!!,"attempt",RemoteAssessment("correct",it.strings("support_event_ids").isNotEmpty(),true,false,"automatic_rule","Synthetic result"),reviews[it.text("id")])
             })
+        }
+        override suspend fun requestWritingReview(token:String,attemptId:String):WritingReview {
+            reviewCalls++
+            val result=reviews.getOrPut(attemptId) { WritingReview(UUID.randomUUID().toString(),attemptId,"pending",0,true,"2026-11-09T12:00:00Z",rubric_id="synthetic",rubric_version=1,scope_version="writing-review-v1",source="not_assessed") }
+            beforeReview?.also {beforeReview=null}?.invoke()
+            if(loseReviewConfirmation) {loseReviewConfirmation=false;throw IOException("Synthetic lost review acknowledgement")}
+            return result
         }
     }
 
@@ -276,6 +287,78 @@ class PracticeAuditRegressionTest {
             assertTrue(f.repo.sync())
             assertEquals(2,f.api.resultsCalls)
             assertTrue(f.db.practiceDao().resultRequests(1).isEmpty())
+        } finally {f.close()}
+    }
+
+    @Test fun human_review_request_is_explicit_and_lost_confirmation_is_idempotent()=runBlocking {
+        val f=Fixture()
+        try {
+            f.catalog.login("first","synthetic")
+            val installed=f.install()
+            var practice=f.repo.answer(f.repo.open(installed.hash),"Synthetic response")
+            val attempt=practice.events.single()
+            try {f.repo.requestWritingReview(practice,attempt.id);fail("Unsent attempt must not be requested")} catch(_:IllegalStateException) {}
+            assertEquals(0,f.api.reviewCalls)
+            assertTrue(f.repo.sync())
+            assertEquals(0,f.api.reviewCalls)
+            val original=f.db.practiceDao().events(1,practice.session.id).single().payload
+            f.api.loseReviewConfirmation=true
+            try {f.repo.requestWritingReview(practice,attempt.id);fail("Lost confirmation")} catch(_:IOException) {}
+            val id=f.api.reviews.getValue(attempt.id).id
+            practice=f.repo.requestWritingReview(practice,attempt.id)
+            assertEquals(id,practice.events.single().remoteAssessment()!!.human_review!!.id)
+            assertEquals("pending",practice.events.single().remoteAssessment()!!.human_review!!.status)
+            assertEquals(1,f.api.reviews.size)
+            assertEquals(original,practice.events.single().payload)
+            assertTrue(practice.completedLessons.isEmpty())
+        } finally {f.close()}
+    }
+
+    @Test fun explicit_refresh_receives_late_and_revised_reviews_and_reopens_offline()=runBlocking {
+        val f=Fixture()
+        try {
+            f.catalog.login("first","synthetic")
+            val installed=f.install()
+            var practice=f.repo.answer(f.repo.open(installed.hash),"Synthetic response")
+            val attempt=practice.events.single()
+            assertTrue(f.repo.sync())
+            practice=f.repo.requestWritingReview(practice,attempt.id)
+            val pending=f.api.reviews.getValue(attempt.id)
+            val review=pending.copy(status="reviewed",revision=1,reviewed_at="2026-11-09T12:30:00Z",feedback="Synthetic feedback",source="human_review",dimensions=listOf(WritingReviewDimension("meaning","met","Synthetic judgment"),WritingReviewDimension("reading","not_observed","Writing only")))
+            f.api.reviews[attempt.id]=review
+            val calls=f.api.resultsCalls
+            practice=f.repo.refreshResults(practice)
+            assertTrue(f.api.resultsCalls>calls)
+            assertEquals(review,practice.events.single().remoteAssessment()!!.human_review)
+            assertEquals("automatic_rule",practice.events.single().remoteAssessment()!!.source)
+            assertFalse(practice.events.single().remoteAssessment()!!.retention_confirmed)
+            f.api.reviews[attempt.id]=review.copy(revision=2,feedback="Synthetic revised feedback")
+            practice=f.repo.refreshResults(practice)
+            assertEquals(2,practice.events.single().remoteAssessment()!!.human_review!!.revision)
+            f.reopen()
+            practice=f.repo.open(installed.hash)
+            assertEquals(2,practice.events.single().remoteAssessment()!!.human_review!!.revision)
+            f.api.failResults=true
+            try {f.repo.refreshResults(practice);fail("Offline refresh must fail")} catch(_:IOException) {}
+            assertEquals(1,f.db.practiceDao().resultRequests(1).size)
+            assertEquals(2,f.repo.reload(practice).events.single().remoteAssessment()!!.human_review!!.revision)
+            assertTrue(f.repo.sync())
+            assertTrue(f.repo.reload(practice).completedLessons.isEmpty())
+        } finally {f.close()}
+    }
+
+    @Test fun account_switch_during_review_request_never_writes_another_accounts_feedback()=runBlocking {
+        val f=Fixture()
+        try {
+            f.catalog.login("first","synthetic")
+            val installed=f.install()
+            val practice=f.repo.answer(f.repo.open(installed.hash),"Synthetic response")
+            assertTrue(f.repo.sync())
+            f.api.beforeReview={f.catalog.logout();f.catalog.login("second","synthetic")}
+            try {f.repo.requestWritingReview(practice,practice.events.single().id);fail("Changed account")} catch(_:IllegalStateException) {}
+            assertNull(f.db.practiceDao().events(1,practice.session.id).single().remoteAssessment()!!.human_review)
+            assertTrue(f.db.practiceDao().events(2,practice.session.id).isEmpty())
+            assertTrue(f.repo.sync())
         } finally {f.close()}
     }
 

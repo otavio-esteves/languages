@@ -3165,6 +3165,93 @@
         "example": null,
         "rule_version": null
       }
+    },
+    {
+      "id": "unicode-uppercase-accepted",
+      "activity": {
+        "type": "written_recall",
+        "modality": "writing",
+        "expected": {
+          "comparison": {
+            "version": "text-variants-v1",
+            "accepted": [
+              "The pharmacy is next to the café."
+            ],
+            "corrections": [
+              {
+                "response": "The pharmacy is far from the café.",
+                "message": "Nesta mensagem, a farmácia fica ao lado do café."
+              }
+            ],
+            "example": "The pharmacy is next to the café."
+          }
+        }
+      },
+      "response": "THE PHARMACY IS NEXT TO THE CAFÉ.",
+      "result": {
+        "outcome": "correct",
+        "message": "Resposta aceita nesta atividade.",
+        "example": null,
+        "rule_version": "text-variants-v1"
+      }
+    },
+    {
+      "id": "unicode-uppercase-known-error",
+      "activity": {
+        "type": "written_recall",
+        "modality": "writing",
+        "expected": {
+          "comparison": {
+            "version": "text-variants-v1",
+            "accepted": [
+              "The pharmacy is next to the café."
+            ],
+            "corrections": [
+              {
+                "response": "The pharmacy is far from the café.",
+                "message": "Nesta mensagem, a farmácia fica ao lado do café."
+              }
+            ],
+            "example": "The pharmacy is next to the café."
+          }
+        }
+      },
+      "response": "THE PHARMACY IS FAR FROM THE CAFÉ.",
+      "result": {
+        "outcome": "incorrect",
+        "message": "Nesta mensagem, a farmácia fica ao lado do café.",
+        "example": "The pharmacy is next to the café.",
+        "rule_version": "text-variants-v1"
+      }
+    },
+    {
+      "id": "unicode-accent-is-not-discarded",
+      "activity": {
+        "type": "written_recall",
+        "modality": "writing",
+        "expected": {
+          "comparison": {
+            "version": "text-variants-v1",
+            "accepted": [
+              "The pharmacy is next to the café."
+            ],
+            "corrections": [
+              {
+                "response": "The pharmacy is far from the café.",
+                "message": "Nesta mensagem, a farmácia fica ao lado do café."
+              }
+            ],
+            "example": "The pharmacy is next to the café."
+          }
+        }
+      },
+      "response": "The pharmacy is next to the cafè.",
+      "result": {
+        "outcome": "unverified",
+        "message": "Ainda não confirmei esta forma. Compare com o exemplo; outra resposta também pode ser válida.",
+        "example": "The pharmacy is next to the café.",
+        "rule_version": "text-variants-v1"
+      }
     }
   ]
 }

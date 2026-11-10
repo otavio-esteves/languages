@@ -77,6 +77,29 @@ class SessionResultsTest extends TestCase
         $this->getJson('/api/v1/learning-sessions/'.$this->session)->assertJsonPath('events.0.assessment.supported', false);
     }
 
+    public function test_device_sequence_orders_support_across_sessions_in_every_upload_order(): void
+    {
+        $write = $this->package['activities'][3];
+        $first = $this->attempt($write, 1);
+        $support = array_intersect_key($this->attempt($write, 2, ['session_id' => (string) Str::uuid()]), array_flip(['schema_version', 'id', 'session_id', 'device_id', 'local_sequence', 'occurred_at', 'time_quality', 'activity_id', 'package_id', 'package_version', 'package_hash', 'target_ids']));
+        $support += ['support_id' => 'comparison-example', 'kind' => 'solution', 'affected_modalities' => ['writing'], 'reveals_answer' => true];
+        $later = $this->attempt($write, 3, ['session_id' => (string) Str::uuid()]);
+        $uploads = [['attempt', $first], ['exposure', $support], ['attempt', $later]];
+        foreach ([[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]] as $order) {
+            DB::table('learning_events')->where('user_id', $this->user->id)->delete();
+            foreach ($order as $index) {
+                [$kind, $payload] = $uploads[$index];
+                $this->postJson('/api/v1/'.$kind.'s/batch', ['events' => [$payload]])->assertJsonPath('results.0.status', 'accepted');
+            }
+            $this->getJson('/api/v1/learning-sessions/'.$first['session_id'])->assertOk()
+                ->assertJsonPath('events.0.assessment.supported', false)
+                ->assertJsonPath('events.0.assessment.outcome', 'correct');
+            $this->getJson('/api/v1/learning-sessions/'.$later['session_id'])->assertOk()
+                ->assertJsonPath('events.0.assessment.supported', true)
+                ->assertJsonPath('events.0.assessment.retention_confirmed', false);
+        }
+    }
+
     public function test_long_session_loads_snapshots_in_one_query_and_keeps_every_result(): void
     {
         $activities = array_values(array_filter($this->package['activities'], fn ($a) => $a['modality'] === 'writing'));
@@ -93,7 +116,7 @@ class SessionResultsTest extends TestCase
             DB::disableQueryLog();
             DB::flushQueryLog();
         }
-        $this->assertCount(3, $queries, 'Session events, prior supports and snapshots, regardless of attempt count.');
+        $this->assertCount(5, $queries, 'Session events, prior supports, snapshots, review requests and feedback context, regardless of attempt count.');
         $this->assertSame(array_column($rows, 'event_id'), array_column($response->json('events'), 'id'));
         foreach ($response->json('events') as $event) {
             $this->assertSame('correct', $event['assessment']['outcome']);

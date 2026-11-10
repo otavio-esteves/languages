@@ -27,6 +27,10 @@ fun OpenPractice.revealedSupports(): Set<String> {
         }
     }.toSet()
 }
+private val remoteAssessmentJson=Json {ignoreUnknownKeys=true}
+fun PracticeEvent.remoteAssessment(): RemoteAssessment? = remoteResult?.let {
+    runCatching { remoteAssessmentJson.decodeFromString<RemoteAssessment>(it) }.getOrNull()
+}
 class PracticeRepository(private val context: Context, private val database: CatalogDatabase, private val catalog: CatalogRepository, private val api: PracticeApi) {
     private val dao = database.practiceDao()
     private val json = Json { ignoreUnknownKeys = true }
@@ -232,8 +236,54 @@ class PracticeRepository(private val context: Context, private val database: Cat
         dao.retryBlocked(user.account.id)
         scheduleSync(user.account.id)
     }
-    suspend fun sync(): Boolean {
+    /** Explicit refresh, bounded to the session the owner has opened. */
+    suspend fun refreshResults(value: OpenPractice): OpenPractice {
+        val user=account()
+        lock.withLock {
+            check(user.account.id==value.session.ownerId && catalog.session.value==user)
+            check(dao.session(user.account.id,value.session.id)!=null)
+            if(dao.events(user.account.id,value.session.id).any {it.syncState=="received"}) {
+                dao.requestResults(PracticeResultRequest(user.account.id,value.session.id,UUID.randomUUID().toString()))
+            }
+        }
+        sync(user)
+        check(catalog.session.value==user)
+        return reload(value)
+    }
+    suspend fun requestWritingReview(value: OpenPractice, attemptId: String): OpenPractice {
+        val user=account()
+        val event=lock.withLock {
+            check(user.account.id==value.session.ownerId && catalog.session.value==user)
+            val event=dao.events(user.account.id,value.session.id).single {it.id==attemptId && it.kind=="attempt"}
+            val payload=json.parseToJsonElement(event.payload).jsonObject
+            val activity=value.document.activities.single {it.id==payload.text("activity_id")}
+            require(activity.modality=="writing" && activity.type in setOf("written_recall","communicative_task") && payload.text("technical_status")=="valid")
+            check(event.syncState=="received") { "Sincronize os registros antes de pedir uma revisão. Sua prática permanece salva." }
+            dao.requestResults(PracticeResultRequest(user.account.id,value.session.id,UUID.randomUUID().toString()))
+            event
+        }
+        try {
+            val review=api.requestWritingReview(user.token,event.id)
+            require(review.attempt_id==event.id && review.scope_version=="writing-review-v1" && !review.retention_confirmed)
+            lock.withLock {
+                check(catalog.session.value==user)
+                val existing=dao.events(user.account.id,value.session.id).singleOrNull {it.id==event.id}
+                if(existing!=null) {
+                    // Without a canonical context yet, remain conservative; a refresh replaces this fallback.
+                    val previous=existing.remoteAssessment() ?: RemoteAssessment("unverified",true,value.installed.preview,false,"not_assessed","Contexto de apoio aguarda atualização.")
+                    val newest=previous.human_review?.takeIf {it.revision>review.revision} ?: review
+                    dao.assessment(user.account.id,event.id,json.encodeToString(previous.copy(human_review=newest)))
+                }
+            }
+            return reload(value)
+        } catch(failure: ApiFailure) {
+            if(failure.status==401) catalog.invalidate(user)
+            throw failure
+        }
+    }
+    suspend fun sync(expected: Session? = null): Boolean {
         val user = account()
+        if(expected!=null && user!=expected) return false
         try { repeat(8) {
             if(catalog.session.value != user) return false
             val batch = dao.pending(user.account.id)
@@ -267,8 +317,13 @@ class PracticeRepository(private val context: Context, private val database: Cat
                 if(catalog.session.value != user) return false
                 database.withTransaction {
                     if (dao.resultRequest(user.account.id, request.sessionId)?.generation == request.generation) {
-                        val ids = dao.events(user.account.id, request.sessionId).map { it.id }.toSet()
-                        remote.events.filter { it.id in ids }.forEach { event -> event.assessment?.let { dao.assessment(user.account.id,event.id,json.encodeToString(it)) } }
+                        val stored = dao.events(user.account.id, request.sessionId).associateBy {it.id}
+                        remote.events.filter { it.id in stored }.forEach { event -> event.assessment?.let {
+                            require(event.human_review==null || (event.human_review.attempt_id==event.id && event.human_review.scope_version=="writing-review-v1" && !event.human_review.retention_confirmed))
+                            val previous=stored[event.id]?.remoteAssessment()?.human_review
+                            val newest=previous?.takeIf {old -> event.human_review==null || old.revision>event.human_review.revision} ?: event.human_review
+                            dao.assessment(user.account.id,event.id,json.encodeToString(it.copy(human_review=newest)))
+                        } }
                         dao.resultsFetched(user.account.id,request.sessionId,request.generation)
                     }
                 }

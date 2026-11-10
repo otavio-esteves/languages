@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import BrandMark from '../components/BrandMark.vue';
 import SessionActions from '../components/SessionActions.vue';
+import NotebookArt from '../components/NotebookArt.vue';
 const form = useForm({ email: '', password: '' });
 const showPassword = ref(false), passwordInput = ref<HTMLInputElement | null>(null);
 function login() {
@@ -10,9 +11,12 @@ function login() {
 }
 </script>
 <template>
-  <main class="login-layout">
-    <div class="login-top"><BrandMark /><SessionActions :allow-logout="false" /></div>
-    <div class="page-heading"><p class="eyebrow">INGLÊS · LEITURA E ESCRITA</p><h1>Vamos continuar?</h1><p class="muted">Entre para abrir sua trilha.</p></div>
+  <main class="login-page">
+    <header class="login-top"><BrandMark /><SessionActions :allow-logout="false" /></header>
+    <div class="login-content">
+    <section class="login-welcome" aria-labelledby="welcome-title"><p class="chapter-label"><span class="chapter-rule" />SEU INGLÊS, NO SEU TEMPO</p><h1 id="welcome-title">Seu inglês,<br>página por <em>página.</em></h1><p>Leia. Escreva. Descubra o que você consegue dizer.</p><NotebookArt /><span class="welcome-note">Pequenas missões para o seu dia a dia.</span></section>
+    <section class="login-layout" aria-labelledby="login-title">
+    <div class="page-heading"><span class="login-bookmark" aria-hidden="true">↗</span><h2 id="login-title">Seu caderno espera.</h2><p class="muted">Entre para continuar sua trilha de inglês.</p></div>
     <form @submit.prevent="login" :aria-busy="form.processing">
       <label for="login-email">E-mail</label>
       <input id="login-email" v-model="form.email" type="email" inputmode="email" autocomplete="username" autocapitalize="none" :spellcheck="false" :aria-invalid="!!form.errors.email" :aria-describedby="form.errors.email ? 'login-error' : undefined" required @input="form.clearErrors('email')">
@@ -22,5 +26,8 @@ function login() {
       <button class="primary-action" :disabled="form.processing"><span v-if="form.processing" class="spinner" aria-hidden="true" />{{ form.processing ? 'Entrando…' : 'Entrar' }}<span v-if="!form.processing" aria-hidden="true">→</span></button>
     </form>
     <p class="page-note"><span class="status-dot" aria-hidden="true" />Prévia editorial · conteúdo em revisão</p>
+    </section>
+    </div>
+    <footer class="login-footer">Leitura e escrita. No seu tempo.</footer>
   </main>
 </template>

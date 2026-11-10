@@ -1,0 +1,20 @@
+{
+  "id": "90000000-0000-4000-8000-000000000001",
+  "attempt_id": "90000000-0000-4000-8000-000000000002",
+  "status": "reviewed",
+  "revision": 1,
+  "is_preview": true,
+  "requested_at": "2026-11-09T12:00:00Z",
+  "reviewed_at": "2026-11-09T12:30:00Z",
+  "feedback": "Fixture sintética: a informação pedida foi comunicada nesta resposta escrita.",
+  "rubric_id": "everyday-text",
+  "rubric_version": 1,
+  "scope_version": "writing-review-v1",
+  "dimensions": [
+    {"id": "meaning", "result": "met", "reason": "Decisão sintética para verificar o contrato, sem revisão humana real."},
+    {"id": "reading", "result": "not_observed", "reason": "Uma produção escrita não observa a habilidade de leitura."},
+    {"id": "form", "result": "abstained", "reason": "A fixture preserva abstenção em uma dimensão não julgada."}
+  ],
+  "source": "human_review",
+  "retention_confirmed": false
+}

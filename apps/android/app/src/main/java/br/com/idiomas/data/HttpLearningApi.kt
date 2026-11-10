@@ -56,5 +56,6 @@ class HttpLearningApi(private val baseUrl: String) : LearningApi, PracticeApi {
         return json.decodeFromString(execute("${kind}s/batch", token, body))
     }
     override suspend fun results(token: String, sessionId: String): RemoteSession = json.decodeFromString(execute("learning-sessions/${segment(sessionId)}", token))
+    override suspend fun requestWritingReview(token: String, attemptId: String): WritingReview = json.decodeFromString(execute("writing-reviews", token, kotlinx.serialization.json.buildJsonObject { put("attempt_id", kotlinx.serialization.json.JsonPrimitive(attemptId)) }.toString()))
 
 }

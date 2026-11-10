@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,6 +30,8 @@ import br.com.idiomas.data.InteractionCue
 
 private val LocalDarkTheme = compositionLocalOf { false }
 private val LocalToggleTheme = staticCompositionLocalOf<() -> Unit> { {} }
+val NotebookDisplay = FontFamily(Font(R.font.languages_display))
+private val NotebookText = FontFamily(Font(R.font.languages_text), Font(R.font.languages_text_semibold, FontWeight.SemiBold))
 
 @Composable
 fun IdiomasTheme(content: @Composable () -> Unit) {
@@ -60,10 +63,17 @@ fun IdiomasTheme(content: @Composable () -> Unit) {
     )
     val base = Typography()
     val typography = Typography(
-        headlineLarge=base.headlineLarge.copy(fontFamily=FontFamily.Serif,fontWeight=FontWeight.Normal,fontSize=38.sp,lineHeight=42.sp,letterSpacing=(-1).sp),
-        headlineMedium=base.headlineMedium.copy(fontFamily=FontFamily.Serif,fontWeight=FontWeight.Normal,fontSize=36.sp,lineHeight=40.sp,letterSpacing=(-1).sp),
-        headlineSmall=base.headlineSmall.copy(fontWeight=FontWeight.SemiBold,letterSpacing=(-.5).sp),
-        labelSmall=base.labelSmall.copy(letterSpacing=.8.sp),
+        headlineLarge=base.headlineLarge.copy(fontFamily=NotebookDisplay,fontWeight=FontWeight.Normal,fontSize=38.sp,lineHeight=44.sp,letterSpacing=(-1).sp),
+        headlineMedium=base.headlineMedium.copy(fontFamily=NotebookDisplay,fontWeight=FontWeight.Normal,fontSize=32.sp,lineHeight=38.sp,letterSpacing=(-.8).sp),
+        headlineSmall=base.headlineSmall.copy(fontFamily=NotebookDisplay,fontWeight=FontWeight.Normal,fontSize=26.sp,lineHeight=35.sp,letterSpacing=(-.5).sp),
+        titleLarge=base.titleLarge.copy(fontFamily=NotebookText,fontWeight=FontWeight.SemiBold),
+        titleMedium=base.titleMedium.copy(fontFamily=NotebookText),
+        bodyLarge=base.bodyLarge.copy(fontFamily=NotebookText,lineHeight=27.sp),
+        bodyMedium=base.bodyMedium.copy(fontFamily=NotebookText,lineHeight=24.sp),
+        bodySmall=base.bodySmall.copy(fontFamily=NotebookText,lineHeight=20.sp),
+        labelLarge=base.labelLarge.copy(fontFamily=NotebookText,fontWeight=FontWeight.SemiBold),
+        labelMedium=base.labelMedium.copy(fontFamily=NotebookText),
+        labelSmall=base.labelSmall.copy(fontFamily=NotebookText,letterSpacing=.7.sp),
     )
     CompositionLocalProvider(LocalDarkTheme provides dark, LocalToggleTheme provides {
         choice = !dark; prefs.edit { putBoolean("dark", !dark) }

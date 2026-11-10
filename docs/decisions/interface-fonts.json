@@ -1,0 +1,35 @@
+{
+  "fonts": [
+    {
+      "source_font": "NotoSans-Regular.ttf",
+      "source_sha256": "89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d",
+      "family": "LanguagesText",
+      "style": "Regular",
+      "coverage": "Latin, combining accents, punctuation and UI arrows",
+      "license": "SIL Open Font License 1.1",
+      "web_bytes": 53548,
+      "android_bytes": 136084
+    },
+    {
+      "source_font": "NotoSans-SemiBold.ttf",
+      "source_sha256": "68543590a7c3185d69ad16664c46df28832beeb72621d2470e86b04099eb4efb",
+      "family": "LanguagesText",
+      "style": "SemiBold",
+      "coverage": "Latin, combining accents, punctuation and UI arrows",
+      "license": "SIL Open Font License 1.1",
+      "web_bytes": 54236,
+      "android_bytes": 135164
+    },
+    {
+      "source_font": "NotoSerifDisplay-Regular.ttf",
+      "source_sha256": "bcdc596729c24044e28c54815ecbe6004f83b10169a49a51160b22f59116249f",
+      "family": "LanguagesDisplay",
+      "style": "Regular",
+      "coverage": "Latin, combining accents, punctuation and UI arrows",
+      "license": "SIL Open Font License 1.1",
+      "web_bytes": 53204,
+      "android_bytes": 139592
+    }
+  ],
+  "note": "Self-hosted UI fonts only; no curricular content or network font service."
+}

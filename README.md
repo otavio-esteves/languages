@@ -35,6 +35,10 @@ scripts/compose run --rm app php artisan app:create-user --editor
 
 Omitir `--editor` cria uma conta sem acesso à prévia. Não há credenciais padrão. A conta com permissão editorial pode entrar em `/login` e consultar os rascunhos em `/editorial` e selecionar o ponto atual da trilha; a prévia não aprova nem publica conteúdo.
 
+A revisão humana da escrita tem um papel próprio, desativado por padrão. Para concedê-lo a uma conta existente, o operador executa `scripts/compose exec app php artisan app:reviewer email-da-conta-existente` e confirma a ação; `--revoke` revoga o papel. O acesso a rascunhos exige também permissão editorial. Um revisor não pode julgar a própria resposta. Após entrar, o destino inicial respeita as permissões da conta.
+
+Na prática, “Pedir revisão humana” compartilha explicitamente uma resposta escrita já recebida com um revisor autorizado. A pessoa pode continuar a lição e consultar “Minhas revisões de escrita” no menu, em `/writing-feedback`. A fila de revisão fica em `/reviews`, com a rubrica do snapshot original, justificativas por dimensão e histórico paginado de decisões. No Android, os resultados recebidos ficam salvos e podem ser atualizados por ação explícita na sessão aberta. A comparação automática permanece separada; julgamentos e feedbacks não promovem domínio ou retenção. A entrega de um retorno humano é registrada conservadoramente como contexto de apoio para tentativas escritas posteriores dos mesmos alvos, sem afirmar que foi lido. Responsáveis, capacidade real de atendimento e revisão curricular continuam pendentes; não há prazo fictício ou publicação automática.
+
 ```bash
 scripts/compose logs --tail=50 app
 scripts/compose stop

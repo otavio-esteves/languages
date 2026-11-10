@@ -122,7 +122,24 @@ class LearningEvents
         return false;
     }
 
-    public function session(User $user, string $id): array
+    private function hasPriorSupport(array $index, array $attempt, int $receiptId): bool
+    {
+        foreach ($attempt['target_ids'] as $target) {
+            foreach ($index[$attempt['package_hash']][$attempt['modality']][$target] ?? [] as $device => $support) {
+                // The device clock spans sessions and survives delayed or reordered batches.
+                // Across devices, preserve known prior context without claiming temporal certainty.
+                if ($device === $attempt['device_id']
+                    ? $support['sequence'] <= $attempt['local_sequence']
+                    : $support['receipt'] < $receiptId) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public function session(User $user, string $id, bool $deliverHumanFeedback = true): array
     {
         $events = DB::table('learning_events')->where('user_id', $user->id)->where('session_id', $id)->orderBy('local_sequence')->get();
         $inputs = [];
@@ -141,8 +158,7 @@ class LearningEvents
             }
         }
         // A page reload starts a new client session, but does not erase prior support.
-        // Keep package/account boundaries and server order; later unrelated exposures
-        // must not rewrite an earlier attempt as supported.
+        // Keep package/account boundaries and each device's sequence across sessions.
         $priorSupports = [];
         $externalSupports = DB::table('learning_events')->where('user_id', $user->id)
             ->where('kind', 'exposure')->where('session_id', '!=', $id)
@@ -155,38 +171,43 @@ class LearningEvents
             }
             foreach ($payload['affected_modalities'] as $modality) {
                 foreach ($payload['target_ids'] as $target) {
-                    $priorSupports[$payload['package_hash']][$modality][$target] ??= $support->id;
+                    $first = $priorSupports[$payload['package_hash']][$modality][$target][$payload['device_id']] ?? ['sequence' => PHP_INT_MAX, 'receipt' => PHP_INT_MAX];
+                    $priorSupports[$payload['package_hash']][$modality][$target][$payload['device_id']] = [
+                        'sequence' => min($first['sequence'], $payload['local_sequence']),
+                        'receipt' => min($first['receipt'], $support->id),
+                    ];
                 }
             }
         }
         $activities = [];
+        $packages = [];
         $hashes = $events->where('kind', 'attempt')->pluck('package_hash')->unique()->all();
         if ($hashes !== []) {
             foreach (DB::table('content_snapshots')->whereIn('hash', $hashes)->get(['hash', 'document']) as $snapshot) {
-                $activities[$snapshot->hash] = array_column(json_decode($snapshot->document, true)['activities'], null, 'id');
+                $packages[$snapshot->hash] = json_decode($snapshot->document, true);
+                $activities[$snapshot->hash] = array_column($packages[$snapshot->hash]['activities'], null, 'id');
             }
         }
+        $reviews = app(WritingReviews::class);
+        $humanFeedbackContext = $reviews->feedbackContext($user, $hashes);
+        $humanReviews = $reviews->forEvents($events->where('kind', 'attempt'), $packages, $deliverHumanFeedback);
 
-        return ['session_id' => $id, 'events' => $events->map(function ($row) use ($inputs, $known, $supports, $technical, $activities, $priorSupports) {
+        return ['session_id' => $id, 'events' => $events->map(function ($row) use ($inputs, $known, $supports, $technical, $activities, $priorSupports, $humanReviews, $humanFeedbackContext) {
             $input = $inputs[$row->event_id];
             $assessment = null;
             if ($row->kind === 'attempt') {
                 $activity = $activities[$row->package_hash][$input['activity_id']];
                 $supportPending = count(array_diff_key(array_fill_keys($input['support_event_ids'], true), $known)) > 0;
-                $supported = $this->hasContext($supports, $input) || $supportPending;
-                foreach ($input['target_ids'] as $target) {
-                    if (($priorSupports[$input['package_hash']][$input['modality']][$target] ?? PHP_INT_MAX) < $row->id) {
-                        $supported = true;
-                    }
-                }
+                $humanFeedbackAvailable = $input['modality'] === 'writing' && collect($input['target_ids'])->contains(fn ($target) => $row->id > ($humanFeedbackContext[$row->package_hash][$target] ?? PHP_INT_MAX));
+                $supported = $this->hasContext($supports, $input) || $supportPending || $this->hasPriorSupport($priorSupports, $input, $row->id) || $humanFeedbackAvailable;
                 $comparison = TextAnswers::compare($activity, $input['response']);
                 if ($input['technical_status'] !== 'valid' || $this->hasContext($technical, $input)) {
                     $comparison = ['outcome' => 'technical_issue', 'message' => 'Falha técnica registrada; nenhuma conclusão linguística.', 'example' => null, 'rule_version' => null];
                 }
-                $assessment = array_merge($comparison, ['supported' => $supported, 'support_pending' => $supportPending, 'is_preview' => (bool) $row->is_preview, 'retention_confirmed' => false, 'source' => $comparison['outcome'] === 'unverified' ? 'not_assessed' : 'automatic_rule']);
+                $assessment = array_merge($comparison, ['supported' => $supported, 'support_pending' => $supportPending, 'is_preview' => (bool) $row->is_preview, 'retention_confirmed' => false, 'source' => $comparison['outcome'] === 'unverified' ? 'not_assessed' : 'automatic_rule', 'human_feedback_available' => $humanFeedbackAvailable]);
             }
 
-            return ['id' => $row->event_id, 'kind' => $row->kind, 'assessment' => $assessment];
+            return ['id' => $row->event_id, 'kind' => $row->kind, 'assessment' => $assessment, 'human_review' => $humanReviews[$row->event_id] ?? null];
         })->values()->all()];
     }
 }

@@ -6,8 +6,8 @@ const root = ref<HTMLElement | null>(null), active = ref<number | null>(null), o
 const id = useId();
 const focused = ref<number | null>(null);
 const tooltipStyle = ref<Record<string, string>>({});
-const pieces = computed(() => props.text.split(/([A-Za-z]+(?:['’‘ʼ][A-Za-z]+)*)/g));
-const entry = (word: string) => props.glossary?.[word.toLowerCase().replace(/[’‘ʼ]/g, "'")];
+const pieces = computed(() => props.text.split(/(\p{L}[\p{L}\p{M}]*(?:['’‘ʼ]\p{L}[\p{L}\p{M}]*)*)/gu));
+const entry = (word: string) => props.glossary?.[word.normalize('NFC').toLowerCase().replace(/[’‘ʼ]/g, "'")];
 let timer: ReturnType<typeof setTimeout> | undefined;
 let disposed = false;
 const pending = new Map<string, Promise<boolean>>();

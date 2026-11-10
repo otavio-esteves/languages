@@ -25,3 +25,21 @@ Artisan::command('app:create-user {--editor : Permissão de prévia editorial}',
 })->purpose('Criar explicitamente uma conta sem credenciais padrão');
 
 Schedule::command('sanctum:prune-expired --hours=24')->daily();
+
+Artisan::command('app:reviewer {email : Conta existente} {--revoke : Revogar a permissão de avaliação}', function () {
+    $user = User::where('email', Str::lower((string) $this->argument('email')))->first();
+    if (! $user) {
+        $this->error('Conta existente não encontrada. Nenhuma conta foi criada.');
+
+        return 1;
+    }
+    $grant = ! $this->option('revoke');
+    if (! $this->confirm($grant ? 'Conceder permissão de avaliação escrita a esta conta?' : 'Revogar permissão de avaliação escrita desta conta?', false)) {
+        return 0;
+    }
+    $user->is_reviewer = $grant;
+    $user->save();
+    $this->info('Permissão atualizada. Isso não registra revisão humana de conteúdo ou respostas.');
+
+    return 0;
+})->purpose('Conceder ou revogar explicitamente avaliação escrita sem criar contas');

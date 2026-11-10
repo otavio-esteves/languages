@@ -31,6 +31,88 @@ function player(fetch, cues = [], initial = {}) {
   }, { expose() {} });
 }
 
+function humanReview(attemptId, changes = {}) {
+  return {
+    ...JSON.parse(readFileSync(new URL('../../../../contracts/fixtures/writing-review.json', import.meta.url), 'utf8')),
+    attempt_id: attemptId, ...changes,
+  };
+}
+
+test('a lost writing review acknowledgement retries the same saved attempt without adding learning events', async () => {
+  const saved = [];
+  const requests = [];
+  const cues = [];
+  const page = player(async (url, request) => {
+    if (url.endsWith('/writing-reviews')) {
+      const input = JSON.parse(request.body); requests.push(input);
+      if (requests.length === 1) throw new Error('Lost review acknowledgement');
+      return { ok: true, json: async () => humanReview(input.attempt_id, { status: 'pending', revision: 0, feedback: null, reviewed_at: null, dimensions: [], source: 'not_assessed' }) };
+    }
+    const event = JSON.parse(request.body).events[0]; saved.push(event);
+    return { ok: true, json: async () => ({ results: [{ id: event.id, status: 'accepted' }] }) };
+  }, cues);
+  await page.submit('A possible alternative outside the rules');
+  const count = page.events.value.length;
+  const sounds = [...cues];
+  assert.equal(await page.requestWritingReview(), false);
+  assert.equal(page.currentWritingReview.value, undefined);
+  assert.equal(await page.requestWritingReview(), true);
+  assert.equal(page.currentWritingReview.value.status, 'pending');
+  await page.requestWritingReview();
+  assert.equal(requests.length, 2);
+  assert.deepEqual(requests[0], requests[1]);
+  assert.equal(requests[0].attempt_id, saved.find(event => event.modality === 'writing').id);
+  assert.equal(page.events.value.length, count);
+  assert.equal(page.recorded.value, true);
+  assert.deepEqual(cues, sounds);
+});
+
+test('explicit review refresh receives revised human feedback while preserving automatic history and progress', async () => {
+  const saved = [];
+  const cues = [];
+  let revision = 1;
+  const page = player(async (url, request) => {
+    const attempt = saved.find(event => event.modality === 'writing');
+    if (url.includes('/learning-sessions/')) return { ok: true, json: async () => ({ session_id: attempt.session_id, events: [{ id: attempt.id, human_review: humanReview(attempt.id, { revision }), assessment: { supported: true, support_pending: false } }] }) };
+    if (url.endsWith('/writing-reviews')) return { ok: true, json: async () => humanReview(attempt.id, { status: 'pending', revision: 0, feedback: null, reviewed_at: null, dimensions: [], source: 'not_assessed' }) };
+    const event = JSON.parse(request.body).events[0]; saved.push(event);
+    return { ok: true, json: async () => ({ results: [{ id: event.id, status: 'accepted' }] }) };
+  }, cues);
+  await page.submit('A possible alternative outside the rules');
+  await page.requestWritingReview();
+  const events = JSON.stringify(page.events.value);
+  const sounds = [...cues];
+  const completed = [...page.completedLessons.value];
+  assert.equal(await page.refreshWritingReview(), true);
+  assert.equal(page.currentWritingReview.value.source, 'human_review');
+  assert.equal(page.currentWritingReview.value.revision, 1);
+  assert.equal(page.currentWritingReview.value.retention_confirmed, false);
+  assert.equal(page.reviewIsSupported.value, true);
+  revision = 2;
+  assert.equal(await page.refreshWritingReview(), true);
+  assert.equal(page.currentWritingReview.value.revision, 2);
+  assert.equal(page.assessment.value.outcome, 'unverified');
+  assert.equal(JSON.stringify(page.events.value), events);
+  assert.deepEqual(page.completedLessons.value, completed);
+  assert.deepEqual(cues, sounds);
+});
+
+test('an unavailable human review leaves the saved answer and the practice available', async () => {
+  const page = player(async (url, request) => {
+    if (url.endsWith('/writing-reviews')) return { ok: false, json: async () => ({ message: 'Revisão indisponível.' }) };
+    const event = JSON.parse(request.body).events[0];
+    return { ok: true, json: async () => ({ results: [{ id: event.id, status: 'accepted' }] }) };
+  });
+  await page.submit('water');
+  const events = JSON.stringify(page.events.value);
+  assert.equal(await page.requestWritingReview(), false);
+  assert.equal(page.message.value, 'Revisão indisponível.');
+  assert.equal(page.busy.value, false);
+  assert.equal(page.recorded.value, true);
+  assert.equal(page.submittedResponse.value, 'water');
+  assert.equal(JSON.stringify(page.events.value), events);
+});
+
 test('lost attempt acknowledgement restores feedback without creating another attempt', async () => {
   const saved = new Map();
   let loseAcknowledgement = true;
